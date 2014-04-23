@@ -50,7 +50,6 @@ var Connection = function(config) {
             }
             return;
         }
-        console.log('Command:', command);
         connection.write(command.encode(), callback);
         setTimeout(function() {
             function respond(code, data) {
@@ -79,7 +78,6 @@ var Connection = function(config) {
             }
             return;
         }
-        console.log(JSON.stringify(data));
     };
     this.getStream = function() {
         return {};

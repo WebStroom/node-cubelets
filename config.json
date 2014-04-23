@@ -113,7 +113,8 @@
   "urls": {
     "api": "http://cubelets-programming.appspot.com/api",
     "build": "http://avr-gcc2.modrobotics.com/hex.php/?u=",
-    "firmware": "http://cubelets-programming.appspot.com"
+    "firmware": "http://cubelets-programming.appspot.com",
+    "compile": "http://compile.modrobotics.com"
   },
   "databases": {
     "info": "info.db"

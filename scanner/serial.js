@@ -8,7 +8,7 @@ var Responses = require('../config.json')['responses'];
 
 var Scanner = function() {
     events.EventEmitter.call(this);
-    this.scan = function(callback) {
+    this.scan = function(callback, probe) {
         var scanner = this;
         SerialPort.list(function(error, devices) {
             if (error) {
@@ -39,39 +39,46 @@ var Scanner = function() {
                             return match.length >= 2 ? match[2] : 'Cubelet';
                         })();
                         var connection = new SerialConnection(config);
-                        scanner.emit('probe', connection, name, config);
-                        function ignoreError() { /* ignore errors */ }
-                        connection.on('error', ignoreError);
-                        connection.open(function(error) {
-                            if (error) {
-                                scanner.emit('fail', error, connection, name);
-                                connection.removeListener('error', ignoreError);
-                                callback(null);
-                            }
-                            else {
-                                var timer = setTimeout(function() {
-                                    var error = new Error('Timed out waiting for keep alive response.');
-                                    connection.removeListener('response', detectResponse);
-                                    connection.removeListener('error', ignoreError);
+                        if (probe) {
+                            scanner.emit('probe', connection, name, config);
+                            function ignoreError() { /* ignore errors */ }
+                            connection.on('error', ignoreError);
+                            connection.open(function(error) {
+                                if (error) {
                                     scanner.emit('fail', error, connection, name);
-                                    connection.close();
-                                    callback(error);
-                                }, 2000);
-                                function detectResponse(response) {
-                                    if (response.type == Responses.KEEP_ALIVE) {
-                                        clearTimeout(timer);
+                                    connection.removeListener('error', ignoreError);
+                                    callback(null);
+                                }
+                                else {
+                                    var timer = setTimeout(function() {
+                                        var error = new Error('Timed out waiting for keep alive response.');
                                         connection.removeListener('response', detectResponse);
                                         connection.removeListener('error', ignoreError);
-                                        connections.push(connection);
-                                        scanner.emit('pass', connection, name, config);
+                                        scanner.emit('fail', error, connection, name);
                                         connection.close();
-                                        callback(null);
+                                        callback(error);
+                                    }, 2000);
+                                    function detectResponse(response) {
+                                        if (response.type == Responses.KEEP_ALIVE) {
+                                            clearTimeout(timer);
+                                            connection.removeListener('response', detectResponse);
+                                            connection.removeListener('error', ignoreError);
+                                            connections.push(connection);
+                                            scanner.emit('pass', connection, name, config);
+                                            connection.close();
+                                            callback(null);
+                                        }
                                     }
+                                    connection.on('response', detectResponse);
+                                    connection.postCommand(new KeepAliveCommand());
                                 }
-                                connection.on('response', detectResponse);
-                                connection.postCommand(new KeepAliveCommand());
-                            }
-                        });
+                            });
+                        }
+                        else {
+                            connections.push(connection);
+                            scanner.emit('pass', connection, name, config);
+                            callback(null);
+                        }
                     });
                 }
             });

@@ -108,7 +108,7 @@ var FlashLoader = function(cubelet, stream, encoding) {
               callback(error);
               return;
             }
-            stream.drain(callback);
+            drain(callback);
           })
         });
       }
@@ -121,7 +121,12 @@ var FlashLoader = function(cubelet, stream, encoding) {
 
     // Drains the buffer
     function drain(callback) {
-      stream.drain(callback);
+      if (stream.drain) {
+        stream.drain(callback);
+      }
+      else {
+        callback(null);
+      }
     }
 
     // Waits for a given interval

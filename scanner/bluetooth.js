@@ -56,7 +56,9 @@ var Scanner = function() {
                 }
             }
         }
-        serialPort.inquire();
+        setTimeout(function() {
+            serialPort.inquire();
+        }, 1000);
     };
 };
 

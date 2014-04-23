@@ -9,6 +9,7 @@ module.exports.Construction = require('./construction');
 module.exports.Types = require('./config.json')['types'];
 module.exports.Responses = require('./config.json')['responses'];
 module.exports.BuildService = require('./service/build');
+module.exports.CompileService = require('./service/compile');
 module.exports.InfoService = require('./service/info');
 module.exports.FirmwareService = require('./service/firmware');
 module.exports.FlashProgram = require('./program');
