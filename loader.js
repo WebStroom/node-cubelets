@@ -320,7 +320,12 @@ var FlashLoader = function(cubelet, stream, encoding) {
         };
       }
       async.series([
-        drain,
+        drain
+        ].concat(capabilities['reset'] ? [        
+        sendResetCommandAndWait(30000),
+        wait(1000),
+        drain
+      ]:[]).concat([
         sendDisableAutomapCommand,
         sendReadyCommandAndWait(30000),
         sendProgramChecksumAndWait(30000),
@@ -328,7 +333,8 @@ var FlashLoader = function(cubelet, stream, encoding) {
         wait(2000),
         sendFlashCommandAndWait(30000),
         waitForSafeCheck(30000)
-      ].concat(capabilities['reset'] ? [
+      ]).concat(capabilities['reset'] ? [
+        wait(1000),
         sendResetCommandAndWait(30000)
       ]:[]), function(error) {
         parser.setRawMode(false);
