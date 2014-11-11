@@ -21,3 +21,5 @@ module.exports.UnregisterBlockValueEventCommand = require('./command/unregisterB
 module.exports.UnregisterAllBlockValueEventsCommand = require('./command/unregisterAllBlockValueEvents');
 module.exports.SetBlockValueCommand = require('./command/setBlockValue');
 module.exports.SetDefaultBlockValueCommand = require('./command/setDefaultBlockValue');
+module.exports.ResetBluetoothCommand = require('./command/resetBluetooth');
+module.exports.ResetAllCubeletsCommand = require('./command/resetAllCubelets');
