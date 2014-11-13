@@ -11,6 +11,9 @@ var CompileService = function() {
     var socket = require('socket.io-client').connect(apiUrl);
     var service = this;
 
+    socket.on('connect', function() {
+    });
+    
     socket.on('compileWarning', function(warning) {
         service.emit('compileWarning', warning);
     });
@@ -34,13 +37,31 @@ var CompileService = function() {
             default: return mcu;
         }
     }
+    function formatTypeFlag(type)
+    {
+        switch(type)
+        {
+            //LipPo Battery type is just v.2 of Battery
+            case 3: return 2;
+            default: return type;
+        }
+    }
+    function formatBlockTypeVersion(cubelet)
+    {
+        switch(cubelet.type.id)
+        {
+            //LipPo Battery type is just v.2 of Battery
+            case 3: return 2;
+            default: return 1;
+        }        
+    }
 
     this.requestBuild = function(source, cubelet) {
         var flags = {
             version: 'master', //XXX
             coreVersion: 1,
-            blockTypeVersion: 1,
-            blockType: cubelet.type.id,
+            blockTypeVersion: formatBlockTypeVersion(cubelet),
+            blockType: formatTypeFlag(cubelet.type.id),
             blockTypeString: cubelet.type.name,
             mcu: formatMCUFlag(cubelet.mcu)
         };
