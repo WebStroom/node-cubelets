@@ -20,6 +20,11 @@
       "name": "battery",
       "category": "think"
     },
+    "BATTERY-LIPO": {
+      "id": 3,
+      "name": "battery",
+      "category": "think"
+    },
     "BLOCKER": {
       "id": 1,
       "name": "blocker",
