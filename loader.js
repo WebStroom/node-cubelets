@@ -32,7 +32,8 @@ var FlashLoader = function(cubelet, stream, encoding) {
 
   var version = cubelet.currentFirmwareVersion;
   var capabilities = {
-    'reset': (version >= 3.1)
+    'reset': (version >= 3.1),
+    'disableAutoMapUpdates': (cubelet.type.id != 4)
   };
 
   this.load = function(program, cubelet) {
@@ -400,11 +401,13 @@ var FlashLoader = function(cubelet, stream, encoding) {
         }
       }
       async.series([
-        drain,
+        drain
+        ].concat(capabilities['disableAutoMapUpdates'] ? [        
         sendDisableAutomapCommand,
+      ]:[]).concat([        
         sendReadyCommandAndWait(30000),
         sendProgramPagesAndWait(30000)
-      ].concat(capabilities['reset'] ? [
+      ]).concat(capabilities['reset'] ? [
         sendResetCommandAndWait(30000)
       ]:[]), function(error) {
         parser.setRawMode(false);
