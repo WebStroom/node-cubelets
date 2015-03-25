@@ -43,16 +43,31 @@ serialPort.on('open', function(err) {
   });
 
   function send(data) {
-    if (serialPort.isOpen()) {
+    if (true) {
+      console.log('Write:', data);
       serialPort.write(data, function(err) {
-        if (!err) {
-          console.log('Write:', data);
+        if (err) {
+          console.error('Write error!', err);
+          return;
         }
+        console.log('Wrote:', data);
+        // serialPort.drain(function(err) {
+        //   if (err) {
+        //     console.error('Drain error!', err);
+        //     return;
+        //   }
+        //   console.log('Write:', data);
+        // });
       });
     }
     else {
       console.error('Serial port not open for writing!');
     }
+  }
+
+  var LEDColor = 0;
+  function nextLEDColor() {
+    return LEDColor = (LEDColor === 7) ? 0 : LEDColor + 1;
   }
 
   // Respond to control events
@@ -63,6 +78,10 @@ serialPort.on('open', function(err) {
       // '1'
       case 0x31:
         send((new cubelets.GetConfigurationRequest()).encode())
+        break;
+      // '2'
+      case 0x32:
+        send((new cubelets.SetLEDColorCommand(nextLEDColor())).encode())
         break;
       // Ctrl+D
       case 0x04:

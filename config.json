@@ -91,12 +91,6 @@
       "category": "sense"
     }
   },
-  "requests": {
-    "GET_CONFIGURATION": {
-      "code": 1,
-      "encoder": "getConfiguration"
-    }
-  },
   "responses": {
     "DEBUG": {
       "code": 112,
