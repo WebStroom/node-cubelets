@@ -22,13 +22,7 @@
   "dependencies": {
     "async": "0.2.8",
     "hashish": "0.0.4",
-    "multimeter": "0.1.1",
-    "pad": "0.0.4",
-    "request": "2.26.0",
-    "serialport": "git+https://github.com/programmarchy/node-serialport.git#drain",
-    "bluetooth-serial-port": "git://github.com/programmarchy/node-bluetooth-serial-port#modrobotics",
-    "socket.io-client": "0.9.16",
-    "temp": "0.5.1",
+    "serialport": "1.6.3",
     "underscore": "1.5.2"
   },
   "engines": {

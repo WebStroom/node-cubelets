@@ -91,28 +91,20 @@
       "category": "sense"
     }
   },
+  "requests": {
+    "GET_CONFIGURATION": {
+      "code": 1,
+      "encoder": "getConfiguration"
+    }
+  },
   "responses": {
     "DEBUG": {
-      "code": "D",
+      "code": 112,
       "decoder": "debug"
     },
-    "KEEP_ALIVE": {
-      "code": "l"
-    },
-    "DISCOVER_MAP_NEIGHBORS": {
-      "code": "n",
-      "decoder": "discoverMapNeighbors"
-    },
-    "BLOCK_VALUE_EVENT": {
-      "code": "b",
-      "decoder": "blockValueEvent"
-    },
-		"FLASH_PROGRESS": {
-			"code": "U",
-			"decoder": "flashProgress"
-		},
-    "FLASH_COMPLETE": {
-      "code": "X"
+    "GET_CONFIGURATION": {
+      "code": 113,
+      "decoder": "getConfiguration"
     }
   },
   "urls": {

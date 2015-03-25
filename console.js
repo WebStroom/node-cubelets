@@ -1,71 +1,94 @@
 if (process.argv.length < 3) {
-    console.log('Usage: node console.js SERIALPORT');
-    return;
+  console.log('Usage: node console.js SERIALPORT');
+  return;
 }
 
 var SerialPort = require('serialport').SerialPort;
 var ResponseParser = require('./parser');
+var cubelets = require('./index');
 
 var path = process.argv[2];
 var serialPort = new SerialPort(path);
 
-serialPort.on('open', function() {
-    console.log('Connected to', device);
+serialPort.on('open', function(err) {
+  if (err) {
+    console.error('Error connecting to', path);
+    return;
+  }
 
-    // Create a parser to interpret responses.
-    var parser = new ResponseParser();
+  console.log('Connected to', path);
 
-    // Process responses
-    parser.on('response', function(response) {
-        console.log('Response:', response);
-    });
+  // Create a parser to interpret responses.
+  var parser = new ResponseParser();
 
-    // Process extra data
-    parser.on('extra', function(data) {
-        console.log('Extra:', data);
-    });
+  // Process responses
+  parser.on('response', function(response) {
+    console.log('Response:', response);
+  });
 
-    // Process raw data
-    parser.on('raw', function(data) {
-        console.log('Raw:', data);
-    });
+  // Process extra data
+  parser.on('extra', function(data) {
+    console.log('Extra:', data);
+  });
 
-    // Once serial connection is open, begin listening for data.
-    serialPort.on('data', function(data) {
-        parser.parse(data);
-    });
+  // Process raw data
+  parser.on('raw', function(data) {
+    console.log('Raw:', data);
+  });
 
-    // Write data to serial connection.
-    keyboard.on('data', function(data) {
-        serialPort.write(data);
-    });
+  // Once serial connection is open, begin listening for data.
+  serialPort.on('data', function(data) {
+    console.log('Read:', data);
+    parser.parse(data);
+  });
 
-    // Respond to control events
-    keyboard.on('data', function(data) {
-        var key = data.readUInt8(0);
-        switch (key) {
-            case 0x04:
-                // Disconnect
-                serialPort.close();
-                break;
-            case 0x12:
-                // Toggle raw
-                var raw = !parser.getRawMode();
-                console.log('Raw Mode:', raw ? 'On' : 'Off');
-                parser.setRawMode(raw);
-                break;
+  function send(data) {
+    if (serialPort.isOpen()) {
+      serialPort.write(data, function(err) {
+        if (!err) {
+          console.log('Write:', data);
         }
-    });
+      });
+    }
+    else {
+      console.error('Serial port not open for writing!');
+    }
+  }
+
+  // Respond to control events
+  keyboard.on('data', function(data) {
+    var key = data.readUInt8(0);
+    console.log('Pressed key:', key);
+    switch (key) {
+      // '1'
+      case 0x31:
+        send((new cubelets.GetConfigurationRequest()).encode())
+        break;
+      // Ctrl+D
+      case 0x04:
+        // Disconnect
+        serialPort.close();
+        break;
+      // Ctrl+R
+      case 0x12:
+        // Toggle raw
+        var raw = !parser.getRawMode();
+        console.log('Raw mode:', raw ? 'On' : 'Off');
+        parser.setRawMode(raw);
+        break;
+    }
+  });
+});
+
+// Handle errors on the serial port
+serialPort.on('error', function(err) {
+  console.error('Serial port error!', err);
+  process.exit(1);
 });
 
 serialPort.on('close', function() {
-    console.log('Goodbye.');
-    process.exit(0);
-});
-
-serialPort.on('error', function(e) {
-    console.error(e);
-    process.exit(1);
+  console.log('Goodbye.');
+  process.exit(0);
 });
 
 // Take keyboard input one character at a time.
