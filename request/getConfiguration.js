@@ -11,7 +11,7 @@ util.inherits(GetConfigurationRequest, Request);
 GetConfigurationRequest.prototype.encode = function() {
   return new Buffer([
     '<'.charCodeAt(0),
-    this.code, 0, 0,
+    this.code, 0,
     '>'.charCodeAt(0)
   ]);
 };

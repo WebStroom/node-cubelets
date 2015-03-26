@@ -11,10 +11,9 @@ var Parser = function(encoding) {
     READY:1,
     HEADER_BEGIN:2,
     HEADER_TYPE:3,
-    HEADER_SIZE_HIGH:4,
-    HEADER_SIZE_LOW:5,
-    HEADER_END:6,
-    BODY:7
+    HEADER_SIZE:4,
+    HEADER_END:5,
+    BODY:6
   };
 
   // Initialize parser state
@@ -109,14 +108,9 @@ var Parser = function(encoding) {
       }
     }
 
-    function parseHeaderSizeHigh() {
+    function parseHeaderSize() {
       size = nextByte();
-      state = State.HEADER_SIZE_HIGH;
-    }
-
-    function parseHeaderSizeLow() {
-      size = (size << 8) + nextByte();
-      state = State.HEADER_SIZE_LOW;
+      state = State.HEADER_SIZE;
     }
 
     function parseHeaderEnd() {
@@ -156,12 +150,9 @@ var Parser = function(encoding) {
           parseHeaderType();
           break;
         case State.HEADER_TYPE:
-          parseHeaderSizeHigh();
+          parseHeaderSize();
           break;
-        case State.HEADER_SIZE_HIGH:
-          parseHeaderSizeLow();
-          break;
-        case State.HEADER_SIZE_LOW:
+        case State.HEADER_SIZE:
           parseHeaderEnd();
           break;
         case State.HEADER_END:

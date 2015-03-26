@@ -99,6 +99,10 @@
     "GET_CONFIGURATION": {
       "code": 113,
       "decoder": "getConfiguration"
+    },
+    "ECHO": {
+      "code": 144,
+      "decoder": "echo"
     }
   },
   "urls": {

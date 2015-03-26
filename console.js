@@ -70,6 +70,17 @@ serialPort.on('open', function(err) {
     return LEDColor = (LEDColor === 7) ? 0 : LEDColor + 1;
   }
 
+  var echoNumber = 0;
+  var echoSize = 10;
+  function nextEchoSequence() {
+    var bytes = [];
+    for (var i = 0; i < echoSize; ++i) {
+      bytes.push(echoNumber);
+      echoNumber = echoNumber < 255 ? echoNumber + 1 : 0;
+    }
+    return new Buffer(bytes);
+  }
+
   // Respond to control events
   keyboard.on('data', function(data) {
     var key = data.readUInt8(0);
@@ -82,6 +93,10 @@ serialPort.on('open', function(err) {
       // '2'
       case 0x32:
         send((new cubelets.SetLEDColorCommand(nextLEDColor())).encode())
+        break;
+      // '3'
+      case 0x33:
+        send((new cubelets.EchoRequest(nextEchoSequence())).encode())
         break;
       // Ctrl+D
       case 0x04:
