@@ -92,8 +92,16 @@
     }
   },
   "responses": {
+    "REGISTER_BLOCK_VALUE": {
+      "code": 117,
+      "decoder": "registerBlockValueEvent"
+    },
+    "BLOCK_VALUE": {
+      "code": 241,
+      "decoder": "blockValueEvent"
+    },
     "DEBUG": {
-      "code": 112,
+      "code": 240,
       "decoder": "debug"
     },
     "GET_CONFIGURATION": {

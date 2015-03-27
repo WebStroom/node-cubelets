@@ -1,13 +1,13 @@
 var util = require('util');
-var Command = require('../command');
+var Request = require('../request');
 
 var SetLEDColorCommand = function(color) {
-  Command.call(this);
+  Request.call(this);
   this.code = 0x42;
   this.color = color;
 };
 
-util.inherits(SetLEDColorCommand, Command);
+util.inherits(SetLEDColorCommand, Request);
 
 SetLEDColorCommand.prototype.encode = function() {
   return new Buffer([

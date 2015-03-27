@@ -71,7 +71,7 @@ serialPort.on('open', function(err) {
   }
 
   var echoNumber = 0;
-  var echoSize = 10;
+  var echoSize = 20;
   function nextEchoSequence() {
     var bytes = [];
     for (var i = 0; i < echoSize; ++i) {
@@ -79,6 +79,11 @@ serialPort.on('open', function(err) {
       echoNumber = echoNumber < 255 ? echoNumber + 1 : 0;
     }
     return new Buffer(bytes);
+  }
+
+  var enableBlockValueEvent = false;
+  function toggleEnableBlockValueEvent() {
+    return enableBlockValueEvent = !enableBlockValueEvent;
   }
 
   // Respond to control events
@@ -97,6 +102,10 @@ serialPort.on('open', function(err) {
       // '3'
       case 0x33:
         send((new cubelets.EchoRequest(nextEchoSequence())).encode())
+        break;
+      // '4'
+      case 0x34:
+        send((new cubelets.RegisterBlockValueEventRequest(toggleEnableBlockValueEvent())).encode())
         break;
       // Ctrl+D
       case 0x04:

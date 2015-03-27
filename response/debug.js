@@ -1,20 +1,24 @@
 var util = require('util');
 var Response = require('../response');
-var Decoder = require('../decoder');
 
-var DebugResponse = function(data, type) {
-  this.id = 0;
-  this.hopcount = 0;
-  this.timeout = 0;
+var DebugEvent = function(data, type) {
+  this.messagesReceived = 0;
+  this.spaceAvailable = 0;
   Response.call(this, data, type);
 };
 
-util.inherits(DebugResponse, Response);
+util.inherits(DebugEvent, Response);
 
-DebugResponse.prototype.decode = function() {
-  this.id = Decoder.decodeID(this.data.slice(0, 3));
-  this.hopcount = this.data.readUInt8(3);
-  this.timeout = this.data.readUInt8(4);
+DebugEvent.prototype.decode = function() {
+  var data = this.data;
+
+  if (data.length != 2) {
+    console.error('Response should be 2 bytes but is', data.length, 'bytes.');
+    return;
+  }
+
+  this.messagesReceived = data.readUInt8(0);
+  this.spaceAvailable = data.readUInt8(1);
 };
 
-module.exports = DebugResponse;
+module.exports = DebugEvent;
