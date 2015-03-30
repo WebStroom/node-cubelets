@@ -5,6 +5,7 @@ if (process.argv.length < 3) {
 
 var SerialPort = require('serialport').SerialPort;
 var ResponseParser = require('./parser');
+var async = require('async');
 var cubelets = require('./index');
 var Decoder = require('./decoder');
 
@@ -50,11 +51,26 @@ serialPort.on('open', function(err) {
 
   function send(data) {
     if (true) {
-      console.log('Write:', data);
-      serialPort.write(data, function(err) {
+      var delay = 50;
+      function wait(callback) {
+        setTimeout(callback, delay);
+      }
+      function writeByte(oneByte) {
+        return function(callback) {
+          serialPort.write(new Buffer([oneByte]), callback);
+        }
+      }
+      var tasks = [];
+      for (var i = 0; i < data.length; ++i) {
+        tasks.push(wait);
+        tasks.push(writeByte(data[i]));
+      }
+      async.series(tasks, function(err) {
         if (err) {
           console.error('Write error!', err);
-          return;
+        }
+        else {
+          console.log('Write:', data);
         }
       });
     }
