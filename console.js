@@ -1,29 +1,30 @@
-if (process.argv.length < 3) {
-  console.log('Usage: node console.js SERIALPORT');
+if (process.argv.length < 4) {
+  console.log('Usage: node console.js ADDRESS CHANNEL');
   return;
 }
 
-var SerialPort = require('serialport').SerialPort;
+var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort;
 var ResponseParser = require('./parser');
 var async = require('async');
 var cubelets = require('./index');
 var Decoder = require('./decoder');
 
-var path = process.argv[2];
-var serialPort = new SerialPort(path);
+var address = process.argv[2];
+var channel = parseInt(process.argv[3]);
+var serialPort = new BluetoothSerialPort();
 
 var passiveCubeletID = Decoder.decodeID(new Buffer([3,2,1]));
 var knobCubeletID = Decoder.decodeID(new Buffer([6,5,4]));
 var flashlightCubeletID = Decoder.decodeID(new Buffer([12,11,10]));
 var barGraphCubeletID = Decoder.decodeID(new Buffer([13,14,14]));
 
-serialPort.on('open', function(err) {
+serialPort.connect(address, channel, function(err) {
   if (err) {
-    console.error('Error connecting to', path);
+    console.error('Error connecting to', address, channel);
     return;
   }
 
-  console.log('Connected to', path);
+  console.log('Connected to', address, channel);
 
   // Create a parser to interpret responses.
   var parser = new ResponseParser();
@@ -50,34 +51,45 @@ serialPort.on('open', function(err) {
   });
 
   function send(data) {
-    if (true) {
-      var delay = 50;
-      function wait(callback) {
-        setTimeout(callback, delay);
+    serialPort.write(data, function(err) {
+      if (err) {
+        console.error('Write error!', err);
       }
-      function writeByte(oneByte) {
-        return function(callback) {
-          serialPort.write(new Buffer([oneByte]), callback);
-        }
+      else {
+        console.log('Write:', data);
       }
-      var tasks = [];
-      for (var i = 0; i < data.length; ++i) {
-        tasks.push(wait);
-        tasks.push(writeByte(data[i]));
-      }
-      async.series(tasks, function(err) {
-        if (err) {
-          console.error('Write error!', err);
-        }
-        else {
-          console.log('Write:', data);
-        }
-      });
-    }
-    else {
-      console.error('Serial port not open for writing!');
-    }
+    });
   }
+
+  // function send(data) {
+  //   if (true) {
+  //     var delay = 50;
+  //     function wait(callback) {
+  //       setTimeout(callback, delay);
+  //     }
+  //     function writeByte(oneByte) {
+  //       return function(callback) {
+  //         serialPort.write(new Buffer([oneByte]), callback);
+  //       }
+  //     }
+  //     var tasks = [];
+  //     for (var i = 0; i < data.length; ++i) {
+  //       tasks.push(wait);
+  //       tasks.push(writeByte(data[i]));
+  //     }
+  //     async.series(tasks, function(err) {
+  //       if (err) {
+  //         console.error('Write error!', err);
+  //       }
+  //       else {
+  //         console.log('Write:', data);
+  //       }
+  //     });
+  //   }
+  //   else {
+  //     console.error('Serial port not open for writing!');
+  //   }
+  // }
 
   var LEDColor = 0;
   function nextLEDColor() {
@@ -193,7 +205,7 @@ serialPort.on('error', function(err) {
   process.exit(1);
 });
 
-serialPort.on('close', function() {
+serialPort.on('closed', function() {
   console.log('Goodbye.');
   process.exit(0);
 });

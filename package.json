@@ -20,10 +20,10 @@
     "url": "http://github.com/modrobotics/node-cubelets.git"
   },
   "dependencies": {
-    "async": "0.2.8",
+    "async": "0.9.0",
     "hashish": "0.0.4",
     "serialport": "1.6.3",
-    "underscore": "1.5.2"
+    "bluetooth-serial-port": "1.2.2"
   },
   "engines": {
     "node": "0.10.18"
