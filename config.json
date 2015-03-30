@@ -108,6 +108,10 @@
       "code": 113,
       "decoder": "getConfiguration"
     },
+    "GET_ROUTING_TABLE": {
+      "code": 128,
+      "decoder": "getRoutingTable"
+    },
     "ECHO": {
       "code": 144,
       "decoder": "echo"

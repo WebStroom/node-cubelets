@@ -6,9 +6,15 @@ if (process.argv.length < 3) {
 var SerialPort = require('serialport').SerialPort;
 var ResponseParser = require('./parser');
 var cubelets = require('./index');
+var Encoder = require('./encoder');
 
 var path = process.argv[2];
 var serialPort = new SerialPort(path);
+
+var passiveCubeletID = 197121;
+var knobCubeletID = 394500;
+var flashlightCubeletID = 789258;
+var barGraphCubeletID = Encoder.encodeID(new Buffer([13,14,14]));
 
 serialPort.on('open', function(err) {
   if (err) {
@@ -86,6 +92,32 @@ serialPort.on('open', function(err) {
     return enableBlockValueEvent = !enableBlockValueEvent;
   }
 
+  var flashlightValue = 0;
+  function nextFlashlightValue() {
+    // return flashlightValue = flashlightValue == 0 ? 255 : 0;
+    return 255;
+  }
+
+  var barGraphValue = 0;
+  function nextBarGraphValue() {
+    switch (barGraphValue) {
+      case 0:
+        return barGraphValue = 8;
+      case 8:
+        return barGraphValue = 16;
+      case 16:
+        return barGraphValue = 32;
+      case 32:
+        return barGraphValue = 64;
+      case 64:
+        return barGraphValue = 128;
+      case 128:
+        return barGraphValue = 255;
+      default:
+        return barGraphValue = 0;
+    }
+  }
+
   // Respond to control events
   keyboard.on('data', function(data) {
     var key = data.readUInt8(0);
@@ -106,6 +138,30 @@ serialPort.on('open', function(err) {
       // '4'
       case 0x34:
         send((new cubelets.RegisterBlockValueEventRequest(toggleEnableBlockValueEvent())).encode())
+        break;
+      // '5'
+      case 0x35:
+        send((new cubelets.GetRoutingTableRequest()).encode())
+        break;
+      // '6'
+      case 0x36:
+        break;
+      // '7'
+      case 0x37:
+        break;
+      // '8'
+      case 0x38:
+        break;
+      // '9'
+      case 0x39:
+        break;
+      // 'b'
+      case 0x62:
+        send((new cubelets.SetBlockValueCommand(barGraphCubeletID, nextBarGraphValue())).encode());
+        break;
+      // 'f'
+      case 0x66:
+        send((new cubelets.SetBlockValueCommand(flashlightCubeletID, nextFlashlightValue())).encode());
         break;
       // Ctrl+D
       case 0x04:
