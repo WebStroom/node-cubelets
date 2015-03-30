@@ -6,15 +6,15 @@ if (process.argv.length < 3) {
 var SerialPort = require('serialport').SerialPort;
 var ResponseParser = require('./parser');
 var cubelets = require('./index');
-var Encoder = require('./encoder');
+var Decoder = require('./decoder');
 
 var path = process.argv[2];
 var serialPort = new SerialPort(path);
 
-var passiveCubeletID = 197121;
-var knobCubeletID = 394500;
-var flashlightCubeletID = 789258;
-var barGraphCubeletID = Encoder.encodeID(new Buffer([13,14,14]));
+var passiveCubeletID = Decoder.decodeID(new Buffer([3,2,1]));
+var knobCubeletID = Decoder.decodeID(new Buffer([6,5,4]));
+var flashlightCubeletID = Decoder.decodeID(new Buffer([12,11,10]));
+var barGraphCubeletID = Decoder.decodeID(new Buffer([13,14,14]));
 
 serialPort.on('open', function(err) {
   if (err) {
@@ -56,14 +56,6 @@ serialPort.on('open', function(err) {
           console.error('Write error!', err);
           return;
         }
-        console.log('Wrote:', data);
-        // serialPort.drain(function(err) {
-        //   if (err) {
-        //     console.error('Drain error!', err);
-        //     return;
-        //   }
-        //   console.log('Write:', data);
-        // });
       });
     }
     else {
