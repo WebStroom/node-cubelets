@@ -22,7 +22,7 @@ BlockValueEvent.prototype.decode = function() {
     return new Version(data[i], data[i + 1], data[i + 2]);
   }
   
-  this.id = Decoder.decodeID(data.slice(0, 2));
+  this.id = Decoder.decodeID(data.slice(0, 3));
   this.value = data.readUInt8(3);
 };
 

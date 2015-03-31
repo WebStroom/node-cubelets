@@ -7,11 +7,13 @@ var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort;
 var ResponseParser = require('./parser');
 var async = require('async');
 var cubelets = require('./index');
+var Encoder = require('./encoder');
 var Decoder = require('./decoder');
 var config = require('./config.json');
 var ResponseTypes = config['responses'];
 var fs = require('fs');
 var util = require('util');
+var pad = require('pad');
 
 function log(s) {
   fs.writeFileSync('console-debug.log', s + '\n');
@@ -43,36 +45,71 @@ for (var i = 0; i < maxMeterSlots; ++i) {
   meterSlots[i] = slot;
 }
 
+function write(s) {
+  if (s) {
+    meter.write(s);
+    meter.offset += (String(s).match(/\n/) || []).length
+  }
+}
+
 // Command menu
-meter.write('\n');
-meter.write('Commands:\n');
-meter.write('`a`: get all blocks ids\n');
-meter.write('`n`: get neighbor block ids\n');
-meter.write('`b`: set current block id\n');
-meter.write('`v`: send block value\n\n');
-meter.write('Enter command:\n');
-meter.offset += 8;
+write('\n');
+write('Commands:\n');
+write('`c`: get configuration\n');
+write('`e`: send echo request\n');
+write('`l`: send LED command\n');
+write('`a`: get all blocks ids\n');
+write('`n`: get neighbor block ids\n');
+write('`r`: register block value events\n');
+write('`u`: unregister block value events\n');
+write('`b`: change bargraph value\n');
+write('`f`: change flashlight value\n');
+
+write('\n');
+
+// var num = 0;
+// takeMeterSlot(passiveCubeletID);
+// takeMeterSlot(barGraphCubeletID);
+// takeMeterSlot(knobCubeletID);
+// takeMeterSlot(flashlightCubeletID);
+// setInterval(function() {
+//   num += 5;
+//   if (num > 255) num = 0;
+//   measure(passiveCubeletID, num);
+//   measure(barGraphCubeletID, num);
+//   measure(knobCubeletID, num);
+//   measure(flashlightCubeletID, num);
+// }, 20);
 
 function takeMeterSlot(id) {
   for (var i = 0; i < maxMeterSlots; ++i) {
     var slot = meterSlots[i];
-    if (null === slot.id) {
-      log('found slot: ' + util.inspect(slot));
-      slot.id = id;
-      return slot;
+    if (slot.id == id) {
+      return -1;
     }
   }
-  return undefined;
+  for (var i = 0; i < maxMeterSlots; ++i) {
+    var slot = meterSlots[i];
+    if (null === slot.id) {
+      log('took meter slot for ' + id);
+      slot.id = id;
+      return i;
+    }
+  }
+  return -1;
 }
 
 function measure(id, value) {
   meterSlots.forEach(function(slot) {
     if (slot.id == id) {
-      log('measuring slot: ' + id + ' = ' + value);
-      slot.bar.ratio(value, 255, String(id + ' = ' + value));
+      value = String(Math.min(Math.max(value, 0), 255));
+      id = String(id);
+      slot.bar.ratio(value, 255, String(pad(8, id) + ' = ' + pad(3, value)));
     }
   })
 }
+
+write('Connecting...\n');
 
 serialPort.connect(address, channel, function(err) {
   if (err) {
@@ -80,7 +117,7 @@ serialPort.connect(address, channel, function(err) {
     return;
   }
 
-  console.log('Connected to', address, channel);
+  write('Connected to ' + address + '\n');
 
   // Create a parser to interpret responses.
   var parser = new ResponseParser();
@@ -90,45 +127,57 @@ serialPort.connect(address, channel, function(err) {
     var T = ResponseTypes;
     var c = response.type.code;
     if (T['REGISTER_BLOCK_VALUE'].code == c) {
-
+      write('\nBlock value events are ' + (response.enabled ? 'on' : 'off') + '\n');
     }
     else if (T['BLOCK_VALUE'].code == c) {
-
+      var id = response.id;
+      takeMeterSlot(id);
+      var value = response.value;
+      measure(id, value);
     }
     else if (T['DEBUG'].code == c) {
-
+      write('\nDebug: ' + util.inspect(response.data) + '\n');
     }
     else if (T['GET_CONFIGURATION'].code == c) {
-
+      var s = '\n';
+      s += ('My ID: ' + response.id + '\n');
+      s += ('Hardware version: ' + response.hardwareVersion.toString() + '\n');
+      s += ('Bootloader version: ' + response.bootloaderVersion.toString() + '\n');
+      s += ('Application version: ' + response.applicationVersion.toString() + '\n');
+      write(s);
     }
     else if (T['GET_ROUTING_TABLE'].code == c) {
-
+      var ids = response.ids;
+      write('\nAll block ids: ' + String(ids) + '\n');
+      ids.forEach(function(id) {
+        takeMeterSlot(id);
+        measure(id, 0);
+      })
+    }
+    else if (T['ECHO'].code == c) {
+      var echo = response.echo;
+      write('\nEcho: ' + util.inspect(echo) + '\n');
     }
   });
 
   // Process extra data
   parser.on('extra', function(data) {
-    console.log('Extra:', data);
-  });
-
-  // Process raw data
-  parser.on('raw', function(data) {
-    console.log('Raw:', data);
+    log('Extra: ' + util.inspect(data));
   });
 
   // Once serial connection is open, begin listening for data.
   serialPort.on('data', function(data) {
-    console.log('Read:', data);
+    log('Read: ' + util.inspect(data));
     parser.parse(data);
   });
 
   function send(data) {
     serialPort.write(data, function(err) {
       if (err) {
-        console.error('Write error!', err);
+        log('Write error! ' + util.inspect(data));
       }
       else {
-        console.log('Write:', data);
+        log('Write: ' + util.inspect(data));
       }
     });
   }
@@ -186,54 +235,72 @@ serialPort.connect(address, channel, function(err) {
 
   var flashlightValue = 0;
   function nextFlashlightValue() {
-    // return flashlightValue = flashlightValue == 0 ? 255 : 0;
-    return 255;
+    return flashlightValue = flashlightValue == 0 ? 255 : 0;
   }
 
-  var barGraphValue = 0;
+  var barGraphIndex = 0;
+  var barGraphValues = [0, 32, 64, 96, 128, 160, 192, 224, 255];
   function nextBarGraphValue() {
-    switch (barGraphValue) {
-      case 0:
-        return barGraphValue = 8;
-      case 8:
-        return barGraphValue = 16;
-      case 16:
-        return barGraphValue = 32;
-      case 32:
-        return barGraphValue = 64;
-      case 64:
-        return barGraphValue = 128;
-      case 128:
-        return barGraphValue = 255;
-      default:
-        return barGraphValue = 0;
-    }
+    barGraphIndex = barGraphIndex < barGraphValues.length ? barGraphIndex + 1 : 0;
+    return barGraphValues[barGraphIndex];
   }
 
   // Respond to control events
   keyboard.on('data', function(data) {
     var key = data.readUInt8(0);
-    console.log('Pressed key:', key);
     switch (key) {
+      // 'c'
+      case 0x63:
+        send((new cubelets.GetConfigurationRequest()).encode())
+        break;
+      // 'a'
+      case 0x61:
+        send((new cubelets.GetRoutingTableRequest()).encode())
+        break;
+      // 'n'
+      case 0x6E:
+        send((new cubelets.GetRoutingTableRequest()).encode())
+        break;
+      // 'r'
+      case 0x72:
+        send((new cubelets.RegisterBlockValueEventRequest(true)).encode())
+        break;
+      // 'u'
+      case 0x75:
+        send((new cubelets.RegisterBlockValueEventRequest(false)).encode())
+        break;
+      // 'e'
+      case 0x65:
+        send((new cubelets.EchoRequest(nextEchoSequence())).encode())
+        break;
+      // 'l'
+      case 0x6C:
+        send((new cubelets.SetLEDColorCommand(nextLEDColor())).encode())
+        break;
+
+      // 'b'
+      case 0x62:
+        send((new cubelets.SetBlockValueCommand(barGraphCubeletID, nextBarGraphValue())).encode());
+        break;
+      // 'f'
+      case 0x66:
+        send((new cubelets.SetBlockValueCommand(flashlightCubeletID, nextFlashlightValue())).encode());
+        break;
+
       // '1'
       case 0x31:
-        send((new cubelets.GetConfigurationRequest()).encode())
         break;
       // '2'
       case 0x32:
-        send((new cubelets.SetLEDColorCommand(nextLEDColor())).encode())
         break;
       // '3'
       case 0x33:
-        send((new cubelets.EchoRequest(nextEchoSequence())).encode())
         break;
       // '4'
       case 0x34:
-        send((new cubelets.RegisterBlockValueEventRequest(toggleEnableBlockValueEvent())).encode())
         break;
       // '5'
       case 0x35:
-        send((new cubelets.GetRoutingTableRequest()).encode())
         break;
       // '6'
       case 0x36:
@@ -247,25 +314,11 @@ serialPort.connect(address, channel, function(err) {
       // '9'
       case 0x39:
         break;
-      // 'b'
-      case 0x62:
-        send((new cubelets.SetBlockValueCommand(barGraphCubeletID, nextBarGraphValue())).encode());
-        break;
-      // 'f'
-      case 0x66:
-        send((new cubelets.SetBlockValueCommand(flashlightCubeletID, nextFlashlightValue())).encode());
-        break;
+
       // Ctrl+D
       case 0x04:
         // Disconnect
         serialPort.close();
-        break;
-      // Ctrl+R
-      case 0x12:
-        // Toggle raw
-        var raw = !parser.getRawMode();
-        console.log('Raw mode:', raw ? 'On' : 'Off');
-        parser.setRawMode(raw);
         break;
     }
   });
@@ -273,16 +326,24 @@ serialPort.connect(address, channel, function(err) {
 
 // Handle errors on the serial port
 serialPort.on('error', function(err) {
-  console.error('Serial port error!', err);
+  write('\nSerial port error!', err);
   process.exit(1);
 });
 
 serialPort.on('closed', function() {
-  console.log('Goodbye.');
+  write('Goodbye.\n');
   process.exit(0);
 });
 
 // Take keyboard input one character at a time.
 var keyboard = process.stdin;
 keyboard.setRawMode(true);
-keyboard.resume();
+keyboard.on('data', function(data) {
+  var key = data.readUInt8(0);
+  log('Pressed key:' + key);
+  switch (key) {
+    case 0x0D:
+      write('\n');
+      break;
+  }
+});
