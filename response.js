@@ -19,6 +19,12 @@ Response.prototype.decode = function() {
 
 module.exports = Response;
 
+module.exports.decodeType = function(code) {
+  return Hash(ResponseTypes).detect(function(type) {
+    return type.code === code;
+  });
+};
+
 module.exports.create = function(data, type) {
   if (!type) {
     // Undefined type
@@ -38,10 +44,4 @@ module.exports.create = function(data, type) {
     return new Response(data, type);
   }
   return new (require(path))(data, type);
-};
-
-module.exports.decodeType = function(code) {
-  return Hash(ResponseTypes).detect(function(type) {
-    return type.code === code;
-  });
 };

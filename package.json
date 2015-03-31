@@ -23,7 +23,8 @@
     "async": "0.9.0",
     "hashish": "0.0.4",
     "serialport": "1.6.3",
-    "bluetooth-serial-port": "1.2.2"
+    "bluetooth-serial-port": "1.2.2",
+    "multimeter": "0.1.1"
   },
   "engines": {
     "node": "0.10.18"

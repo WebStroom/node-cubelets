@@ -8,6 +8,14 @@ var ResponseParser = require('./parser');
 var async = require('async');
 var cubelets = require('./index');
 var Decoder = require('./decoder');
+var config = require('./config.json');
+var ResponseTypes = config['responses'];
+var fs = require('fs');
+var util = require('util');
+
+function log(s) {
+  fs.writeFileSync('console-debug.log', s + '\n');
+}
 
 var address = process.argv[2];
 var channel = parseInt(process.argv[3]);
@@ -17,6 +25,54 @@ var passiveCubeletID = Decoder.decodeID(new Buffer([3,2,1]));
 var knobCubeletID = Decoder.decodeID(new Buffer([6,5,4]));
 var flashlightCubeletID = Decoder.decodeID(new Buffer([12,11,10]));
 var barGraphCubeletID = Decoder.decodeID(new Buffer([13,14,14]));
+
+// Meter slots for cubelets
+var meter = require('multimeter')(process);
+meter.write('Block values:');
+var maxMeterSlots = 5;
+var meterSlots = [];
+for (var i = 0; i < maxMeterSlots; ++i) {
+  var bar = meter.rel(0, i + 1, {
+    width: 32
+  });
+  var slot = {
+    bar: bar,
+    id: null
+  }
+  meter.write('\n');
+  meterSlots[i] = slot;
+}
+
+// Command menu
+meter.write('\n');
+meter.write('Commands:\n');
+meter.write('`a`: get all blocks ids\n');
+meter.write('`n`: get neighbor block ids\n');
+meter.write('`b`: set current block id\n');
+meter.write('`v`: send block value\n\n');
+meter.write('Enter command:\n');
+meter.offset += 8;
+
+function takeMeterSlot(id) {
+  for (var i = 0; i < maxMeterSlots; ++i) {
+    var slot = meterSlots[i];
+    if (null === slot.id) {
+      log('found slot: ' + util.inspect(slot));
+      slot.id = id;
+      return slot;
+    }
+  }
+  return undefined;
+}
+
+function measure(id, value) {
+  meterSlots.forEach(function(slot) {
+    if (slot.id == id) {
+      log('measuring slot: ' + id + ' = ' + value);
+      slot.bar.ratio(value, 255, String(id + ' = ' + value));
+    }
+  })
+}
 
 serialPort.connect(address, channel, function(err) {
   if (err) {
@@ -31,7 +87,23 @@ serialPort.connect(address, channel, function(err) {
 
   // Process responses
   parser.on('response', function(response) {
-    console.log('Response:', response);
+    var T = ResponseTypes;
+    var c = response.type.code;
+    if (T['REGISTER_BLOCK_VALUE'].code == c) {
+
+    }
+    else if (T['BLOCK_VALUE'].code == c) {
+
+    }
+    else if (T['DEBUG'].code == c) {
+
+    }
+    else if (T['GET_CONFIGURATION'].code == c) {
+
+    }
+    else if (T['GET_ROUTING_TABLE'].code == c) {
+
+    }
   });
 
   // Process extra data
