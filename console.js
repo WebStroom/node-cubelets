@@ -28,13 +28,26 @@ var knobCubeletID = Decoder.decodeID(new Buffer([6,5,4]));
 var flashlightCubeletID = Decoder.decodeID(new Buffer([12,11,10]));
 var barGraphCubeletID = Decoder.decodeID(new Buffer([13,14,14]));
 
-// Meter slots for cubelets
+// Take keyboard input one character at a time.
+var keyboard = process.stdin;
+keyboard.setRawMode(true);
+keyboard.on('data', function(data) {
+  var key = data.readUInt8(0);
+  log('Pressed key:' + key);
+  switch (key) {
+    case 0x0D:
+      write('\n');
+      break;
+  }
+});
+
+// Provide meters in slots [1..maxMeterSlots]
+var maxMeterSlots = 5;
 var meter = require('multimeter')(process);
 meter.write('Block values:');
-var maxMeterSlots = 5;
 var meterSlots = [];
 for (var i = 0; i < maxMeterSlots; ++i) {
-  var bar = meter.rel(0, i + 1, {
+  var bar = meter.rel(0, i, {
     width: 32
   });
   var slot = {
@@ -64,9 +77,9 @@ write('`r`: register block value events\n');
 write('`u`: unregister block value events\n');
 write('`b`: change bargraph value\n');
 write('`f`: change flashlight value\n');
+write('Enter Commands:\n');
 
-write('\n');
-
+// Testing out meter UI
 // var num = 0;
 // takeMeterSlot(passiveCubeletID);
 // takeMeterSlot(barGraphCubeletID);
@@ -77,25 +90,30 @@ write('\n');
 //   if (num > 255) num = 0;
 //   measure(passiveCubeletID, num);
 //   measure(barGraphCubeletID, num);
-//   measure(knobCubeletID, num);
+//   measure(knobCubeletID, 255 - num);
 //   measure(flashlightCubeletID, num);
+//   measure('meow', 255 - num);
 // }, 20);
+// return;
 
 function takeMeterSlot(id) {
+  // Do not allow taking already assigned slots
   for (var i = 0; i < maxMeterSlots; ++i) {
     var slot = meterSlots[i];
     if (slot.id == id) {
+      log('slot for ' + id + ' already taken');
       return -1;
     }
   }
   for (var i = 0; i < maxMeterSlots; ++i) {
     var slot = meterSlots[i];
     if (null === slot.id) {
-      log('took meter slot for ' + id);
+      log('took meter slot ' + i + ' for ' + id);
       slot.id = id;
       return i;
     }
   }
+  log('slot not found');
   return -1;
 }
 
@@ -239,10 +257,23 @@ serialPort.connect(address, channel, function(err) {
   }
 
   var barGraphIndex = 0;
-  var barGraphValues = [0, 32, 64, 96, 128, 160, 192, 224, 255];
+  var barGraphValues = [0, 32, 64, 96, 128, 160, 192, 224, 255, 224, 192, 160, 128, 96, 64, 32, 0];
   function nextBarGraphValue() {
     barGraphIndex = barGraphIndex < barGraphValues.length ? barGraphIndex + 1 : 0;
     return barGraphValues[barGraphIndex];
+  }
+
+  var barGraphSineWaveTimer = null;
+  function toggleBarGraphSineWave() {
+    if (barGraphSineWaveTimer) {
+      clearTimeout(barGraphSineWaveTimer);
+    }
+    else {
+      var fps = 20;
+      setInterval(function() {
+        send((new cubelets.SetBlockValueCommand(barGraphCubeletID, nextBarGraphValue())).encode());
+      }, 1000/fps)
+    }
   }
 
   // Respond to control events
@@ -280,7 +311,7 @@ serialPort.connect(address, channel, function(err) {
 
       // 'b'
       case 0x62:
-        send((new cubelets.SetBlockValueCommand(barGraphCubeletID, nextBarGraphValue())).encode());
+        toggleBarGraphSineWave();
         break;
       // 'f'
       case 0x66:
@@ -333,17 +364,4 @@ serialPort.on('error', function(err) {
 serialPort.on('closed', function() {
   write('Goodbye.\n');
   process.exit(0);
-});
-
-// Take keyboard input one character at a time.
-var keyboard = process.stdin;
-keyboard.setRawMode(true);
-keyboard.on('data', function(data) {
-  var key = data.readUInt8(0);
-  log('Pressed key:' + key);
-  switch (key) {
-    case 0x0D:
-      write('\n');
-      break;
-  }
 });
