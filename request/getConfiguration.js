@@ -1,19 +1,10 @@
-var util = require('util');
-var Request = require('../request');
+var util = require('util')
+var Message = require('../message')
 
-var GetConfigurationRequest = function() {
-  Request.call(this);
-  this.code = 0x01;
-};
+var GetConfigurationRequest = function () {
+  Message.call(this)
+}
 
-util.inherits(GetConfigurationRequest, Request);
+util.inherits(GetConfigurationRequest, Message)
 
-GetConfigurationRequest.prototype.encode = function() {
-  return new Buffer([
-    '<'.charCodeAt(0),
-    this.code, 0,
-    '>'.charCodeAt(0)
-  ]);
-};
-
-module.exports = GetConfigurationRequest;
+module.exports = GetConfigurationRequest

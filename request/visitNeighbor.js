@@ -2,14 +2,14 @@ var util = require('util')
 var Message = require('../message')
 var Encoder = require('../encoder')
 
-var GetBlockValueRequest = function (id) {
+var VisitNeighborRequest = function (id) {
   Message.call(this)
   this.id = id
 }
 
-util.inherits(GetBlockValueRequest, Message)
+util.inherits(VisitNeighborRequest, Message)
 
-GetBlockValueRequest.prototype.encodeBody = function () {
+VisitNeighborRequest.prototype.encodeBody = function () {
   var encodedID = Encoder.encodeID(this.id)
   return new Buffer([
     encodedID.readUInt8(0),
@@ -18,4 +18,4 @@ GetBlockValueRequest.prototype.encodeBody = function () {
   ])
 }
 
-module.exports = GetBlockValueRequest
+module.exports = VisitNeighborRequest

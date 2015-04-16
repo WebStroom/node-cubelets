@@ -1,23 +1,15 @@
-var util = require('util');
-var Request = require('../request');
+var util = require('util')
+var Message = require('../message')
 
-var EchoRequest = function(echo) {
-  Request.call(this);
-  this.code = 0x20;
-  this.echo = echo;
-};
+var EchoRequest = function (echo) {
+  Message.call(this)
+  this.echo = echo
+}
 
-util.inherits(EchoRequest, Request);
+util.inherits(EchoRequest, Message)
 
-EchoRequest.prototype.encode = function() {
-  return Buffer.concat([
-    new Buffer([
-      '<'.charCodeAt(0),
-      this.code, this.echo.length,
-      '>'.charCodeAt(0)
-    ]),
-    this.echo
-  ]);
-};
+EchoRequest.prototype.encodeBody = function () {
+  return this.echo
+}
 
-module.exports = EchoRequest;
+module.exports = EchoRequest

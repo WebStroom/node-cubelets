@@ -20,9 +20,9 @@
       "name": "battery",
       "category": "think"
     },
-    "BATTERY-LIPO": {
+    "BATTERY_LIPO": {
       "id": 3,
-      "name": "battery",
+      "name": "battery_lipo",
       "category": "think"
     },
     "BLOCKER": {
@@ -89,32 +89,6 @@
       "id": 25,
       "name": "temperature",
       "category": "sense"
-    }
-  },
-  "responses": {
-    "REGISTER_BLOCK_VALUE": {
-      "code": 117,
-      "decoder": "registerBlockValueEvent"
-    },
-    "BLOCK_VALUE": {
-      "code": 241,
-      "decoder": "blockValueEvent"
-    },
-    "DEBUG": {
-      "code": 240,
-      "decoder": "debug"
-    },
-    "GET_CONFIGURATION": {
-      "code": 113,
-      "decoder": "getConfiguration"
-    },
-    "GET_ROUTING_TABLE": {
-      "code": 128,
-      "decoder": "getRoutingTable"
-    },
-    "ECHO": {
-      "code": 144,
-      "decoder": "echo"
     }
   },
   "urls": {

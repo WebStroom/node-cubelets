@@ -1,21 +1,10 @@
-var util = require('util');
-var Request = require('../request');
+var util = require('util')
+var Message = require('../message')
 
-var RegisterBlockValueEventRequest = function(enable) {
-  Request.call(this);
-  this.code = 0x05;
-  this.enable = enable;
-};
+var RegisterBlockValueEventRequest = function () {
+  Message.call(this)
+}
 
-util.inherits(RegisterBlockValueEventRequest, Request);
+util.inherits(RegisterBlockValueEventRequest, Message)
 
-RegisterBlockValueEventRequest.prototype.encode = function() {
-  return new Buffer([
-    '<'.charCodeAt(0),
-    this.code, 1,
-    '>'.charCodeAt(0),
-    this.enable ? 0x01 : 0x00
-  ]);
-};
-
-module.exports = RegisterBlockValueEventRequest;
+module.exports = RegisterBlockValueEventRequest

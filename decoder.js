@@ -1,43 +1,50 @@
+var Version = require('./version')
+
 // Decodes a 3-byte ID
 module.exports.decodeID = function(data) {
   if (data.length < 3) {
-    return 0;
+    return 0
   }
   var value = [
     data.readUInt8(0) * 256 * 256,
     data.readUInt8(1) * 256,
     data.readUInt8(2)
   ];
-  return value[2] + value[1] + value[0];
+  return value[2] + value[1] + value[0]
 };
+
+// Decodes a version
+module.exports.decodeVersion = function(data) {
+  return new Version(data[0], data[1], data[2])
+}
 
 // Decodes a map
 module.exports.decodeMap = function(data) {
-  var map = [];
+  var map = []
   
   if (data.length == 0) {
     // Empty map
-    return map;
+    return map
   }
 
   if (data.length % 3 != 0) {
     // Invalid data
-    return map;
+    return map
   }
 
   var decoder = this;
 
   function decodeIDAtIndex(index) {
-    var start = 3 * index;
-    var end = 3 + start;
-    return decoder.decodeID(data.slice(start, end));
+    var start = 3 * index
+    var end = 3 + start
+    return decoder.decodeID(data.slice(start, end))
   }
 
-  var count = data.length / 3;
+  var count = data.length / 3
 
   for (var i = 0; i < count; ++i) {
-    map.push(decodeIDAtIndex(i));
+    map.push(decodeIDAtIndex(i))
   }
 
-  return map;
-};
+  return map
+}

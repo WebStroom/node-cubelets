@@ -1,15 +1,15 @@
-var util = require('util');
-var Response = require('../response');
+var util = require('util')
+var Message = require('../message')
 
-var EchoResponse = function(data, code) {
-  this.echo = new Buffer(0);
-  Response.call(this, data, code);
-};
+var EchoResponse = function (echo) {
+  Message.call(this)
+  this.echo = echo
+}
 
-util.inherits(EchoResponse, Response);
+util.inherits(EchoResponse, Message)
 
-EchoResponse.prototype.decode = function() {
-  this.echo = this.data;
-};
+EchoResponse.prototype.decode = function (data) {
+  this.echo = data
+}
 
-module.exports = EchoResponse;
+module.exports = EchoResponse

@@ -1,38 +1,27 @@
-var util = require('util');
-var Response = require('../response');
-var Decoder = require('../decoder');
-var Version = require('../version');
+var util = require('util')
+var Message = require('../message')
+var Decoder = require('../decoder')
+var Version = require('../version')
 
-var GetConfigurationResponse = function(data, code) {
-  this.id = 0;
-  this.hardwareVersion = new Version();
-  this.bootloaderVersion = new Version();
-  this.applicationVersion = new Version();
-  this.hasCustomApplication = false;
-  this.mode = -1;
-  Response.call(this, data, code);
-};
+var GetConfigurationResponse = function (id) {
+  Message.call(this)
+  this.id = id
+}
 
-util.inherits(GetConfigurationResponse, Response);
+util.inherits(GetConfigurationResponse, Message)
 
-GetConfigurationResponse.prototype.decode = function() {
-  var data = this.data;
-
+GetConfigurationResponse.prototype.decode = function (data) {
   if (data.length < 14) {
-    console.error('Response should be at least 14 bytes but is', data.length, 'bytes.');
-    return;
+    console.error('Size should be at least 14 bytes but is', data.length, 'bytes.')
+    return
   }
 
-  function readVersion(i) {
-    return new Version(data[i], data[i + 1], data[i + 2]);
-  }
-  
-  this.hardwareVersion = readVersion(0);
-  this.bootloaderVersion = readVersion(3);
-  this.applicationVersion = readVersion(6);
-  this.id = Decoder.decodeID(data.slice(9, 3));
-  this.mode = data.readUInt8(12);
-  this.hasCustomApplication = data.readUInt8(13) ? true : false;
-};
+  this.hardwareVersion = Decoder.decodeVersion(data.slice(0, 3))
+  this.bootloaderVersion = Decoder.decodeVersion(data.slice(3, 6))
+  this.applicationVersion = Decoder.decodeVersion(data.slice(6, 9))
+  this.id = Decoder.decodeID(data.slice(9, 12))
+  this.hasCustomApplication = data.readUInt8(13) ? true : false
+  this.mode = data.readUInt8(12)
+}
 
-module.exports = GetConfigurationResponse;
+module.exports = GetConfigurationResponse
