@@ -17,7 +17,6 @@ function start() {
     bluetoothClient.pipe(runtimeStream).pipe(bluetoothClient)
     bluetoothClient.on('end', restart)
     running = true
-    console.log('start chrome')
   }
 }
 
@@ -27,7 +26,6 @@ function stop() {
     bluetoothClient.removeListener('end', restart)
     bluetoothClient = null
     running = false
-    console.log('stop chrome')
   }
 }
 
@@ -43,6 +41,8 @@ var ChromeClient = function (config) {
   var address = config['address']
   var uuid = config['uuid']
   var socketStream = null
+  var fromBufferStream = null
+  var toBufferStream = null
   var connected = false
 
   this.connect = function (callback) {
@@ -53,19 +53,14 @@ var ChromeClient = function (config) {
       return
     }
 
-    bluetoothClient.on('error', function (err) {
-      console.error('bluetooth', err)
-      client.emit('error', err)
-    })
-
     bluetoothClient.socket.connect(address, uuid, function (connectInfo) {
       var port = chrome.runtime.connect(appId, {name: connectInfo.port})
       socketStream = new ChromeRuntimeStream(port)
-      var fromBufferStream = BufferArrayStream.fromBuffer()
-      var toBufferStream = BufferArrayStream.toBuffer()
+      fromBufferStream = BufferArrayStream.fromBuffer()
+      toBufferStream = BufferArrayStream.toBuffer()
       fromBufferStream.pipe(socketStream).pipe(toBufferStream)
 
-      socketStream.on('data', function (data) {
+      toBufferStream.on('data', function (data) {
         client._parser.parse(data)
       })
 
@@ -103,12 +98,13 @@ var ChromeClient = function (config) {
 
     var ss = socketStream
     socketStream = null
-    ss.removeAllListeners('data')
+    toBufferStream.removeAllListeners('data')
     ss.removeAllListeners('close')
     ss.end(function () {
-      ss.removeAllListeners('error')
       client._disconnect()
       ss = null
+      toBufferStream = null
+      fromBufferStream = null
       if (callback) {
         callback(null)
       }
@@ -121,7 +117,7 @@ var ChromeClient = function (config) {
 
   this.sendData = function (data, callback) {
     if (connected) {
-      socketStream.write(data, callback)
+      fromBufferStream.write(data, callback)
     } else {
       if (callback) {
         callback(new Error('Client is not connected.'))
