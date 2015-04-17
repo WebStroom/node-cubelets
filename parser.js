@@ -1,6 +1,6 @@
 var events = require('events')
 var util = require('util')
-var Protocol = require('./index').Protocol
+var Protocol = require('./protocol/imago')
 
 var Parser = function () {
   events.EventEmitter.call(this)
@@ -101,7 +101,7 @@ var Parser = function () {
 
     function parseHeaderBegin() {
       code = nextByte()
-      type = Protocol.typeForCode(code)
+      type = protocol.typeForCode(code)
       state = State.HEADER_TYPE
       if (!type) {
         parseExtra()

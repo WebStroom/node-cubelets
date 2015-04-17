@@ -1,7 +1,7 @@
 var util = require('util')
 var events = require('events')
 var Parser = require('./parser')
-var Protocol = require('./index')._Protocol
+var Protocol = require('./protocol/imago')
 
 var Client = function (config) {
   events.EventEmitter.call(this)
