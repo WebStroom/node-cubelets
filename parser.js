@@ -1,6 +1,6 @@
 var events = require('events')
 var util = require('util')
-var Protocol = require('./index')._Protocol
+var Protocol = require('./index').Protocol
 
 var Parser = function () {
   events.EventEmitter.call(this)
@@ -56,16 +56,16 @@ var Parser = function () {
       return String.fromCharCode(nextByte())
     }
 
-    function hasMoreBytes() {
-      return (data.length > 0) && (index < data.length)
-    }
-
-    function hasEmptyBody() {
-      return (state == State.HEADER_END) && (size == 0)
-    }
-
     function shouldParse() {
-      return (hasMoreBytes() && (size + index <= data.length)) || hasEmptyBody()
+      var bytesToRead = data.length - index
+      switch (state) {
+        case State.HEADER_END:
+          return size === 0 || bytesToRead > 0
+        case State.BODY:
+          return bytesToRead >= size
+        default:
+          return bytesToRead > 0
+      }
     }
 
     function reset() {
@@ -89,7 +89,7 @@ var Parser = function () {
       index = 0
     }
 
-    function parseHeaderBegin() {
+    function parseReady() {
       var c = nextChar()
       if (c == '<') {
         state = State.HEADER_BEGIN
@@ -99,7 +99,7 @@ var Parser = function () {
       }
     }
 
-    function parseHeaderType() {
+    function parseHeaderBegin() {
       code = nextByte()
       type = Protocol.typeForCode(code)
       state = State.HEADER_TYPE
@@ -108,12 +108,12 @@ var Parser = function () {
       }
     }
 
-    function parseHeaderSize() {
+    function parseHeaderType() {
       size = nextByte()
       state = State.HEADER_SIZE
     }
 
-    function parseHeaderEnd() {
+    function parseHeaderSize() {
       var c = nextChar()
       if (c == '>') {
         state = State.HEADER_END
@@ -123,8 +123,16 @@ var Parser = function () {
       }
     }
 
+    function parseHeaderEnd() {
+      if (size === 0) {
+        parseBody()
+      }
+      else {
+        state = State.BODY
+      }
+    }
+
     function parseBody() {
-      state = State.BODY
       var body = data.slice(index, index + size)
       emitMessage(body)
       index += size
@@ -144,24 +152,22 @@ var Parser = function () {
           parseRaw()
           break
         case State.READY:
-          parseHeaderBegin()
+          parseReady()
           break
         case State.HEADER_BEGIN:
-          parseHeaderType()
+          parseHeaderBegin()
           break
         case State.HEADER_TYPE:
-          parseHeaderSize()
+          parseHeaderType()
           break
         case State.HEADER_SIZE:
-          parseHeaderEnd()
+          parseHeaderSize()
           break
         case State.HEADER_END:
+          parseHeaderEnd()
+          break
         case State.BODY:
           parseBody()
-          break
-        default:
-          console.log('Invalid parser state.')
-          parseExtra()
           break
       }
     }
