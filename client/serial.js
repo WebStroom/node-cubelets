@@ -77,6 +77,7 @@ var SerialClient = function (config) {
       sp.close(function (err) {
         sp.removeAllListeners('error')
         client._disconnect()
+        sp = null
         if (callback) {
           if (err) {
             callback(err)

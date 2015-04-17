@@ -1,6 +1,6 @@
 var events = require('events')
 var util = require('util')
-var Protocol = require('./index').Protocol
+var Protocol = require('./index')._Protocol
 
 var Parser = function () {
   events.EventEmitter.call(this)

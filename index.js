@@ -26,7 +26,7 @@ cubelets.DebugEvent = require('./event/debug')
 cubelets.BlockValueEvent = require('./event/blockValue')
 cubelets.FlashProgressEvent = require('./event/flashProgress')
 
-cubelets.Protocol = require('./protocol')({
+cubelets._Protocol = require('./protocol')({
   commands: [
     [0x41, cubelets.SetBlockValueCommand],
     [0x42, cubelets.SetLEDColorCommand]
@@ -62,6 +62,3 @@ cubelets.Protocol = require('./protocol')({
 
 cubelets._Parser = require('./parser')
 cubelets._Client = require('./client')
-cubelets.SerialClient = require('./client/serial')
-cubelets.BluetoothSerialClient = require('./client/bluetoothSerial')
-cubelets.ChromeClient = require('./client/chrome')
