@@ -1,14 +1,46 @@
 var util = require('util')
 var assert = require('assert')
 var Client = require('../client')
+var ChromeBluetoothClient = require('chrome-bluetooth-client')
+var ChromeRuntimeStream = require('chrome-runtime-stream')
+var BufferArrayStream = require('buffer-array-stream')
 
-assert(chrome.runtime)
-assert(chrome.runtime.connect)
+var appId = 'fehdhddkknkaeimadppmacaoclnllcjm'
+var running = false
+var bluetoothClient = null
 
-var ChromeClient = function (bluetoothClient) {
+function start() {
+  if (!running) {
+    var port = chrome.runtime.connect(appId, {name: 'control'})
+    var runtimeStream = new ChromeRuntimeStream(port)
+    bluetoothClient = new ChromeBluetoothClient()
+    bluetoothClient.pipe(runtimeStream).pipe(bluetoothClient)
+    bluetoothClient.on('end', restart)
+    running = true
+  }
+}
+
+function stop() {
+  if (running) {
+    bluetoothClient.end()
+    bluetoothClient.removeListener('end', restart)
+    bluetoothClient = null
+    running = false
+  }
+}
+
+function restart() {
+  stop()
+  start()
+}
+
+var ChromeClient = function (config) {
   Client.call(this)
   
   var client = this
+  var address = config['address']
+  var uuid = config['uuid']
+  var socketStream = null
   var connected = false
 
   this.connect = function (callback) {
@@ -19,27 +51,22 @@ var ChromeClient = function (bluetoothClient) {
       return
     }
 
-    var port = chrome.runtime.connect()
-
-    serialPort = new SerialPort(path, {}, false)
-
-    serialPort.on('error', function (err) {
+    bluetoothClient.on('error', function (err) {
       client.emit('error', err)
     })
 
-    serialPort.open(function (err) {
-      if (err) {
-        if (callback) {
-          callback(err)
-        }
-        return
-      }
+    bluetoothClient.socket.connect(address, uuid, function (connectInfo) {
+      var port = chrome.runtime.connect(appId, {name: connectInfo.port})
+      socketStream = new ChromeRuntimeStream(port)
+      var fromBufferStream = BufferArrayStream.fromBuffer()
+      var toBufferStream = BufferArrayStream.toBuffer()
+      fromBufferStream.pipe(socketStream).pipe(toBufferStream)
 
-      serialPort.on('data', function (data) {
+      socketStream.on('data', function (data) {
         client._parser.parse(data)
       })
 
-      serialPort.on('close', function () {
+      socketStream.on('end', function () {
         client.disconnect()
       })
 
@@ -63,29 +90,28 @@ var ChromeClient = function (bluetoothClient) {
 
     connected = false
 
-    if (!serialPort) {
+    if (!socketStream) {
       if (callback) {
         callback(null)
       }
       return
     }
 
-    var sp = serialPort
-    serialPort = null
-    sp.drain(function (err) {
-      sp.removeAllListeners('data')
-      sp.removeAllListeners('close')
-      sp.close(function (err) {
-        sp.removeAllListeners('error')
-        client._disconnect()
-        if (callback) {
-          if (err) {
-            callback(err)
-          } else {
-            callback(null)
-          }
+    var ss = socketStream
+    socketStream = null
+    ss.removeAllListeners('data')
+    ss.removeAllListeners('close')
+    ss.end(function () {
+      sp.removeAllListeners('error')
+      client._disconnect()
+      ss = null
+      if (callback) {
+        if (err) {
+          callback(err)
+        } else {
+          callback(null)
         }
-      })
+      }
     })
   }
 
@@ -95,7 +121,7 @@ var ChromeClient = function (bluetoothClient) {
 
   this.sendData = function (data, callback) {
     if (connected) {
-      serialPort.write(data, callback)
+      socketStream.write(data, callback)
     } else {
       if (callback) {
         callback(new Error('Client is not connected.'))
@@ -104,11 +130,12 @@ var ChromeClient = function (bluetoothClient) {
   }
 
   this.stream = function () {
-    return serialPort
+    return socketStream
   }
 
-  return serialPort
+  return this
 }
 
-util.inherits(SerialClient, Client)
-module.exports = SerialClient
+util.inherits(ChromeClient, Client)
+module.exports = ChromeClient
+start()

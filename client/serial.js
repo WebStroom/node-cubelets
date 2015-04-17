@@ -107,7 +107,7 @@ var SerialClient = function (config) {
     return serialPort
   }
 
-  return serialPort
+  return this
 }
 
 util.inherits(SerialClient, Client)
