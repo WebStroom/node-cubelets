@@ -1,7 +1,7 @@
 var test = require('tape')
 var cubelets = require('../index')
-var Client = require('../client/serial')
-var config = require('./config.json')['serial']
+var Client = require('../client/chrome')
+var config = require('./config.json')['chrome']
 
 test('connection', function (t) {
   t.plan(4)

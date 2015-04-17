@@ -17,6 +17,7 @@ function start() {
     bluetoothClient.pipe(runtimeStream).pipe(bluetoothClient)
     bluetoothClient.on('end', restart)
     running = true
+    console.log('start chrome')
   }
 }
 
@@ -26,6 +27,7 @@ function stop() {
     bluetoothClient.removeListener('end', restart)
     bluetoothClient = null
     running = false
+    console.log('stop chrome')
   }
 }
 
@@ -52,6 +54,7 @@ var ChromeClient = function (config) {
     }
 
     bluetoothClient.on('error', function (err) {
+      console.error('bluetooth', err)
       client.emit('error', err)
     })
 
@@ -73,6 +76,7 @@ var ChromeClient = function (config) {
       connected = true
 
       client._connect()
+      console.log('connected')
 
       if (callback) {
         callback(null)
@@ -102,15 +106,11 @@ var ChromeClient = function (config) {
     ss.removeAllListeners('data')
     ss.removeAllListeners('close')
     ss.end(function () {
-      sp.removeAllListeners('error')
+      ss.removeAllListeners('error')
       client._disconnect()
       ss = null
       if (callback) {
-        if (err) {
-          callback(err)
-        } else {
-          callback(null)
-        }
+        callback(null)
       }
     })
   }
