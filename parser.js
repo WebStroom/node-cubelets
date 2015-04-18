@@ -101,7 +101,7 @@ var Parser = function () {
 
     function parseHeaderBegin() {
       code = nextByte()
-      type = protocol.typeForCode(code)
+      type = Protocol.typeForCode(code)
       state = State.HEADER_TYPE
       if (!type) {
         parseExtra()

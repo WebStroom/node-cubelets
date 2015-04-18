@@ -1,92 +1,38 @@
 var util = require('util')
 var events = require('events')
-var Parser = require('./parser')
-var Protocol = require('./protocol/imago')
 
-var Client = function (config) {
-  events.EventEmitter.call(this)
+module.exports = function  (Scanner, Connection) {
 
-  var client = this
+  function Client () {
+    events.EventEmitter.call(this)
 
-  this.connect = function (callback) {
-    throw new Error('Not implemented.')
-  }
-
-  this._connect = function () {
-    this._parser = new Parser()
-    this._parser.on('message', function (msg) {
-      if (Protocol.isEvent(msg)) {
-        client.emit('event', msg)
-      } else if (Protocol.isResponse(msg)) {
-        client.emit('response', msg)
-      }
-    })
-    process.nextTick(function () {
-      client.emit('connect')
-    })
-  }
-
-  this.disconnect = function (callback) {
-    throw new Error('Not implemented.')
-  }
-
-  this._disconnect = function () {
-    if (this._parser) {
-      this._parser.removeAllListeners('message')
-      this._parser = null
-    }
-    process.nextTick(function () {
-      client.emit('disconnect')
-    })
-  }
-
-  this.connected = function () {
-    throw new Error('Not implemented.')
-  }
-
-  this.stream = function () {
-    throw new Error('Not implemented.')
-  }
-
-  this.sendData = function (data, callback) {
-    this.stream.write(data, callback)
-  }
-
-  this.sendCommand = function (command, callback) {
-    this.sendData(command.encode(), callback)
-  }
-
-  this.sendRequest = function (request, callback, timeout) {
-    if (typeof callback !== 'function') {
-      this.sendData(request.encode())
-      return
-    }
-
-    timeout = timeout || 5000
-
-    var timer = setTimeout(function () {
-      client.removeListener('response', waitForResponse)
-      if (callback) {
-        callback(new Error('Timed out waiting for response to request: ' + request.code()))
-      }
-    }, timeout)
-
-    function waitForResponse(response) {
-      if (Protocol.requestCodeForResponseCode(response.code()) === request.code()) {
-        clearTimeout(timer)
-        client.removeListener('response', waitForResponse)
-        if (callback) {
-          callback(null, response)
+    this.connect = function (device, callback) {
+      var cn = new Connection(device)
+      var self = this
+      cn.connect(function (err) {
+        if (err) {
+          self.emit('error', err)
+          if (callback) {
+            callback(err)
+          }
+        } else {
+          self.emit('connection', cn)
+          if (callback) {
+            callback(null, cn)
+          }
         }
-      }
+      })
+      return cn
     }
 
-    client.on('response', waitForResponse)
-    client.sendData(request.encode())
+    return this
   }
 
-  return client
-}
+  util.inherits(Client, events.EventEmitter)
 
-util.inherits(Client, events.EventEmitter)
-module.exports = Client
+  Client.Scanner = Scanner
+  Client.Connection = Connection
+
+  return Client
+
+}

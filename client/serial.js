@@ -1,14 +1,37 @@
 var util = require('util')
 var SerialPort = require('serialport').SerialPort
+var Scanner = require('../scanner')
+var Connection = require('../connection')
 var Client = require('../client')
+var assert = require('assert')
 
-var SerialClient = function (config) {
-  Client.call(this)
+var SerialScanner = function () {
+  Scanner.call(this)
+
+  this.listRobotDevices = function (callback) {
+    assert(typeof callback === 'function')
+    var serialPort = require('serialport')
+    var devices = []
+    serialPort.list(function (err, ports) {
+      devices.push({
+        path: ports.comName
+      })
+    })
+    callback(devices)
+  }
+
+  return this
+}
+
+util.inherits(SerialScanner, Scanner)
+
+var SerialConnection = function (device) {
+  Connection.call(this)
   
-  var path = config['path'] || ((process.platform === 'win32') ?
+  var path = device['path'] || ((process.platform === 'win32') ?
     'COM1' : '/dev/cu.Cubelet-RGB-AMP-SPP')
 
-  var client = this
+  var cn = this
   var serialPort = null
   var connected = false
 
@@ -23,7 +46,7 @@ var SerialClient = function (config) {
     serialPort = new SerialPort(path, {}, false)
 
     serialPort.on('error', function (err) {
-      client.emit('error', err)
+      cn.emit('error', err)
     })
 
     serialPort.open(function (err) {
@@ -35,16 +58,16 @@ var SerialClient = function (config) {
       }
 
       serialPort.on('data', function (data) {
-        client._parser.parse(data)
+        cn._parser.parse(data)
       })
 
       serialPort.on('close', function () {
-        client.disconnect()
+        cn.disconnect()
       })
 
       connected = true
 
-      client._connect()
+      cn._connect()
 
       if (callback) {
         callback(null)
@@ -76,7 +99,7 @@ var SerialClient = function (config) {
       sp.removeAllListeners('close')
       sp.close(function (err) {
         sp.removeAllListeners('error')
-        client._disconnect()
+        cn._disconnect()
         sp = null
         if (callback) {
           if (err) {
@@ -110,5 +133,6 @@ var SerialClient = function (config) {
   return this
 }
 
-util.inherits(SerialClient, Client)
-module.exports = SerialClient
+util.inherits(SerialConnection, Connection)
+
+module.exports = Client(new SerialScanner(), SerialConnection)
