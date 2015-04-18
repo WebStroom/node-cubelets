@@ -4,6 +4,8 @@ var cubelets = require('../index')
 var Client = require('../client/serial')
 var device = require('./config.json')['serial']
 
+console.log(device)
+
 test('client', function (t) {
   t.plan(7)
 

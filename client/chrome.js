@@ -1,48 +1,66 @@
 var util = require('util')
 var assert = require('assert')
-var Client = require('../client')
 var ChromeBluetoothClient = require('chrome-bluetooth-client')
 var ChromeRuntimeStream = require('chrome-runtime-stream')
 var BufferArrayStream = require('buffer-array-stream')
+var Scanner = require('../scanner')
+var Connection = require('../connection')
+var Client = require('../client')
 
 var appId = 'fehdhddkknkaeimadppmacaoclnllcjm'
 var running = false
 var bluetoothClient = null
 
-function start() {
+function startRuntime() {
   if (!running) {
     var port = chrome.runtime.connect(appId, {name: 'control'})
     var runtimeStream = new ChromeRuntimeStream(port)
     bluetoothClient = new ChromeBluetoothClient()
     bluetoothClient.pipe(runtimeStream).pipe(bluetoothClient)
-    bluetoothClient.on('end', restart)
+    bluetoothClient.on('end', restartRuntime)
     running = true
   }
 }
 
-function stop() {
+function stopRuntime() {
   if (running) {
     bluetoothClient.end()
-    bluetoothClient.removeListener('end', restart)
+    bluetoothClient.removeListener('end', restartRuntime)
     bluetoothClient = null
     running = false
   }
 }
 
-function restart() {
-  stop()
-  start()
+function restartRuntime() {
+  stopRuntime()
+  startRuntime()
 }
 
-var ChromeClient = function (config) {
-  Client.call(this)
+var ChromeScanner = function () {
+  Scanner.call(this)
+
+  this.listRobotDevices = function (callback) {
+    assert(typeof callback === 'function')
+    bluetoothClient.getDevices(function (devices) {
+      callback(devices.filter(function (device) {
+        return 0 === device.name.indexOf('Cubelet')
+      }))
+    })
+  }
+
+  return this
+}
+
+util.inherits(ChromeScanner, Scanner)
+
+var ChromeConnection = function (device) {
+  Connection.call(this)
   
-  var client = this
-  var address = config['address']
-  var uuid = config['uuid']
-  var socketStream = null
-  var fromBufferStream = null
-  var toBufferStream = null
+  var cn = this
+  var address = device['address'] || '00:00:00:00:00:00'
+  console.log('address')
+  var uuid = device['uuid']
+  var input, socketStream, output
   var connected = false
 
   this.connect = function (callback) {
@@ -56,21 +74,21 @@ var ChromeClient = function (config) {
     bluetoothClient.socket.connect(address, uuid, function (connectInfo) {
       var port = chrome.runtime.connect(appId, {name: connectInfo.port})
       socketStream = new ChromeRuntimeStream(port)
-      fromBufferStream = BufferArrayStream.fromBuffer()
-      toBufferStream = BufferArrayStream.toBuffer()
-      fromBufferStream.pipe(socketStream).pipe(toBufferStream)
+      input = BufferArrayStream.fromBuffer()
+      output = BufferArrayStream.toBuffer()
+      input.pipe(socketStream).pipe(output)
 
-      toBufferStream.on('data', function (data) {
-        client._parser.parse(data)
+      output.on('data', function (data) {
+        cn._parser.parse(data)
       })
 
       socketStream.on('end', function () {
-        client.disconnect()
+        cn.disconnect()
       })
 
       connected = true
 
-      client._connect()
+      cn._connect()
       console.log('connected')
 
       if (callback) {
@@ -98,13 +116,13 @@ var ChromeClient = function (config) {
 
     var ss = socketStream
     socketStream = null
-    toBufferStream.removeAllListeners('data')
+    output.removeAllListeners('data')
     ss.removeAllListeners('close')
     ss.end(function () {
-      client._disconnect()
+      cn._disconnect()
       ss = null
-      toBufferStream = null
-      fromBufferStream = null
+      output = null
+      input = null
       if (callback) {
         callback(null)
       }
@@ -117,7 +135,7 @@ var ChromeClient = function (config) {
 
   this.sendData = function (data, callback) {
     if (connected) {
-      fromBufferStream.write(data, callback)
+      input.write(data, callback)
     } else {
       if (callback) {
         callback(new Error('Client is not connected.'))
@@ -132,6 +150,8 @@ var ChromeClient = function (config) {
   return this
 }
 
-util.inherits(ChromeClient, Client)
-module.exports = ChromeClient
-start()
+util.inherits(ChromeConnection, Connection)
+
+module.exports = Client(new ChromeScanner(), ChromeConnection)
+
+startRuntime()

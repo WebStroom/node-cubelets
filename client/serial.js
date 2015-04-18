@@ -1,9 +1,9 @@
 var util = require('util')
+var assert = require('assert')
 var SerialPort = require('serialport').SerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
-var assert = require('assert')
 
 var SerialScanner = function () {
   Scanner.call(this)
