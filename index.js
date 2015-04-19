@@ -6,6 +6,7 @@ cubelets.Client = require('./client')
 
 cubelets.Protocol.merge(cubelets)
 
+// TODO
 // var classic = {
 //   Protocol = require('./protocol/classic'),
 //   Parser = require('./protocol/classic/parser'),

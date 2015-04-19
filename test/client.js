@@ -1,8 +1,10 @@
 var test = require('tape')
 var cubelets = require('../index')
 
-var Client = require('../client/chrome')
-var device = require('./config.json')['chrome']
+// var Client = require('../client/chrome')
+// var device = require('./config.json')['chrome']
+var Client = require('../client/serial')
+var device = require('./config.json')['serial']
 
 test('client', function (t) {
   t.plan(7)
@@ -46,6 +48,26 @@ test('responding', function (t) {
 
       cn.disconnect(function () {
         t.pass('disconnected')
+      })
+    })
+  })
+})
+
+test('construction', function (t) {
+  t.plan(3)
+  //1 connected
+  //2 added a cubelet
+  //3 removed a cubelet
+
+  var cn = new Client().connect(device, function (err, construction) {
+    t.pass('connected')
+    var c = construction
+    construction.discover(function (map) {
+      var m = map
+      m.on('change', function (added, removed) {
+        // test add or remove nodes
+        if (added.length > 0) t.pass('added cubelet')
+        if (removed.length > 0) t.pass('removed cubelet')
       })
     })
   })
