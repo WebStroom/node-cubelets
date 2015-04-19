@@ -58,7 +58,6 @@ var ChromeConnection = function (device) {
   
   var cn = this
   var address = device['address'] || '00:00:00:00:00:00'
-  console.log('address')
   var uuid = device['uuid']
   var input, socketStream, output
   var connected = false
