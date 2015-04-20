@@ -62,13 +62,17 @@ test('construction', function (t) {
   var cn = new Client().connect(device, function (err, construction) {
     t.pass('connected')
     var c = construction
-    construction.discover(function (map) {
-      var m = map
-      m.on('change', function (added, removed) {
-        // test add or remove nodes
-        if (added.length > 0) t.pass('added cubelet')
-        if (removed.length > 0) t.pass('removed cubelet')
-      })
+    c.on('change', function (added, removed) {
+      // test add or remove nodes
+      if (added.length > 0) t.pass('added cubelet')
+      if (removed.length > 0) t.pass('removed cubelet')
+    })
+    c.discover(function (err) {
+      if (err) {
+        t.fail(err)
+      } else {
+        console.log('construction', c)
+      }
     })
   })
 })

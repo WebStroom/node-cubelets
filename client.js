@@ -1,5 +1,6 @@
 var util = require('util')
 var events = require('events')
+var Construction = require('./construction')
 
 module.exports = function  (Scanner, Connection) {
 
@@ -18,7 +19,7 @@ module.exports = function  (Scanner, Connection) {
         } else {
           self.emit('connection', cn)
           if (callback) {
-            callback(null, cn)
+            callback(null, new Construction(cn))
           }
         }
       })
