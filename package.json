@@ -28,16 +28,16 @@
   },
   "browser": {
     "serialport": false,
-    "bluetooth-serial-port": false,
-    "./client": "./client/chrome"
+    "bluetooth-serial-port": false
   },
   "engines": {
     "node": "0.10.18"
   },
   "main": "index.js",
   "devDependencies": {
-    "tape": "^4.0.0",
     "multimeter": "0.1.1",
-    "pad": "0.0.4"
+    "pad": "0.0.4",
+    "redtape": "^1.0.0",
+    "tape": "^4.0.0"
   }
 }

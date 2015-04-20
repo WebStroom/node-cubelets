@@ -3,7 +3,7 @@ var Message = require('../message')
 var Decoder = require('../decoder')
 
 var GetNeighborhoodResponse = function (neighbors) {
-  Message.call(this, data, code)
+  Message.call(this)
   this.neighbors = []
 }
 
@@ -21,7 +21,7 @@ GetNeighborhoodResponse.prototype.decode = function (data) {
     var p = i * 5
     /* format: [ id2, id1, id0, hc, face ] */
     neighbors.push({
-      id: Decoder.decodeId(data.slice(p + 0, p + 3)),
+      id: Decoder.decodeID(data.slice(p + 0, p + 3)),
       hopCount: data.readUInt8(p + 3),
       faceIndex: data.readUInt8(p + 4)
     })

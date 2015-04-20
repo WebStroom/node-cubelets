@@ -2,12 +2,9 @@ var util = require('util');
 var events = require('events');
 var Cubelet = require('./cubelet')
 var Types = Cubelet.Types
-var GetNeighborhoodRequest = require('./request/getNeighborhood')
-var VisitNeighborRequest = require('./request/visitNeighbor')
-var GetNeighborhoodResponse = require('./response/getNeighborhood')
-var VisitNeighborResponse = require('./response/visitNeighbor')
-var __ = require('underscore')
+var messages = require('./protocol/imago').messages
 var xtend = require('xtend/mutable')
+var __ = require('underscore')
 
 var Construction = function (connection) {
   events.EventEmitter.call(this)
@@ -17,6 +14,58 @@ var Construction = function (connection) {
   var mapHopCount = { 0: [], 1: [], 2: [] }
   var edges = []
   var construction = this
+
+  this.origin = function () {
+    return origin
+  }
+
+  this.neighborhood = function () {
+    return __(mapHopCount).chain().values().sortBy(function (cubelet, hopCount) {
+      return hopCount
+    }).value()
+  }
+
+  this.neighbors = function () {
+    var neighbors = []
+    return __(mapHopCount).reduce(function (cubelet, hopCount) {
+      var hopCount = parseInt(hopCount)
+      if (1 === hopCount) {
+        neighbors.push(cubelet)
+      }
+    }, neighbors)
+  }
+
+  this.edges = function () {
+    return edges
+  }
+
+  this.mapHopCount = function () {
+    return mapHopCount
+  }
+
+  this.discover = function (callback) {
+    connection.sendRequest(new messages.GetConfigurationRequest(), function (err, response) {
+      if (err) {
+        if (callback) {
+          callback(err)
+        }
+      } else {
+        onGetConfiguration(response)
+        connection.sendRequest(new messages.GetNeighborhoodRequest(), function (err, response) {
+          if (err) {
+            if (callback) {
+              callback(err)
+            }
+          } else {
+            onGetNeighborhood(response)
+            if (callback) {
+              callback(null)
+            }
+          }
+        })
+      }
+    })
+  }
 
   function exists(id) {
     return mapId[id]
@@ -69,73 +118,23 @@ var Construction = function (connection) {
   }
 
   function onGetConfiguration(response) {
-    // Update origin
     var id = response.id
-    var origin = upsert(id, 0, Types.BLUETOOTH)
-    construction.origin = origin
+    origin = upsert(id, 0, Types.BLUETOOTH)
+    construction.emit('origin', construction.origin())
   }
 
   function onGetNeighborhood(response) {
-    var nextNeighborhood = response.neighbors
-    nextNeighborhood.forEach(function (neighbor) {
+    response.neighbors.forEach(function (neighbor) {
       upsert(neighbor.id, neighbor.hopCount, Types.UNKNOWN)
     })
+    construction.emit('neighborhood', construction.neighborhood())
   }
 
   function onVisitNeighbor(response) {
     //TODO
   }
 
-  this.origin = function () {
-    return origin
-  }
-
-  this.neighborhood = function () {
-    return Object.values(mapHopcount)
-  }
-
-  this.neighbors = function () {
-    var neighbors = []
-    return __(mapHopcount).reduce(function (cubelet, hopCount) {
-      var hopCount = parseInt(hopCount)
-      if (1 === hopCount) {
-        neighbors.push(cubelet)
-      }
-    }, neighbors)
-  }
-
-  this.edges = function () {
-    return edges
-  }
-
-  this.mapHopCount = function () {
-    return mapHopcount
-  }
-
-  this.discover = function (callback) {
-    connection.sendRequest(new cubelets.GetConfigurationRequest(), function (err, response) {
-      if (err) {
-        if (callback) {
-          callback(err)
-        }
-      } else {
-        onGetConfiguration(response)
-        connection.sendRequest(new cubelets.GetNeighborhoodRequest(), function (err, response) {
-          if (err) {
-            if (callback) {
-              callback(err)
-            }
-          } else {
-            onGetNeighborhood(response)
-            if (callback) {
-              callback(null)
-            }
-          }
-        })
-      }
-    })
-  }
-
+  return this
 }
 
 util.inherits(Construction, events.EventEmitter)

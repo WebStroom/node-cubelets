@@ -15,10 +15,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
 <script>
   var cubelets = require('cubelets')
+  var ChromeClient = require('cubelets/client/chrome')
 
-  var client = new cubelets.ChromeClient()
-
-  var connection = client.connect({
+  var connection = new ChromeClient().connect({
     name: '/dev/cu.Cubelet-CCC-AMP-SPP'
   }, function (err) {
     if (!err) {

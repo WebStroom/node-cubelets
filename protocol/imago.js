@@ -39,8 +39,8 @@ module.exports = new Protocol({
     [0x04, messages.GetBlockValueRequest],
     [0x05, messages.RegisterBlockValueEventRequest],
     [0x06, messages.UnregisterBlockValueEventRequest],
-    [0x07, messages.GetNeighborhoodRequest],
     [0x08, messages.VisitNeighborRequest],
+    [0x10, messages.GetNeighborhoodRequest],
     [0x20, messages.EchoRequest]
   ],
   responses: [
@@ -50,9 +50,9 @@ module.exports = new Protocol({
     [0x74, messages.GetBlockValueResponse],
     [0x75, messages.RegisterBlockValueEventResponse],
     [0x76, messages.UnregisterBlockValueEventResponse],
-    [0x77, messages.GetNeighborhoodResponse],
     [0x78, messages.VisitNeighborResponse],
-    [0x80, messages.EchoResponse]
+    [0x80, messages.GetNeighborhoodResponse],
+    [0x90, messages.EchoResponse]
   ],
   events: [
     [0xF0, messages.DebugEvent],
@@ -62,5 +62,7 @@ module.exports = new Protocol({
 })
 
 module.exports.merge = function (obj) {
-  return xtend(obj, messages)
+  var merged = xtend(obj, messages)
+  module.exports.messages = messages
+  return merged
 }
