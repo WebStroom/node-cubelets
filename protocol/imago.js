@@ -35,22 +35,22 @@ module.exports = new Protocol({
   requests: [
     [0x01, messages.GetConfigurationRequest],
     [0x02, messages.GetModeRequest],
-    [0x03, messages.SetModeRequest],
+    // [0x03, messages.SetModeRequest],
     [0x04, messages.GetBlockValueRequest],
     [0x05, messages.RegisterBlockValueEventRequest],
-    [0x06, messages.UnregisterBlockValueEventRequest],
-    [0x08, messages.VisitNeighborRequest],
+    // [0x06, messages.UnregisterBlockValueEventRequest],
+    // [0x08, messages.VisitNeighborRequest],
     [0x10, messages.GetNeighborhoodRequest],
     [0x20, messages.EchoRequest]
   ],
   responses: [
     [0x71, messages.GetConfigurationResponse],
     [0x72, messages.GetModeResponse],
-    [0x73, messages.SetModeResponse],
+    // [0x73, messages.SetModeResponse],
     [0x74, messages.GetBlockValueResponse],
     [0x75, messages.RegisterBlockValueEventResponse],
-    [0x76, messages.UnregisterBlockValueEventResponse],
-    [0x78, messages.VisitNeighborResponse],
+    // [0x76, messages.UnregisterBlockValueEventResponse],
+    // [0x78, messages.VisitNeighborResponse],
     [0x80, messages.GetNeighborhoodResponse],
     [0x90, messages.EchoResponse]
   ],

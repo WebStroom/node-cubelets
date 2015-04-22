@@ -17,7 +17,7 @@ function startRuntime() {
     var runtimeStream = new ChromeRuntimeStream(port)
     bluetoothClient = new ChromeBluetoothClient()
     bluetoothClient.pipe(runtimeStream).pipe(bluetoothClient)
-    bluetoothClient.on('end', restartRuntime)
+    bluetoothClient.once('end', restartRuntime)
     running = true
   }
 }
@@ -25,7 +25,6 @@ function startRuntime() {
 function stopRuntime() {
   if (running) {
     bluetoothClient.end()
-    bluetoothClient.removeListener('end', restartRuntime)
     bluetoothClient = null
     running = false
   }
@@ -41,10 +40,15 @@ var ChromeScanner = function () {
 
   this.listRobotDevices = function (callback) {
     assert(typeof callback === 'function')
-    bluetoothClient.getDevices(function (devices) {
-      callback(devices.filter(function (device) {
-        return 0 === device.name.indexOf('Cubelet')
-      }))
+    bluetoothClient.getDevices(function (allDevices) {
+      var devices = []
+      allDevices.forEach(function (device) {
+        var name = device.name
+        if (name.indexOf('Cubelet') === 0) {
+          devices.push(device)
+        }
+      })
+      callback(devices)
     })
   }
 
@@ -88,7 +92,6 @@ var ChromeConnection = function (device) {
       connected = true
 
       cn._connect()
-      console.log('connected')
 
       if (callback) {
         callback(null)

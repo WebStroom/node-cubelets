@@ -1,8 +1,0 @@
-{
-  "serial": {
-    "path": "/dev/tty.Cubelet-CCC-AMP-SPP"
-  },
-  "chrome": {
-    "address": "00:04:3e:08:21:a9"
-  }
-}

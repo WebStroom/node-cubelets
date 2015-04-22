@@ -28,7 +28,8 @@
   },
   "browser": {
     "serialport": false,
-    "bluetooth-serial-port": false
+    "bluetooth-serial-port": false,
+    "./client/index": "./client/browser"
   },
   "engines": {
     "node": "0.10.18"

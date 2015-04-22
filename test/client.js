@@ -1,7 +1,7 @@
 var redtape = require('redtape')
 var cubelets = require('../index')
-var Client = require('../client/serial')
-var device = require('./config.json')['serial']
+var Client = require('../client/chrome')
+var device = require('./config.json')['chrome']
 
 var test = redtape(function before(cb) {
   var connection = new Client().connect(device, function (err, construction) {

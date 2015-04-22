@@ -1,8 +1,7 @@
 var test = require('tape')
+var device = require('./config').device
 var cubelets = require('../index')
-
-var Client = require('../client/serial')
-var device = require('./config.json')['serial']
+var Client = require('../client/index')
 
 test('connecting', function (t) {
   t.plan(7)

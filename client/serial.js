@@ -10,14 +10,23 @@ var SerialScanner = function () {
 
   this.listRobotDevices = function (callback) {
     assert(typeof callback === 'function')
-    var serialPort = require('serialport')
-    var devices = []
-    serialPort.list(function (err, ports) {
-      devices.push({
-        path: ports.comName
-      })
+    var sp = require('serialport')
+    sp.list(function (err, ports) {
+      var devices = []
+      if (err) {
+        callback(devices)
+      } else {
+        ports.forEach(function (port) {
+          var name = port.comName
+          if (name.indexOf('Cubelet') === 0) {
+            devices.push({
+              path: name
+            })
+          }
+        })
+        callback(devices)
+      }
     })
-    callback(devices)
   }
 
   return this
@@ -58,7 +67,6 @@ var SerialConnection = function (device) {
       }
 
       serialPort.on('data', function (data) {
-        console.log('>>> data', data)
         cn._parser.parse(data)
       })
 

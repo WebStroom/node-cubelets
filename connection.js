@@ -15,7 +15,6 @@ var Connection = function (config) {
   this._connect = function () {
     cn._parser = new Parser()
     cn._parser.on('message', function (msg) {
-      console.log('>>> message', msg)
       if (Protocol.isEvent(msg)) {
         cn.emit('event', msg)
       } else if (Protocol.isResponse(msg)) {
