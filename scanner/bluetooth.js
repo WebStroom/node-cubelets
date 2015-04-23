@@ -10,55 +10,21 @@ var Scanner = function() {
         var scanner = this;
         var connections = [];
         var serialPort = new BluetoothSerialPort();
-        serialPort.on('found', function(address, name) {
-            beginScan();
-            if (name.indexOf('Cubelet') !== -1) {
-                serialPort.findSerialPortChannel(address, function(channel) {
-                    var config = {
-                        address: address,
-                        channel: channel
-                    };
-                    var connection = new BluetoothConnection(config);
-                    scanner.emit('pass', connection, name, config);
-                    connections.push(connection);
-                    endScan();
-                });
-            }
-            else {
-                scanner.emit('fail', new Error('Not named like a Moss Brain.'), null, name);
-                endScan();
+        serialPort.listPairedDevices(function(pairedDevices) {
+            var devices = pairedDevices.filter(function(device) {
+                return (device.name && device.name.indexOf('Cubelet') !== -1)
+            });
+            devices.forEach(function(device) {
+                var name = device.name;
+                var connection = new BluetoothConnection(device);
+                scanner.emit('pass', connection, name, device);
+                connections.push(connection);
+            });
+            scanner.emit('complete', null, connections);
+            if (callback) {
+                callback(null, connections)
             }
         });
-        var isFinished = false;
-        var isComplete = false;
-        var numberScanning = 0;
-        function beginScan() {
-            numberScanning++;
-        }
-        serialPort.on('finished', function() {
-            isFinished = true;
-            setTimeout(function() {
-                complete();
-            }, 1000);
-        });
-        function endScan() {
-            numberScanning--;
-            if (isFinished) {
-                complete();
-            }
-        }
-        function complete() {
-            if (isFinished && !isComplete && numberScanning === 0) {
-                isComplete = true;
-                scanner.emit('complete', null, connections);
-                if (callback) {
-                    callback(null, connections)
-                }
-            }
-        }
-        setTimeout(function() {
-            serialPort.inquire();
-        }, 1000);
     };
 };
 
