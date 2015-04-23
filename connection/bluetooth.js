@@ -4,9 +4,15 @@ var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort;
 var Parser = require('../parser');
 
 var Connection = function(config) {
+    console.log(config);
     events.EventEmitter.call(this);
     var address = config['address'];
-    var channel = config['channel'];
+    var channelID = 0;
+    var services = config['services'];
+    if (Array.isArray(services) && services.length > 0) {
+        var service = services[0];
+        channelID = service.channelID;
+    }
     var connection = this;
     var parser = null;
     var serialPort = null;
@@ -19,7 +25,7 @@ var Connection = function(config) {
             return;
         }
         serialPort = new BluetoothSerialPort();
-        serialPort.connect(address, channel, function() {
+        serialPort.connect(address, channelID, function() {
             parser = new Parser();
             parser.on('response', function(response) {
                 connection.emit('response', response);
@@ -27,8 +33,7 @@ var Connection = function(config) {
             serialPort.on('data', function(data) {
                 parser.parse(data);
             });
-            serialPort.on('failure', function(error) {
-                connection.emit('error', error);
+            serialPort.once('failure', function(error) {
                 connection.close();
             });
             isOpen = true;
