@@ -1,6 +1,6 @@
 {
   "name": "cubelets",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A package for interacting with Cubelets.",
   "keywords": [
     "modular",
@@ -25,7 +25,7 @@
     "multimeter": "0.1.1",
     "pad": "0.0.4",
     "request": "2.26.0",
-    "serialport": "git+https://github.com/programmarchy/node-serialport.git#drain",
+    "serialport": "1.6.3",
     "bluetooth-serial-port": "git://github.com/programmarchy/node-bluetooth-serial-port#modrobotics",
     "socket.io-client": "0.9.16",
     "temp": "0.5.1",
