@@ -1,7 +1,6 @@
 module.exports.Cubelet = require('./cubelet');
 module.exports.BluetoothScanner = require('./scanner/bluetooth');
 module.exports.MockScanner = require('./scanner/mock');
-module.exports.SerialConnection = require('./connection/serial');
 module.exports.BluetoothConnection = require('./connection/bluetooth');
 module.exports.MockConnection = require('./connection/mock');
 module.exports.Construction = require('./construction');
