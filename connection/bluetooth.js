@@ -4,7 +4,6 @@ var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort;
 var Parser = require('../parser');
 
 var Connection = function(config) {
-    console.log(config);
     events.EventEmitter.call(this);
     var address = config['address'];
     var channelID = 0;
