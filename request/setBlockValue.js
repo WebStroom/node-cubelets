@@ -1,22 +1,10 @@
 var util = require('util')
-var Message = require('../message')
+var SetBlockValueCommand = require('../command/setBlockValue')
 
-var SetBlockValueRequest = function (id, value) {
-  Message.call(this)
-  this.id = id
-  this.value = value
+var SetBlockValueRequest = function (id, value, clear) {
+  SetBlockValueCommand.call(this, id, value, clear)
 }
 
-util.inherits(SetBlockValueRequest, Message)
-
-SetBlockValueRequest.prototype.encodeBody = function () {
-  var encodedID = Encoder.encodeID(this.id)
-  return new Buffer([
-    encodedID.readUInt8(0),
-    encodedID.readUInt8(1),
-    encodedID.readUInt8(2),
-    this.value
-  ])
-}
+util.inherits(SetBlockValueRequest, SetBlockValueCommand)
 
 module.exports = SetBlockValueRequest

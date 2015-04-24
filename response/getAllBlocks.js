@@ -2,32 +2,32 @@ var util = require('util')
 var Message = require('../message')
 var Decoder = require('../decoder')
 
-var GetNeighborhoodResponse = function (neighbors) {
+var GetAllBlocks = function (blocks) {
   Message.call(this)
-  this.neighbors = []
+  this.blocks = []
 }
 
-util.inherits(GetNeighborhoodResponse, Message)
+util.inherits(GetAllBlocks, Message)
 
-GetNeighborhoodResponse.prototype.decode = function (data) {
+GetAllBlocks.prototype.decode = function (data) {
   if (data.length % 5 != 0) {
     console.error('Size should be divisible by 5.')
     return
   }
 
-  var neighbors = []
+  var blocks = []
   var count = data.length / 5
   for (var i = 0; i < count; ++i) {
     var p = i * 5
     /* format: [ id2, id1, id0, hc, face ] */
-    neighbors.push({
+    blocks.push({
       id: Decoder.decodeID(data.slice(p + 0, p + 3)),
       hopCount: data.readUInt8(p + 3),
       faceIndex: data.readUInt8(p + 4)
     })
   }
 
-  this.neighbors = neighbors
+  this.blocks = blocks
 }
 
-module.exports = GetNeighborhoodResponse
+module.exports = GetAllBlocks
