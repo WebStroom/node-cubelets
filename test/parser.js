@@ -18,7 +18,7 @@ test('can parse', function (t) {
 
     parser.parse(new Buffer([ '<'.charCodeAt(0) ]))
     t.equal(0, count)
-    parser.parse(new Buffer([ 0x71 ]))
+    parser.parse(new Buffer([ cubelets.EchoResponse.code ]))
     parser.parse(new Buffer([ 0x0E ]))
     t.equal(0, count)
     parser.parse(new Buffer([ '>'.charCodeAt(0) ]))
@@ -27,11 +27,11 @@ test('can parse', function (t) {
     t.equal(0, count)
     parser.parse(new Buffer([ 0 ]))
     t.equal(1, count)
-    t.ok(message instanceof cubelets.GetConfigurationResponse, 'is config response')
+    t.ok(message instanceof cubelets.EchoResponse, 'is echo response')
 
     parser.parse(new Buffer([
       '<'.charCodeAt(0),
-      0xF0,
+      0xE0,
       0x00,
       '>'.charCodeAt(0)
     ]))

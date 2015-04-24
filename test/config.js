@@ -4,6 +4,6 @@ module.exports = process.browser ? {
   }
 } : {
   "device": {
-    "path": "/dev/tty.Cubelet-CCC-AMP-SPP"
+    "path": "/dev/tty.Cubelet-BWG-AMP-SPP"
   }
 }

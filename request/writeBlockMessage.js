@@ -2,7 +2,7 @@ var util = require('util')
 var Message = require('../message')
 var Encoder = require('../encoder')
 
-var WriteMessageRequest = function (type, id, size, data) {
+var WriteBlockMessageRequest = function (type, id, size, data) {
   Message.call(this)
   this.type = type
   this.id = id
@@ -10,9 +10,9 @@ var WriteMessageRequest = function (type, id, size, data) {
   this.data = data || new Buffer(0)
 }
 
-util.inherits(WriteMessageRequest, Message)
+util.inherits(WriteBlockMessageRequest, Message)
 
-WriteMessageRequest.prototype.encodeBody = function () {
+WriteBlockMessageRequest.prototype.encodeBody = function () {
   return Buffer.concat([
     new Buffer([ this.typeID ]),
     Encoder.encodeID(this.id),
@@ -21,4 +21,4 @@ WriteMessageRequest.prototype.encodeBody = function () {
   ])
 }
 
-module.exports = WriteMessageRequest
+module.exports = WriteBlockMessageRequest

@@ -15,12 +15,12 @@ test('message codes', function (t) {
     t.equal(new GetConfigurationRequest().code(), 0x01)
 
     var GetConfigurationResponse = cubelets.GetConfigurationResponse
-    t.equal(GetConfigurationResponse.code, 0x71)
-    t.equal(new GetConfigurationResponse().code(), 0x71)
+    t.equal(GetConfigurationResponse.code, 0x81)
+    t.equal(new GetConfigurationResponse().code(), 0x81)
 
     var DebugEvent = cubelets.DebugEvent
-    t.equal(DebugEvent.code, 0xF0)
-    t.equal(new DebugEvent().code(), 0xF0)
+    t.equal(DebugEvent.code, 0xE0)
+    t.equal(new DebugEvent().code(), 0xE0)
 })
 
 test('linked message codes', function (t) {

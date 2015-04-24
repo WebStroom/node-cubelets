@@ -7,6 +7,6 @@ var FlashProgressEvent = function (progress) {
   this.progress = progress
 }
 
-util.inherits(FlashProgressEvent, Response)
+util.inherits(FlashProgressEvent, Message)
 
 module.exports = FlashProgressEvent

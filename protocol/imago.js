@@ -21,16 +21,14 @@ var messages = {
   GetAllBlocksResponse: require('../response/getAllBlocks'),
   GetNeighborBlocksRequest: require('../request/getNeighborBlocks'),
   GetNeighborBlocksResponse: require('../response/getNeighborBlocks'),
-  WriteBlockMessageRequest: require('../request/writeBlockMesage'),
-  WriteBlockMessageResponse: require('../response/writeBlockMesage'),
+  WriteBlockMessageRequest: require('../request/writeBlockMessage'),
+  WriteBlockMessageResponse: require('../response/writeBlockMessage'),
   EchoRequest: require('../request/echo'),
   EchoResponse: require('../response/echo'),
-  GetHandshakeRateRequest: require('../request/getHandshakeRate'),
-  GetHandshakeRateResponse: require('../response/getHandshakeRate'),
   DebugEvent: require('../event/debug'),
   BlockValueEvent: require('../event/blockValue'),
   ReadBlockMessageEvent: require('../event/readBlockMessage'),
-  FlashProgressEvent: require('../event/flashProgressEvent')
+  FlashProgressEvent: require('../event/flashProgress')
 }
 
 module.exports = new Protocol({
@@ -50,10 +48,9 @@ module.exports = new Protocol({
     [0x08, messages.GetNeighborBlocksRequest],
     [0x09, messages.WriteBlockMessageRequest],
     [0x10, messages.EchoRequest],
-    [0x11, messages.GetHandshakeRateRequest],
-    [0x20, messages.GetMemoryTableRequest],
-    [0x21, messages.UploadToMemoryRequest],
-    [0x22, messages.FlashMemoryToBlockRequest]
+    // [0x20, messages.GetMemoryTableRequest],
+    // [0x21, messages.UploadToMemoryRequest],
+    // [0x22, messages.FlashMemoryToBlockRequest]
   ],
   responses: [
     [0x81, messages.GetConfigurationResponse],
@@ -66,10 +63,9 @@ module.exports = new Protocol({
     [0x88, messages.GetNeighborBlocksResponse],
     [0x89, messages.WriteBlockMessageResponse],
     [0x90, messages.EchoResponse],
-    [0x91, messages.GetHandshakeRateResponse],
-    [0xA0, messages.GetMemoryTableResponse],
-    [0xA1, messages.UploadToMemoryResponse],
-    [0xA2, messages.FlashMemoryToBlockResponse]
+    // [0xA0, messages.GetMemoryTableResponse],
+    // [0xA1, messages.UploadToMemoryResponse],
+    // [0xA2, messages.FlashMemoryToBlockResponse]
   ],
   events: [
     [0xE0, messages.DebugEvent],

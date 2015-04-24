@@ -32,7 +32,6 @@ test('flood', function (t) {
       })
       cn.sendData(data, function (err) {
         if (err) {
-          console.error(err)
           cn.disconnect()
         } 
       })
