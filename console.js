@@ -4,19 +4,18 @@ if (process.argv.length < 4) {
 }
 
 var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort;
-var ResponseParser = require('./parser');
+var Parser = require('./parser');
 var async = require('async');
 var cubelets = require('./index');
 var Encoder = require('./encoder');
 var Decoder = require('./decoder');
 var config = require('./config.json');
-var ResponseTypes = config['responses'];
 var fs = require('fs');
 var util = require('util');
 var pad = require('pad');
 
 function log(s) {
-  fs.writeFileSync('console-debug.log', s + '\n');
+  fs.appendFileSync('console-debug.log', s + '\n');
 }
 
 var address = process.argv[2];
@@ -66,21 +65,6 @@ write('`b`: change bargraph value\n');
 write('`f`: change flashlight value\n');
 write('\n');
 
-var num = 0;
-takeMeterSlot(passiveCubeletID);
-takeMeterSlot(barGraphCubeletID);
-takeMeterSlot(knobCubeletID);
-takeMeterSlot(flashlightCubeletID);
-setInterval(function() {
-  num += 5;
-  if (num > 255) num = 0;
-  measure(passiveCubeletID, num);
-  measure(barGraphCubeletID, num);
-  measure(knobCubeletID, num);
-  measure(flashlightCubeletID, num);
-}, 20);
-return;
-
 function takeMeterSlot(id) {
   for (var i = 0; i < maxMeterSlots; ++i) {
     var slot = meterSlots[i];
@@ -91,7 +75,6 @@ function takeMeterSlot(id) {
   for (var i = 0; i < maxMeterSlots; ++i) {
     var slot = meterSlots[i];
     if (null === slot.id) {
-      log('took meter slot for ' + id);
       slot.id = id;
       return i;
     }
@@ -120,42 +103,32 @@ serialPort.connect(address, channel, function(err) {
   write('Connected to ' + address + '\n');
 
   // Create a parser to interpret responses.
-  var parser = new ResponseParser();
+  var parser = new Parser();
 
   // Process responses
-  parser.on('response', function(response) {
-    var T = ResponseTypes;
-    var c = response.type.code;
-    if (T['REGISTER_BLOCK_VALUE'].code == c) {
-      write('\nBlock value events are ' + (response.enabled ? 'on' : 'off') + '\n');
+  parser.on('message', function(message) {
+    var c = message.code()
+    if (cubelets.RegisterBlockValueEventResponse.code == c) {
+      write('\nBlock value events are ' + (message.enabled ? 'on' : 'off') + '\n');
     }
-    else if (T['BLOCK_VALUE'].code == c) {
-      var id = response.id;
-      takeMeterSlot(id);
-      var value = response.value;
-      measure(id, value);
-    }
-    else if (T['DEBUG'].code == c) {
-      write('\nDebug: ' + util.inspect(response.data) + '\n');
-    }
-    else if (T['GET_CONFIGURATION'].code == c) {
+    else if (cubelets.GetConfigurationResponse.code == c) {
       var s = '\n';
-      s += ('My ID: ' + response.id + '\n');
-      s += ('Hardware version: ' + response.hardwareVersion.toString() + '\n');
-      s += ('Bootloader version: ' + response.bootloaderVersion.toString() + '\n');
-      s += ('Application version: ' + response.applicationVersion.toString() + '\n');
+      s += ('My ID: ' + message.id + '\n');
+      s += ('Hardware version: ' + message.hardwareVersion.toString() + '\n');
+      s += ('Bootloader version: ' + message.bootloaderVersion.toString() + '\n');
+      s += ('Application version: ' + message.applicationVersion.toString() + '\n');
       write(s);
     }
-    else if (T['GET_ROUTING_TABLE'].code == c) {
-      var ids = response.ids;
-      write('\nAll block ids: ' + String(ids) + '\n');
-      ids.forEach(function(id) {
-        takeMeterSlot(id);
-        measure(id, 0);
-      })
+    else if (cubelets.GetAllBlocksResponse.code == c) {
+      var blocks = message.blocks;
+      write('\nAll blocks: ' + util.inspect(blocks) + '\n');
     }
-    else if (T['ECHO'].code == c) {
-      var echo = response.echo;
+    else if (cubelets.GetNeighborBlocksResponse.code == c) {
+      var blocks = message.blocks;
+      write('\nNeighbor blocks: ' + util.inspect(blocks) + '\n');
+    }
+    else if (cubelets.EchoResponse.code == c) {
+      var echo = message.echo;
       write('\nEcho: ' + util.inspect(echo) + '\n');
     }
   });
@@ -268,11 +241,11 @@ serialPort.connect(address, channel, function(err) {
         break;
       // 'a'
       case 0x61:
-        send((new cubelets.GetRoutingTableRequest()).encode())
+        send((new cubelets.GetAllBlocksRequest()).encode())
         break;
       // 'n'
       case 0x6E:
-        send((new cubelets.GetRoutingTableRequest()).encode())
+        send((new cubelets.GetNeighborBlocksRequest()).encode())
         break;
       // 'r'
       case 0x72:
