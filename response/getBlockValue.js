@@ -14,12 +14,13 @@ util.inherits(GetBlockValueResponse, Message)
 GetBlockValueResponse.prototype.decode = function (data) {
   if (data.length !== 5) {
     console.error('Size should be 5 bytes but is', data.length, 'bytes.')
-    return
+    return false
   }
 
   this.id = Decoder.decodeID(data.slice(0, 3))
   this.value = data.readUInt8(3)
   this.result = data.readUInt8(4)
+  return true
 }
 
 module.exports = GetBlockValueResponse

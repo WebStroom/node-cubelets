@@ -11,10 +11,11 @@ util.inherits(GetModeResponse, Message)
 GetModeResponse.prototype.decode = function (data) {
   if (data.length !== 1) {
     console.error('Size should be 1 byte but is', data.length, 'bytes.')
-    return
+    return false
   }
 
   this.mode = data.readUInt8(0)
+  return true
 }
 
 module.exports = GetModeResponse

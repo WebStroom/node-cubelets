@@ -1,7 +1,7 @@
 var util = require('util')
 var events = require('events')
 var Parser = require('./parser')
-var Protocol = require('./protocol/imago')
+var ImagoProtocol = require('./protocol/imago')
 
 var Connection = function (config) {
   events.EventEmitter.call(this)
@@ -49,7 +49,7 @@ var Connection = function (config) {
   }
 
   this.sendData = function (data, callback) {
-    cn.stream.write(data, callback)
+    cn.stream().write(data, callback)
   }
 
   this.sendMessage = function (message, callback) {
@@ -85,6 +85,47 @@ var Connection = function (config) {
 
     cn.on('response', waitForResponse)
     cn.sendMessage(request)
+  }
+
+  this.sendBlockRequest = function (blockRequest, callback, timeout) {
+    var writeBlockRequest = new ImagoProtocol.messages.WriteBlockMessageRequest(blockRequest)
+
+    timeout = timeout || 10000
+
+    var timer = setTimeout(function () {
+      cn.removeListener('event', waitForBlockResponse)
+      if (callback) {
+        callback(new Error('Timed out waiting for block response to block request: ' + request.code()))
+      }
+    }, timeout)
+
+    function waitForBlockResponse(e) {
+      if (e.code() === ImagoProtocol.messages.ReadBlockMessageEvent.code) {
+        if (e.blockMessage.code() === request.blockMessage.code()) {
+          clearTimeout(timer)
+          cn.removeListener('event', waitForBlockResponse)
+          if (callback) {
+            callback(null, e.blockMessage)
+          }
+        }
+      }
+    }
+
+    function onRequestError(err) {
+      cn.removeListener('event', waitForBlockResponse)
+      if (callback) {
+        callback(err)
+      }      
+    }
+
+    cn.on('event', waitForBlockResponse)
+    cn.sendRequest(writeBlockRequest, function (err, response) {
+      if (err) {
+        onRequestError(err)
+      } else if (response.result !== 0) {
+        onRequestError(new Error('Failed to write block message with result: ' + response.result))
+      }
+    })
   }
 
   return cn

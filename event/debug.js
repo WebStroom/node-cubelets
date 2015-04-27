@@ -11,7 +11,7 @@ util.inherits(DebugEvent, Message)
 DebugEvent.prototype.decode = function (data) {
   console.log('DEBUG',
     ((this.data = data))
-  )
+  ); return true
 }
 
 module.exports = DebugEvent

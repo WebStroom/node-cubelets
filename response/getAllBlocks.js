@@ -4,7 +4,7 @@ var Decoder = require('../decoder')
 
 var GetAllBlocks = function (blocks) {
   Message.call(this)
-  this.blocks = []
+  this.blocks = blocks
 }
 
 util.inherits(GetAllBlocks, Message)
@@ -12,7 +12,7 @@ util.inherits(GetAllBlocks, Message)
 GetAllBlocks.prototype.decode = function (data) {
   if (data.length % 5 != 0) {
     console.error('Size should be divisible by 5.')
-    return
+    return false
   }
 
   var blocks = []
@@ -28,6 +28,7 @@ GetAllBlocks.prototype.decode = function (data) {
   }
 
   this.blocks = blocks
+  return true
 }
 
 module.exports = GetAllBlocks

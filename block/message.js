@@ -1,7 +1,8 @@
 var assert = require('assert')
 
-var Message = function () {
+var Message = function (id) {
   this.timestamp = (new Date).getTime()
+  this.id = id
 }
 
 Message.prototype.code = function () {
@@ -13,11 +14,12 @@ Message.prototype.decode = function (body) {
 }
 
 Message.prototype.encodeHeader = function (sizeOfBody) {
-  return new Buffer([
-    '<'.charCodeAt(0),
-    this.code(),
-    sizeOfBody,
-    '>'.charCodeAt(0)
+  var toID = this.id
+  assert(typeof toID === 'number')
+  return Buffer.concat([
+    new Buffer([ this.code() ]),
+    Encoder.encodeID(toID),
+    new Buffer([ sizeOfBody ])
   ])
 }
 

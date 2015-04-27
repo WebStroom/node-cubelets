@@ -1,5 +1,4 @@
 var Protocol = require('../protocol')
-var xtend = require('xtend/mutable')
 
 var messages = {
   SetBlockValueCommand: require('../command/setBlockValue'),
@@ -28,14 +27,14 @@ var messages = {
   DebugEvent: require('../event/debug'),
   BlockValueEvent: require('../event/blockValue'),
   ReadBlockMessageEvent: require('../event/readBlockMessage'),
-  FlashProgressEvent: require('../event/flashProgress')
+  FlashProgressEvent: require('../event/flashProgress'),
 }
 
 module.exports = new Protocol({
   commands: [
     [0x41, messages.SetBlockValueCommand],
     [0x42, messages.SetLEDColorCommand],
-    [0x43, messages.SetLEDRGBCommand]
+    [0x43, messages.SetLEDRGBCommand],
   ],
   requests: [
     [0x01, messages.GetConfigurationRequest],
@@ -50,7 +49,7 @@ module.exports = new Protocol({
     [0x10, messages.EchoRequest],
     // [0x20, messages.GetMemoryTableRequest],
     // [0x21, messages.UploadToMemoryRequest],
-    // [0x22, messages.FlashMemoryToBlockRequest]
+    // [0x22, messages.FlashMemoryToBlockRequest],
   ],
   responses: [
     [0x81, messages.GetConfigurationResponse],
@@ -65,18 +64,16 @@ module.exports = new Protocol({
     [0x90, messages.EchoResponse],
     // [0xA0, messages.GetMemoryTableResponse],
     // [0xA1, messages.UploadToMemoryResponse],
-    // [0xA2, messages.FlashMemoryToBlockResponse]
+    // [0xA2, messages.FlashMemoryToBlockResponse],
   ],
   events: [
     [0xE0, messages.DebugEvent],
     [0xE1, messages.BlockValueEvent],
     [0xE2, messages.ReadBlockMessageEvent],
-    [0xE3, messages.FlashProgressEvent]
+    [0xE3, messages.FlashProgressEvent],
   ]
 })
 
-module.exports.merge = function (obj) {
-  var merged = xtend(obj, messages)
-  module.exports.messages = messages
-  return merged
-}
+module.exports.messages = messages
+
+module.exports.Block = require('../protocol/block')

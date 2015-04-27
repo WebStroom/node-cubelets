@@ -10,6 +10,7 @@ util.inherits(EchoResponse, Message)
 
 EchoResponse.prototype.decode = function (data) {
   this.echo = data
+  return true
 }
 
 module.exports = EchoResponse

@@ -17,6 +17,8 @@ ErrorEvent.prototype.decode = function (data) {
   if (data.length > 1) {
     this.messageCode = data.readUInt8(1)
   }
+
+  return true
 }
 
 module.exports = ErrorEvent

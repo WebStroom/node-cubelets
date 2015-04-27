@@ -12,12 +12,9 @@ Message.prototype.decode = function (body) {
   return Buffer.isBuffer(body)
 }
 
-Message.prototype.encodeHeader = function (sizeOfBody) {
+Message.prototype.encodeHeader = function () {
   return new Buffer([
-    '<'.charCodeAt(0),
-    this.code(),
-    sizeOfBody,
-    '>'.charCodeAt(0)
+    this.code()
   ])
 }
 
@@ -26,10 +23,12 @@ Message.prototype.encodeBody = function () {
 }
 
 Message.prototype.encode = function () {
+  var header = this.encodeHeader()
+  assert(Buffer.isBuffer(header))
   var body = this.encodeBody()
   assert(Buffer.isBuffer(body))
   return Buffer.concat([
-    this.encodeHeader(body.length),
+    header,
     body
   ])
 }

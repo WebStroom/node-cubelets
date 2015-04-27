@@ -13,7 +13,7 @@ util.inherits(GetConfigurationResponse, Message)
 GetConfigurationResponse.prototype.decode = function (data) {
   if (data.length !== 14) {
     console.error('Size should be 14 bytes but is', data.length, 'bytes.')
-    return
+    return false
   }
 
   this.hardwareVersion = Decoder.decodeVersion(data.slice(0, 3))
@@ -22,6 +22,7 @@ GetConfigurationResponse.prototype.decode = function (data) {
   this.id = Decoder.decodeID(data.slice(9, 12))
   this.mode = data.readUInt8(12)
   this.hasCustomApplication = data.readUInt8(13) ? true : false
+  return true
 }
 
 module.exports = GetConfigurationResponse
