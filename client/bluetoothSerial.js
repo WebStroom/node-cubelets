@@ -13,17 +13,13 @@ var BluetoothSerialScanner = function () {
     var serialPort = new BluetoothSerialPort()
     serialPort.listPairedDevices(function (pairedDevices) {
       var devices = []
-      if (err) {
-        callback(devices)
-      } else {
-        pairedDevices.forEach(function (pairedDevice) {
-          var name = pairedDevice.name
-          if (name.indexOf('Cubelet') === 0) {
-            devices.push(pairedDevice)
-          }
-        })
-        callback(devices)
-      }
+      pairedDevices.forEach(function (pairedDevice) {
+        var name = pairedDevice.name
+        if (name.indexOf('Cubelet') === 0) {
+          devices.push(pairedDevice)
+        }
+      })
+      callback(devices)
     })
   }
 
