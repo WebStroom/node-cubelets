@@ -40,9 +40,8 @@ test('responding', function (t) {
   cn.connect(function (err) {
     t.pass('connected')
     cn.sendRequest(new GetConfigurationRequest(), function (err, response) {
-      t.error(err)
+      t.error(err, 'no error')
       t.ok(response, 'got response')
-
       cn.disconnect(function () {
         t.pass('disconnected')
       })

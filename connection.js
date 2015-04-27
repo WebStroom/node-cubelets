@@ -1,7 +1,7 @@
 var util = require('util')
 var events = require('events')
 var Parser = require('./parser')
-var ImagoProtocol = require('./protocol/imago')
+var Protocol = require('./protocol/imago')
 
 var Connection = function (config) {
   events.EventEmitter.call(this)
@@ -88,7 +88,7 @@ var Connection = function (config) {
   }
 
   this.sendBlockRequest = function (blockRequest, callback, timeout) {
-    var writeBlockRequest = new ImagoProtocol.messages.WriteBlockMessageRequest(blockRequest)
+    var writeBlockRequest = new Protocol.messages.WriteBlockMessageRequest(blockRequest)
 
     timeout = timeout || 10000
 
@@ -100,7 +100,7 @@ var Connection = function (config) {
     }, timeout)
 
     function waitForBlockResponse(e) {
-      if (e.code() === ImagoProtocol.messages.ReadBlockMessageEvent.code) {
+      if (e.code() === Protocol.messages.ReadBlockMessageEvent.code) {
         if (e.blockMessage.code() === request.blockMessage.code()) {
           clearTimeout(timer)
           cn.removeListener('event', waitForBlockResponse)

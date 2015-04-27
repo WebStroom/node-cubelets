@@ -1,24 +1,28 @@
 var Decoder = require('../decoder')
 
-var id = function (b2, b1, b0) {
+function id(b2, b1, b0) {
   return Decoder.decodeID(new Buffer([b2, b1, b0]))
 }
 
-module.exports = process.browser ? {
-  "device": {
+function device() {
+  return process.browser ? {
     "address": "00:04:3e:08:21:a9"
-  },
-  "construction": (function () {
-    var type = {
-      bluetooth: id(22, 21, 20),
-      passive: id(3, 2, 1),
-      knob: id(6, 5, 4),
-      distance: id(7, 5, 4),
-      drive: id(9, 8, 7),
-      flashlight: id(12, 11, 10),
-      bargraph: id(13, 14, 14)
-    }
-  })() {
+  } : {
+    "path": "/dev/tty.Cubelet-BWG-AMP-SPP"
+  }
+}
+
+function construction() {
+  var type = {
+    bluetooth: id(22, 21, 20),
+    passive: id(3, 2, 1),
+    knob: id(6, 5, 4),
+    distance: id(7, 5, 4),
+    drive: id(9, 8, 7),
+    flashlight: id(12, 11, 10),
+    bargraph: id(13, 14, 14)
+  }
+  return {
     "type": type,
     "hopcount": [[
       type.bluetooth
@@ -30,8 +34,9 @@ module.exports = process.browser ? {
       type.bargraph
     ]]
   }
-} : {
-  "device": {
-    "path": "/dev/tty.Cubelet-BWG-AMP-SPP"
-  }
+}
+
+module.exports = {
+  "device": device(),
+  "construction": construction()
 }
