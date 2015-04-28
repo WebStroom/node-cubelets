@@ -27,13 +27,16 @@ Then, open a connection:
 
 ```
 var cubelets = require('cubelets')
-var client = new cubelets.SerialClient({ path: '/dev/cu.Cubelet-GPW-AMP-SPP' })
+var CubeletsClient = cubelets.Client
 
-client.on('connect', function() {
-  console.log('Connected')
+var client = new CubeletsClient()
+var device = {
+  path: '/dev/cu.Cubelet-GPW-AMP-SPP'
+}
+
+var connection = client.connect(device, function (err, construction) {
+  console.log('connected to', device)
 })
-
-client.connect()
 
 ```
 
@@ -43,15 +46,15 @@ Discover
 Once connected, you can discover other Cubelets connected to the Bluetooth Cubelet.
 
 ```
-var construction = new cubelets.Construction(client)
-
-construction.on('change', function() {
-    console.log('Construction changed:')
-    console.log('The origin is', construction.origin())
-    console.log('The direct neighbors are near', construction.near())
-    console.log('The other cubelets are far', construction.far())
-    console.log('All together they are', construction.all())
-    console.log('And mapped by id', construction.map())
+construction.on('change', function () {
+  console.log('Construction changed:')
+  console.log('Origin block', construction.getOriginBlock())
+  console.log('Neighbor blocks', construction.getNeighborBlocks())
+  console.log('All blocks', construction.getAllBlocks())
+  console.log('By ID', construction.findById(1234))
+  console.log('By hop count', construction.filterByHopCount(2))
+  console.log('Edges', construction.getEdges())
+  console.log('Graph', construction.getGraph())
 })
 ```
 
@@ -60,12 +63,12 @@ The change event will fire when you add or remove direct neighbors to the robot 
 Command
 =======
 
-Once Cubelets are discovered, you can send commands to them. For example, to blink the LED on a Cubelet with ID ```1234```:
+Once Cubelets are discovered, you can send commands to them. For example, to blink the LED on a Cubelet with ID `1234`:
 
 ```
 var LED = false // Off
 setInterval(function() {
-  client.sendCommand(new cubelets.BlinkLEDCommand(1234, LED))
+  client.sendBlockCommand(new cubelets.block.SetLED(1234, LED))
   LED = !LED
 }, 500)
 ```
