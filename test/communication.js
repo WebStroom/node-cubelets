@@ -1,9 +1,11 @@
 var test = require('tape')
 var cubelets = require('../index')
 var Client = require('../client/index')
-var device = require('./config').device
+var Decoder = require('../decoder')
+var config = require('./config')
+var __ = require('underscore')
 
-var cn = new Client().connect(device, function (err, construction) {
+var cn = new Client().connect(config.device, function (err, construction) {
   test('connected', function (t) {
     t.plan(1)
     if (err) {
@@ -11,42 +13,56 @@ var cn = new Client().connect(device, function (err, construction) {
     } else {
       t.pass('connected')
 
-      test('commands', function (t) {
-        t.plan(3)
-        cn.sendCommand(new cubelets.SetBlockValueCommand(0, 0), t.ifError)
-        cn.sendCommand(new cubelets.SetLEDColorCommand(0), t.ifError)
-        cn.sendCommand(new cubelets.SetLEDRGBCommand(0, 0, 0), t.ifError)
-      })
+      // test('commands', function (t) {
+      //   t.plan(3)
+      //   cn.sendCommand(new cubelets.SetBlockValueCommand(0, 0), t.ifError)
+      //   cn.sendCommand(new cubelets.SetLEDColorCommand(0), t.ifError)
+      //   cn.sendCommand(new cubelets.SetLEDRGBCommand(0, 0, 0), t.ifError)
+      // })
 
-      test('echo', function (t) {
-        t.plan(2)
-        var echo = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        cn.sendRequest(new cubelets.EchoRequest(echo), function (err, response) {
-          t.ifError(err)
-          t.deepEqual(echo, response.echo)
-        })
-      })
+      // test('echo', function (t) {
+      //   t.plan(2)
+      //   var echo = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+      //   cn.sendRequest(new cubelets.EchoRequest(echo), function (err, response) {
+      //     t.ifError(err)
+      //     t.deepEqual(echo, response.echo)
+      //   })
+      // })
+
+      // test('construction', function (t) {
+      //   t.plan(2)
+      //   cn.sendRequest(new cubelets.GetAllBlocksRequest(), function (err, response) {
+      //     t.ifError(err, 'no response error')
+      //     console.log('response', response)
+      //     var passive = __(response.blocks).find(function (block) {
+      //       return block.id === config.construction.type.passive
+      //     })
+      //     t.ok(passive, 'has a passive')
+      //   })
+      // })
 
       test('ping', function (t) {
         t.plan(5)
-        var pingCode = 0xA4
-        var pongCode = 0xA5
+        var pingCode = cubelets.block.PingRequest.code
+        var pongCode = cubelets.block.PongResponse.code
+        var id = config.construction.type.passive
         var payload = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        var id = Decoder.decodeID(config.construction.passive)
+        var pingRequest = new cubelets.block.PingRequest(id, payload)
         cn.on('event', function listener(e) {
           if (e instanceof cubelets.ReadBlockMessageEvent) {
-            if (e.type === pongCode && e.id === id) {
+            var pongResponse = e.blockMessage
+            if (pongResponse.code() === pongCode && pongResponse.id === id) {
               t.pass('read pong message')
-              t.equal(e.size, payload.length, 'equal size')
-              t.deepEqual(e.data, payload, 'equivalent payload')
+              t.equal(pongResponse.payload.length, payload.length, 'equal size')
+              t.deepEqual(pongResponse.payload, payload, 'equivalent payload')
               cn.removeListener('event', listener)
             }
           }
         })
-        cn.sendRequest(new cubelets.WriteBlockMessageRequest(pingCode, id, payload.length, payload), function (err, response) {
-          t.ifError(err, 'no write error')
-          console.log('res', response)
-          t.equal(0, response.result, 'write ping message')
+        cn.sendRequest(new cubelets.WriteBlockMessageRequest(pingRequest), function (err, response) {
+          console.log('response', response)
+          t.ifError(err, 'no response error')
+          t.equal(0, response.result, 'wrote ping message')
         })
       })
 

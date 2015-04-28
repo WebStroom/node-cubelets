@@ -10,7 +10,6 @@ var messages = {
   PingRequest: require('../block/request/ping'),
   PongResponse: require('../block/response/pong'),
   JumpCommand: require('../block/command/jump'),
-  PathCommand: require('../block/command/path'),
 }
 
 module.exports = new Protocol({
@@ -18,17 +17,16 @@ module.exports = new Protocol({
     [0x70, messages.SetValueCommand],
     [0x71, messages.SetLEDCommand],
     [0x80, messages.JumpCommand],
-    [0xA0, messages.PathCommand]
   ],
   requests: [
-    [0x72, messages.GetConfigurationRequest],
-    [0x74, messages.GetNeighborsRequest],
-    [0x76, messages.PingRequest],
+    [0xA0, messages.GetConfigurationRequest],
+    [0xA2, messages.GetNeighborsRequest],
+    [0xA4, messages.PingRequest],
   ],
   responses: [
-    [0x73, messages.GetConfigurationResponse],
-    [0x75, messages.GetNeighborsResponse],
-    [0x77, messages.PongResponse],
+    [0xA1, messages.GetConfigurationResponse],
+    [0xA3, messages.GetNeighborsResponse],
+    [0xA5, messages.PongResponse],
   ],
   events: []
 })

@@ -1,4 +1,5 @@
 var assert = require('assert')
+var Encoder = require('../encoder')
 
 var Message = function (id) {
   this.timestamp = (new Date).getTime()

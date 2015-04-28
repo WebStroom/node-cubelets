@@ -101,11 +101,12 @@ var Connection = function (config) {
 
     function waitForBlockResponse(e) {
       if (e.code() === Protocol.messages.ReadBlockMessageEvent.code) {
-        if (e.blockMessage.code() === request.blockMessage.code()) {
+        var blockResponse = e.blockMessage
+        if (blockResponse.code() === blockRequest.code() && blockResponse.id === blockRequest.id) {
           clearTimeout(timer)
           cn.removeListener('event', waitForBlockResponse)
           if (callback) {
-            callback(null, e.blockMessage)
+            callback(null, blockResponse)
           }
         }
       }

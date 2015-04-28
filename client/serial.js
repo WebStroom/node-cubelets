@@ -67,6 +67,7 @@ var SerialConnection = function (device) {
       }
 
       serialPort.on('data', function (data) {
+        console.log('data', data)
         cn._parser.parse(data)
       })
 
