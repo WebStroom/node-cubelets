@@ -58,7 +58,7 @@ construction.on('change', function () {
 })
 ```
 
-The change event will fire when you add or remove direct neighbors to the robot construction, but the full map is only fetched once.
+The change event will fire when the robot construction changes in any detectable way, included if a block is added, removed, or moved.
 
 Command
 =======
@@ -73,4 +73,10 @@ setInterval(function() {
 }, 500)
 ```
 
+Request
+=======
+
+
+Notification
+============
 
