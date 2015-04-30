@@ -1,6 +1,5 @@
 var util = require('util')
 var Message = require('../message')
-var Encoder = require('../encoder')
 
 var SetModeRequest = function (mode) {
   Message.call(this)

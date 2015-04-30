@@ -13,33 +13,33 @@ var cn = new Client().connect(config.device, function (err, construction) {
     } else {
       t.pass('connected')
 
-      // test('commands', function (t) {
-      //   t.plan(3)
-      //   cn.sendCommand(new cubelets.SetBlockValueCommand(0, 0), t.ifError)
-      //   cn.sendCommand(new cubelets.SetLEDColorCommand(0), t.ifError)
-      //   cn.sendCommand(new cubelets.SetLEDRGBCommand(0, 0, 0), t.ifError)
-      // })
+      test('commands', function (t) {
+        t.plan(3)
+        cn.sendCommand(new cubelets.SetBlockValueCommand(0, 0), t.ifError)
+        cn.sendCommand(new cubelets.SetLEDColorCommand(0), t.ifError)
+        cn.sendCommand(new cubelets.SetLEDRGBCommand(0, 0, 0), t.ifError)
+      })
 
-      // test('echo', function (t) {
-      //   t.plan(2)
-      //   var echo = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-      //   cn.sendRequest(new cubelets.EchoRequest(echo), function (err, response) {
-      //     t.ifError(err)
-      //     t.deepEqual(echo, response.echo)
-      //   })
-      // })
+      test('echo', function (t) {
+        t.plan(2)
+        var echo = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        cn.sendRequest(new cubelets.EchoRequest(echo), function (err, response) {
+          t.ifError(err)
+          t.deepEqual(echo, response.echo)
+        })
+      })
 
-      // test('construction', function (t) {
-      //   t.plan(2)
-      //   cn.sendRequest(new cubelets.GetAllBlocksRequest(), function (err, response) {
-      //     t.ifError(err, 'no response error')
-      //     console.log('response', response)
-      //     var passive = __(response.blocks).find(function (block) {
-      //       return block.id === config.construction.type.passive
-      //     })
-      //     t.ok(passive, 'has a passive')
-      //   })
-      // })
+      test('blocks present', function (t) {
+        t.plan(2)
+        cn.sendRequest(new cubelets.GetAllBlocksRequest(), function (err, response) {
+          t.ifError(err, 'no response error')
+          console.log('response', response)
+          var passive = __(response.blocks).find(function (block) {
+            return block.id === config.construction.type.passive
+          })
+          t.ok(passive, 'has a passive')
+        })
+      })
 
       test('ping', function (t) {
         t.plan(5)

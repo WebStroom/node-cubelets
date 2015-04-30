@@ -15,11 +15,11 @@ var Construction = function (connection) {
   var edges = []
   var construction = this
 
-  this.origin = function () {
+  this.getOrigin = function () {
     return origin
   }
 
-  this.neighborhood = function () {
+  this.getAllBlocks = function () {
     var all = __(mapId).values()
     return __(all).chain()
       .sortBy(function (cubelet) {
@@ -31,11 +31,11 @@ var Construction = function (connection) {
       .value()
   }
 
-  this.neighbors = function () {
+  this.getNeighborBlocks = function () {
     return this.filterByHopCount(1)
   }
 
-  this.edges = function () {
+  this.getEdges = function () {
     return edges
   }
 
@@ -57,13 +57,13 @@ var Construction = function (connection) {
         }
       } else {
         onGetConfiguration(response)
-        connection.sendRequest(new messages.GetNeighborhoodRequest(), function (err, response) {
+        connection.sendRequest(new messages.GetAllBlocksRequest(), function (err, response) {
           if (err) {
             if (callback) {
               callback(err)
             }
           } else {
-            onGetNeighborhood(response)
+            onGetAllBlocks(response)
             if (callback) {
               callback(null)
             }
@@ -76,17 +76,15 @@ var Construction = function (connection) {
   function onGetConfiguration(response) {
     var id = response.id
     origin = upsert(id, 0, Types.BLUETOOTH)
-    construction.emit('origin', construction.origin())
   }
 
-  function onGetNeighborhood(response) {
-    response.neighbors.forEach(function (neighbor) {
-      upsert(neighbor.id, neighbor.hopCount, Types.UNKNOWN)
+  function onGetAllBlocks(response) {
+    response.blocks.forEach(function (block) {
+      upsert(block.id, block.hopCount, Types.UNKNOWN)
     })
-    construction.emit('neighborhood', construction.neighborhood())
   }
 
-  function onVisitNeighbor(response) {
+  function onVisitBlock(response) {
 
   }
 
@@ -160,13 +158,13 @@ var Construction = function (connection) {
 
   function addRank(cubelet) {
     var hopCount = cubelet.hopCount
-    var rank = getRank(fromHopCount)
+    var rank = getRank(hopCount)
     rank.push(cubelet)
   }
 
   function removeRank(cubelet) {
     var hopCount = cubelet.hopCount
-    var rank = getRank(fromHopCount)
+    var rank = getRank(hopCount)
     var i = __(rank).indexOf(cubelet)
     if (i > -1) {
       rank.splice(i, 1)

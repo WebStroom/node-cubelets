@@ -2,14 +2,14 @@ var util = require('util')
 var Message = require('../message')
 var Decoder = require('../decoder')
 
-var GetNeighborBlocks = function (blocks) {
+var GetNeighborBlocksResponse = function (blocks) {
   Message.call(this)
   this.blocks = blocks
 }
 
-util.inherits(GetNeighborBlocks, Message)
+util.inherits(GetNeighborBlocksResponse, Message)
 
-GetNeighborBlocks.prototype.decode = function (data) {
+GetNeighborBlocksResponse.prototype.decode = function (data) {
   if (data.length % 4 != 0) {
     console.error('Size should be divisible by 4.')
     return false
@@ -30,4 +30,4 @@ GetNeighborBlocks.prototype.decode = function (data) {
   return true
 }
 
-module.exports = GetNeighborBlocks
+module.exports = GetNeighborBlocksResponse

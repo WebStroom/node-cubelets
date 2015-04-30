@@ -1,7 +1,7 @@
 var Version = require('./version')
 
 // Decodes a 3-byte ID
-module.exports.decodeID = function(data) {
+module.exports.decodeID = function (data) {
   if (data.length < 3) {
     return 0
   }
@@ -14,12 +14,12 @@ module.exports.decodeID = function(data) {
 };
 
 // Decodes a version
-module.exports.decodeVersion = function(data) {
+module.exports.decodeVersion = function (data) {
   return new Version(data[0], data[1], data[2])
 }
 
 // Decodes a map
-module.exports.decodeMap = function(data) {
+module.exports.decodeMap = function (data) {
   var map = []
   
   if (data.length == 0) {

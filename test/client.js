@@ -20,21 +20,17 @@ test('construction', function (t, connection, construction) {
 
   var cn = connection
   var c = construction
-  c.once('change', function (added, removed) {
+  c.on('change', function listener(added, removed) {
     if (added.length > 0) {
+      c.removeListener('change', listener)
       t.pass('added cubelet')
     }
   })
-  // c.once('change', function (added, removed) {
-  //   if (removed.length > 0) {
-  //     t.pass('removed cubelet')
-  //   }
-  // })
-  c.once('origin', function (origin) {
-    t.ok(origin, 'origin')
-  })
-  c.once('neighborhood', function (neighborhood) {
-    t.ok(neighborhood, 'neighborhood')
+  c.on('change', function listener(added, removed) {
+    if (removed.length > 0) {
+      c.removeListener('change', listener)
+      t.pass('removed cubelet')
+    }
   })
   c.discover(function (err) {
     if (err) {
@@ -43,5 +39,3 @@ test('construction', function (t, connection, construction) {
     }
   })
 })
-
-
