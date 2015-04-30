@@ -18,7 +18,7 @@ var SerialScanner = function () {
       } else {
         ports.forEach(function (port) {
           var name = port.comName
-          if (name.indexOf('Cubelet') === 0) {
+          if (name.indexOf('Cubelet') > 0) {
             devices.push({
               path: name
             })
