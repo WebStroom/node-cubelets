@@ -16,6 +16,7 @@ GetMemoryTableResponse.prototype.decode = function (data) {
     return false
   }
 
+  var mask = data.readUInt32BE(0)
   var slotsLength = data.length - 4
 
   if (slotsLength % 7 != 0) {
@@ -24,10 +25,9 @@ GetMemoryTableResponse.prototype.decode = function (data) {
   }
 
   var slots = {}
-  var count = data.length / 7
-  var mask = data.readUInt32BE(0)
+  var count = slotsLength / 7
   for (var i = 0; i < count; ++i) {
-    if (mask & (i << 1)) {
+    if (mask & (1 << i)) {
       var p = i * 7
       /* format: [ t, sz1, sz0, v2, v1, v0, c ] */
       slots[i] = {
@@ -39,7 +39,7 @@ GetMemoryTableResponse.prototype.decode = function (data) {
     }
   }
 
-  this.blocks = blocks
+  this.slots = slots
   return true
 }
 
