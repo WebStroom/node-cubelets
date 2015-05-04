@@ -24,6 +24,8 @@ GetMemoryTableResponse.prototype.decode = function (data) {
     return false
   }
 
+  console.log('data', data)
+
   var slots = {}
   var count = slotsLength / 7
   var p = 4
