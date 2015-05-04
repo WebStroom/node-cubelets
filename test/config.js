@@ -8,7 +8,7 @@ function device() {
   return process.browser ? {
     "address": "00:04:3e:08:21:a9"
   } : {
-    "path": "/dev/tty.Cubelet-GPW-AMP-SPP"
+    "path": "/dev/tty.Cubelet-BWG-AMP-SPP"
   }
 }
 

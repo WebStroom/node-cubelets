@@ -17,7 +17,6 @@ GetMemoryTableResponse.prototype.decode = function (data) {
   }
 
   var mask = data.readUInt32BE(0)
-  console.log('mask', mask)
   var slotsLength = data.length - 4
 
   if (slotsLength % 7 != 0) {
@@ -35,7 +34,7 @@ GetMemoryTableResponse.prototype.decode = function (data) {
         blockType: data.readUInt8(p + 0),
         slotSize: data.readUInt16BE(p + 1),
         version: Decoder.decodeVersion(data.slice(p + 3, p + 6)),
-        isCustom: data.readUInt8(p + 0) ? true : false
+        isCustom: data.readUInt8(p + 6) ? true : false
       }
       p += 7
     }

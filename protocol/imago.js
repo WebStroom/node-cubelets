@@ -33,6 +33,7 @@ var messages = {
   DebugEvent: require('../event/debug'),
   BlockValueEvent: require('../event/blockValue'),
   ReadBlockMessageEvent: require('../event/readBlockMessage'),
+  UploadToMemoryCompleteEvent: require('../event/uploadToMemoryComplete'),
   FlashProgressEvent: require('../event/flashProgress'),
 }
 
@@ -76,7 +77,8 @@ module.exports = new Protocol({
     [0xE0, messages.DebugEvent],
     [0xE1, messages.BlockValueEvent],
     [0xE2, messages.ReadBlockMessageEvent],
-    [0xE3, messages.FlashProgressEvent],
+    [0xE3, messages.UploadToMemoryCompleteEvent],
+    [0xE4, messages.FlashProgressEvent],
   ]
 })
 
