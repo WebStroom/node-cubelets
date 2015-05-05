@@ -29,12 +29,15 @@ communication
 
 client
 ------
-- tests accessibility of high level objects like the client and construction
+- tests accessibility of high level objects like client, connection, and construction
 
 construction
 ------------
-- todo
+- tests functionality of the construction object
 
 flash
 -----
-- tests 
+- tests external memory module
+- tests reading the full memory table
+- tests writing data to memory slots
+- tests flashing hex files from a memory slot to a block

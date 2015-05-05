@@ -18,9 +18,8 @@ function construction() {
     passive: id(3, 2, 1),
     knob: id(6, 5, 4),
     distance: id(7, 5, 4),
-    drive: id(9, 8, 7),
     flashlight: id(12, 11, 10),
-    bargraph: id(13, 14, 14)
+    bargraph: id(9, 8, 7)
   }
   return {
     "type": type,

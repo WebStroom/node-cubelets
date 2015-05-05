@@ -9,3 +9,6 @@ cubelets.Construction = require('./construction')
 var xtend = require('xtend/mutable')
 xtend(cubelets, cubelets.Protocol.messages)
 xtend(cubelets, { block: cubelets.Protocol.Block.messages })
+
+cubelets.Version = require('./version')
+cubelets.Program = require('./program')
