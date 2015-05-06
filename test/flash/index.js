@@ -178,7 +178,7 @@ var cn = new Client().connect(config.device, function (err, construction) {
       })
 
       test('can flash a mini bargraph hex', function (t) {
-        t.plan(8)
+        t.plan(9)
 
         // check the program is valid
         var id = config.construction.type.bargraph
@@ -197,9 +197,9 @@ var cn = new Client().connect(config.device, function (err, construction) {
         // send an upload request
         var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
         cn.sendRequest(request, function (err, response) {
-          t.ifError(err, 'no response err')
-          t.ok(response, 'response ok')
-          t.equal(response.result, 0, 'result success')
+          t.ifError(err, 'no upload response err')
+          t.ok(response, 'upload response ok')
+          t.equal(response.result, 0, 'upload result success')
         })
         // wait for an upload complete event
         cn.on('event', function listener (e) {
@@ -212,15 +212,15 @@ var cn = new Client().connect(config.device, function (err, construction) {
         })
         // send the data
         cn.sendData(program.data, function (err) {
-          console.log('call send data', err)
+          console.log('send data callback', err)
         })
 
         function testFlash() {
           var request = new cubelets.FlashMemoryToBlockRequest(id, slotIndex)
           cn.sendRequest(request, function (err, response) {
-            t.ifError(err, 'no response err')
-            t.ok(response, 'response ok')
-            t.equal(response.result, 0, 'result success')
+            t.ifError(err, 'no flash response err')
+            t.ok(response, 'flash response ok')
+            t.equal(response.result, 0, 'flash result success')
           }, 1000 * 30)
         }
       })
