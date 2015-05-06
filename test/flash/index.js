@@ -130,16 +130,16 @@ var cn = new Client().connect(config.device, function (err, construction) {
         var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
         // send an upload request
         cn.sendRequest(request, function (err, response) {
-          t.ifError(err, 'no response err')
-          t.ok(response, 'response ok')
-          t.equal(response.result, 0, 'result success')
+          t.ifError(err, 'no upload response err')
+          t.ok(response, 'upload response ok')
+          t.equal(response.result, 0, 'upload result success')
         })
         // wait for an upload complete event
         cn.on('event', function listener (e) {
           if (e instanceof cubelets.UploadToMemoryCompleteEvent) {
             cn.removeListener('event', listener)
             t.ok(e, 'event ok')
-            t.equal(e.result, 0, 'result success')
+            t.equal(e.result, 0, 'event result success')
             testMemoryTable()
           }
         })
@@ -168,8 +168,8 @@ var cn = new Client().connect(config.device, function (err, construction) {
       test('target block exists', function (t) {
         t.plan(3)
         cn.sendRequest(new cubelets.GetAllBlocksRequest(), function (err, response) {
-          t.ifError(err, 'no response err')
-          t.ok(response, 'response ok')
+          t.ifError(err, 'no blocks response err')
+          t.ok(response, 'blocks response ok')
           var bargraph = __(response.blocks).find(function (block) {
             return block.id === config.construction.type.bargraph
           })
@@ -206,7 +206,7 @@ var cn = new Client().connect(config.device, function (err, construction) {
           if (e instanceof cubelets.UploadToMemoryCompleteEvent) {
             cn.removeListener('event', listener)
             t.ok(e, 'event ok')
-            t.equal(e.result, 0, 'result success')
+            t.equal(e.result, 0, 'event result success')
             testFlash()
           }
         })
@@ -221,7 +221,7 @@ var cn = new Client().connect(config.device, function (err, construction) {
             t.ifError(err, 'no flash response err')
             t.ok(response, 'flash response ok')
             t.equal(response.result, 0, 'flash result success')
-          }, 1000 * 30)
+          }, 1000 * 60)
         }
       })
 
