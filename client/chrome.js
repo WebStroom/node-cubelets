@@ -51,8 +51,6 @@ var ChromeScanner = function () {
       callback(devices)
     })
   }
-
-  return this
 }
 
 util.inherits(ChromeScanner, Scanner)
@@ -148,8 +146,6 @@ var ChromeConnection = function (device) {
   this.stream = function () {
     return socketStream
   }
-
-  return this
 }
 
 util.inherits(ChromeConnection, Connection)

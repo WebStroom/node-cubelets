@@ -178,8 +178,6 @@ var Construction = function (connection) {
       addRank(cubelet)
     }
   }
-
-  return this
 }
 
 util.inherits(Construction, events.EventEmitter)

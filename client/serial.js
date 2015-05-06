@@ -28,8 +28,6 @@ var SerialScanner = function () {
       }
     })
   }
-
-  return this
 }
 
 util.inherits(SerialScanner, Scanner)
@@ -138,8 +136,6 @@ var SerialConnection = function (device) {
   this.stream = function () {
     return serialPort
   }
-
-  return this
 }
 
 util.inherits(SerialConnection, Connection)

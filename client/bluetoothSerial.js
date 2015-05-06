@@ -22,8 +22,6 @@ var BluetoothSerialScanner = function () {
       callback(devices)
     })
   }
-
-  return this
 }
 
 util.inherits(BluetoothSerialScanner, Scanner)
@@ -160,8 +158,6 @@ var BluetoothSerialConnection = function (device) {
   this.stream = function () {
     return stream
   }
-
-  return this
 }
 
 util.inherits(BluetoothSerialConnection, Connection)

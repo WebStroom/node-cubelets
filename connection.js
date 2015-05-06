@@ -128,8 +128,6 @@ var Connection = function (config) {
       }
     })
   }
-
-  return cn
 }
 
 util.inherits(Connection, events.EventEmitter)

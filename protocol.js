@@ -82,8 +82,6 @@ module.exports = function Protocol(messages) {
   this.isEvent = function (message) {
     return !!events.left[message.code()]
   }
-
-  return this
 }
 
 function Bimap(relations) {
@@ -108,6 +106,4 @@ function Bimap(relations) {
 
   this.left = left
   this.right = right
-
-  return this
 }

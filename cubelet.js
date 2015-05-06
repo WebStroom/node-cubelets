@@ -1,13 +1,11 @@
 var Types = require('./config.json')['types']
 var __ = require('underscore')
 
-var Cubelet = function(id, type, hopCount, mcu) {
-
+var Cubelet = function (id, type, hopCount, mcu) {
   this.id = id
   this.type = type || Types.UNKNOWN
   this.hopCount = hopCount
   this.mcu = mcu
-
 }
 
 module.exports = Cubelet

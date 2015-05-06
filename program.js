@@ -1,6 +1,5 @@
 // Reads in a Buffer with Intel HEX data format
 var Program = function (hex, opts) {
-
   this.valid = false
   this.checksum = { sum: 0, xor: 0 }
 
@@ -244,7 +243,6 @@ var Program = function (hex, opts) {
     this.checksum.xor = 0
     this.checksum.sum = 0
   }
-
 }
 
 module.exports = Program
