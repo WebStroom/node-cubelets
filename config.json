@@ -75,6 +75,11 @@
       "name": "passive",
       "category": "think"
     },
+    "THRESHOLD": {
+      "id": 64,
+      "name": "threshold",
+      "category": "think"
+    },
     "ROTATE": {
       "id": 46,
       "name": "rotate",
