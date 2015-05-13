@@ -119,51 +119,51 @@ var cn = new Client().connect(config.device, function (err, construction) {
       //   })
       // })
 
-      test('write to memory slot', function (t) {
-        t.plan(15)
-        var slotIndex = 22
-        var slotSize = Math.ceil(smallSlotData.length / lineLength)
-        var blockType = Cubelet.Types.PASSIVE.id
-        var version = new Version(4, 5, 6)
-        var isCustom = false
-        var crc = 0xcc
-        var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
-        // send an upload request
-        cn.sendRequest(request, function (err, response) {
-          t.ifError(err, 'no upload response err')
-          t.ok(response, 'upload response ok')
-          t.equal(response.result, 0, 'upload result success')
-        })
-        // wait for an upload complete event
-        cn.on('event', function listener (e) {
-          if (e instanceof cubelets.UploadToMemoryCompleteEvent) {
-            cn.removeListener('event', listener)
-            t.ok(e, 'event ok')
-            t.equal(e.result, 0, 'event result success')
-            testMemoryTable()
-          }
-        })
-        // send the data
-        cn.sendData(smallSlotData, function (err) {
-          t.ifError(err, 'no data err')
-        })
-        // then test the table again once upload is complete
-        function testMemoryTable() {
-          cn.sendRequest(new cubelets.GetMemoryTableRequest(), function (err, response) {
-            t.ifError(err, 'no response err')
-            t.ok(response, 'response ok')
-            var slots = response.slots
-            t.ok(slots[slotIndex], 'slot exists')
-            var slot = slots[slotIndex]
-            t.equal(slot.slotSize, slotSize)
-            t.equal(slot.blockType, blockType)
-            t.equal(slot.version.major, version.major)
-            t.equal(slot.version.minor, version.minor)
-            t.equal(slot.version.patch, version.patch)
-            t.equal(slot.isCustom, isCustom)
-          })
-        }
-      })
+      // test('write to memory slot', function (t) {
+      //   t.plan(15)
+      //   var slotIndex = 22
+      //   var slotSize = Math.ceil(smallSlotData.length / lineLength)
+      //   var blockType = Cubelet.Types.PASSIVE.id
+      //   var version = new Version(4, 5, 6)
+      //   var isCustom = false
+      //   var crc = 0xcc
+      //   var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   // send an upload request
+      //   cn.sendRequest(request, function (err, response) {
+      //     t.ifError(err, 'no upload response err')
+      //     t.ok(response, 'upload response ok')
+      //     t.equal(response.result, 0, 'upload result success')
+      //   })
+      //   // wait for an upload complete event
+      //   cn.on('event', function listener (e) {
+      //     if (e instanceof cubelets.UploadToMemoryCompleteEvent) {
+      //       cn.removeListener('event', listener)
+      //       t.ok(e, 'event ok')
+      //       t.equal(e.result, 0, 'event result success')
+      //       testMemoryTable()
+      //     }
+      //   })
+      //   // send the data
+      //   cn.sendData(smallSlotData, function (err) {
+      //     t.ifError(err, 'no data err')
+      //   })
+      //   // then test the table again once upload is complete
+      //   function testMemoryTable() {
+      //     cn.sendRequest(new cubelets.GetMemoryTableRequest(), function (err, response) {
+      //       t.ifError(err, 'no response err')
+      //       t.ok(response, 'response ok')
+      //       var slots = response.slots
+      //       t.ok(slots[slotIndex], 'slot exists')
+      //       var slot = slots[slotIndex]
+      //       t.equal(slot.slotSize, slotSize)
+      //       t.equal(slot.blockType, blockType)
+      //       t.equal(slot.version.major, version.major)
+      //       t.equal(slot.version.minor, version.minor)
+      //       t.equal(slot.version.patch, version.patch)
+      //       t.equal(slot.isCustom, isCustom)
+      //     })
+      //   }
+      // })
 
       test('target block exists', function (t) {
         t.plan(3)
@@ -174,6 +174,7 @@ var cn = new Client().connect(config.device, function (err, construction) {
             return block.id === config.construction.type.bargraph
           })
           t.ok(bargraph, 'has a bargraph')
+          t.end()
         })
       })
 
@@ -186,8 +187,8 @@ var cn = new Client().connect(config.device, function (err, construction) {
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
 
+        var slotIndex = 2
         var slotData = program.data
-        var slotIndex = 13
         var slotSize = Math.ceil(slotData.length / lineLength)
         var blockType = Cubelet.Types.BARGRAPH.id
         var version = new Version(4, 5, 6)
@@ -221,13 +222,15 @@ var cn = new Client().connect(config.device, function (err, construction) {
             t.ifError(err, 'no flash response err')
             t.ok(response, 'flash response ok')
             t.equal(response.result, 0, 'flash result success')
-          }, 1000 * 60)
+          }, 1000 * 10)
         }
       })
 
       // for debugging:
-      // test('debug read table', testExternalMemory().readTable())
-      // test('debug read slot', testExternalMemory().readSlot(3, slotDataLength / lineLength))
+      // test('debug read table', debugExternalMemory()
+      //   .readTable())
+      // test('debug read slot', debugExternalMemory()
+      //   .readSlot(2, 0x14000 / 32))
 
       test('disconnect', function (t) {
         t.plan(1)
@@ -254,7 +257,7 @@ function debugExternalMemory() {
       ]))
       var fs = require('fs')
       stream.on('data', function (data) {
-        fs.appendFileSync('./debug-memory.log', data)
+        fs.appendFileSync('./debug-memory-table.log', data)
         n += data.length
         if (n >= totalSize) {
           t.pass('done')
@@ -275,8 +278,9 @@ function debugExternalMemory() {
         '>'.charCodeAt(0),
         slotIndex,
         slotSize ]))
+      var fs = require('fs')
       stream.on('data', function (data) {
-        console.log(data)
+        fs.appendFileSync('./debug-memory-slot-' + slotIndex + '.log', data)
         n += data.length
         if (n >= slotSize) {
           t.pass('done')

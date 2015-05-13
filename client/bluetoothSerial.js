@@ -4,6 +4,7 @@ var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
+var through = require('through2')
 
 var BluetoothSerialScanner = function () {
   Scanner.call(this)
@@ -72,7 +73,7 @@ var BluetoothSerialConnection = function (device) {
 
       serialPort.on('data', function (data) {
         cn._parser.parse(data)
-        stream.queue(data)
+        stream.push(data)
       })
 
       serialPort.once('closed', function () {
@@ -136,7 +137,7 @@ var BluetoothSerialConnection = function (device) {
     if (serialPort.isOpen()) {
       close()
     } else {
-      sp.once('close', close)
+      sp.once('closed', close)
       sp.close()
     }
   }

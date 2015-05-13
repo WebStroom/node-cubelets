@@ -4,6 +4,7 @@ var SerialPort = require('serialport').SerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
+var fs = require('fs')
 
 var SerialScanner = function () {
   Scanner.call(this)
@@ -66,6 +67,7 @@ var SerialConnection = function (device) {
 
       serialPort.on('data', function (data) {
         cn._parser.parse(data)
+        fs.appendFileSync('/Users/Donald/Desktop/output.log', data)
       })
 
       serialPort.on('close', function () {
@@ -125,6 +127,7 @@ var SerialConnection = function (device) {
 
   this.sendData = function (data, callback) {
     if (connected) {
+      fs.appendFileSync('/Users/Donald/Desktop/input.log', data)
       serialPort.write(data, callback)
     } else {
       if (callback) {
