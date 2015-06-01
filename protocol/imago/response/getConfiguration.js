@@ -19,7 +19,8 @@ GetConfigurationResponse.prototype.decode = function (data) {
   this.applicationVersion = Message.Decoder.decodeVersion(data.slice(6, 9))
   this.id = Message.Decoder.decodeID(data.slice(9, 12))
   this.mode = data.readUInt8(12)
-  this.hasCustomApplication = data.readUInt8(13) ? true : false
+  this.customApplication = data.readUInt8(13)
+  this.hasCustomApplication = (this.customApplication !== 0)
   return true
 }
 

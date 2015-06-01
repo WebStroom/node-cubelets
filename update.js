@@ -1,32 +1,125 @@
+var async = require('async')
 var cubelets = require('./index')
-var device = require('./test/config').device
 var Protocol = cubelets.Protocol
 
-cubelets.connect(device, function (err, client) {
-  detect(client, function (protocol) {
-    if (protocol === Protocol.Imago) {
-      console.log('detected imago protocol')
-    } else if (protcol === Protocol.Classic) {
-      console.log('detected classic protocol')
-    } else {
-      console.error('could not detect protocol')
-    }
-    client.disconnect()
-  })
-})
+var device = {
+  WCC: { address: "00-04-3e-08-21-d1", channelID: 1 }
+  GPW: { address: "00-04-3e-08-21-db", channelID: 1 }
+}
 
-function detect(client, callback) {
-  client.sendRequest(new Protocol.Classic.messages.KeepAliveRequest(), function (err) {
-    if (err) {
-      client.sendRequest(new Protocol.Imago.messages.EchoRequest(), function (err) {
-        if (err) {
-          callback(null)
+var branches = {
+  CLASSIC: 0,
+  BOOTSTRAP: 1,
+  IMAGO: 2
+}
+
+// 1: detect bluetooth cubelet type:
+//     - imago
+//     - bootstrap
+//     - classic
+// 2: flash bluetooth with bootstrap
+// 3: attach next classic cubelet
+// 4. flash classic cubelet with imago
+// 5. detatch imago cubelet
+// 6. if another classic cubelet goto 3
+// 7. flash bluetooth with imago
+
+var done = false
+
+function detectBranch(client, callback) {
+  console.log('detect branch')
+  client.setProtocol(Protocol.Classic)
+  client.keepAlive(function (err) {
+    if (!err) {
+      callback(null, client, branches.CLASSIC)
+    } else {
+      client.setProtocol(Protocol.Imago)
+      client.getConfiguration(function (err, response) {
+        if (!err) {
+          callback(null, client,
+            (response.customApplication === 2) ? 
+              branches.BOOTSTRAP : branches.IMAGO)
         } else {
-          callback(Protocol.Imago)
+          callback(err, client)
         }
       })
-    } else {
-      callback(Protocol.Classic)
     }
   })
 }
+
+function flash(client, branch, callback) {
+  console.log('flash')
+  switch (branch) {
+    case branches.BOOTSTRAP:
+      callback(null, client)
+      break
+    default:
+      flashBootstrap(client, callback)
+      break
+  }
+}
+
+function flashBootstrap(client, callback) {
+  callback(null, client)
+}
+
+function flashImago(client, callback) {
+  callback(null, client)
+}
+
+function queueUntilDone(client, callback) {
+  console.log('queue until done')
+  var waitingQueue = []
+  var doneQueue = []
+  function enqueue(q, id) {
+    !exists(q, id) && q.unshift(id)
+  }
+  function dequeue(q) {
+    return q.pop(q)
+  }
+  function exists(q, id) {
+    return q.indexOf(id) > -1
+  }
+  async.until(function () {
+    return done
+  }, function (callback) {
+    client.getNeighborBlocks(function (err, blocks) {
+      if (err) {
+        callback(err)
+      } else {
+        blocks.forEach(function (block) {
+          var id = block.id
+          if (!exists(doneQueue, id)) {
+            enqueue(waitingQueue, id)
+          }
+        })
+      }
+    })
+  }, callback.bind(this, client))
+}
+
+function update(device, callback) {
+  console.log('update')
+  async.seq([
+    cubelets.connect,
+    detectBranch,
+    queueUntilDone,
+    client.disconnect
+  ], device, callback)
+
+  this.done = function () {
+    done = true
+  }
+}
+
+cubelets.connect(device, function (err, client) {
+  if (err) {
+    console.err('connect:', err)
+  } else {
+    update(client, function (err) {
+      if (err) {
+        console.err('update:', err)
+      }
+    })
+  }
+})

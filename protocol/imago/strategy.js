@@ -56,6 +56,10 @@ function ImagoStrategy(protocol, client) {
     client.sendRequest(new messages.EchoRequest(data), callback)
   }
 
+  this.getConfiguration = function (callback) {
+    client.sendRequest(new messages.GetConfigurationRequest(), callback)
+  }
+
   this.setBlockValueEventEnabled = function (enabled, callback) {
     client.sendRequest(new messages.RegisterBlockValueEventRequest(enabled), callback)
   }

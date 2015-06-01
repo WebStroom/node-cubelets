@@ -51,6 +51,10 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
+  this.getConfiguration = function (callback) {
+    throw new Error('not implemented')
+  }
+
   this.setBlockValue = function (id, value, callback) {
     client.sendCommand(new messages.SetBlockValueCommand(id, value), callback)
   }

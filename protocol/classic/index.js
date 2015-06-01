@@ -21,28 +21,32 @@ var messages = {
   FlashCompleteEvent: require('./event/flashComplete')
 }
 
+function code(c) {
+  return c.charCodeAt(0)
+}
+
 var ClassicProtocol = new Protocol({
   commands: [
-    ['e', messages.SetBlockLEDCommand],
-    ['s', messages.SetBlockValueCommand],
-    ['t', messages.ClearBlockValueCommand],
-    ['m', messages.GetNeighborBlocksCommand],
-    ['b', messages.RegisterBlockValueEventCommand],
-    ['u', messages.UnregisterBlockValueEventCommand],
-    ['q', messages.UnregisterAllBlockValueEventsCommand],
-    ['x', messages.ResetCommand]
+    [code('e'), messages.SetBlockLEDCommand],
+    [code('s'), messages.SetBlockValueCommand],
+    [code('t'), messages.ClearBlockValueCommand],
+    [code('m'), messages.GetNeighborBlocksCommand],
+    [code('b'), messages.RegisterBlockValueEventCommand],
+    [code('u'), messages.UnregisterBlockValueEventCommand],
+    [code('q'), messages.UnregisterAllBlockValueEventsCommand],
+    [code('x'), messages.ResetCommand]
   ],
   requests: [
-    ['a', messages.KeepAliveRequest]
+    [code('a'), messages.KeepAliveRequest]
   ],
   responses: [
-    ['l', messages.KeepAliveResponse]
+    [code('l'), messages.KeepAliveResponse]
   ],
   events: [
-    ['b', messages.BlockValueEvent],
-    ['n', messages.GetNeighborBlocksEvent],
-    ['U', messages.FlashProgressEvent],
-    ['X', messages.FlashCompleteEvent]
+    [code('b'), messages.BlockValueEvent],
+    [code('n'), messages.GetNeighborBlocksEvent],
+    [code('U'), messages.FlashProgressEvent],
+    [code('X'), messages.FlashCompleteEvent]
   ]
 })
 
