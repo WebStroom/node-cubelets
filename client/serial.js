@@ -1,5 +1,4 @@
 var util = require('util')
-var assert = require('assert')
 var SerialPort = require('serialport').SerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
@@ -9,8 +8,7 @@ var fs = require('fs')
 var SerialScanner = function () {
   Scanner.call(this)
 
-  this.getDevices = function (callback) {
-    assert(typeof callback === 'function')
+  this._getDevices = function (callback) {
     var sp = require('serialport')
     sp.list(function (err, ports) {
       var devices = []
@@ -29,114 +27,87 @@ var SerialScanner = function () {
       }
     })
   }
+
+  this._compareDevice = function (device, otherDevice) {
+    return device.path == otherDevice.path
+  }
 }
 
 util.inherits(SerialScanner, Scanner)
 
-var SerialConnection = function (device) {
-  Connection.call(this)
+var SerialConnection = function (device, opts) {
+  Connection.call(this, device, opts)
   
   var path = device['path'] || ((process.platform === 'win32') ?
     'COM1' : '/dev/cu.Cubelet-RGB-AMP-SPP')
 
-  var cn = this
+  var stream = this
   var serialPort = null
-  var connected = false
+  var isOpen = false
 
-  this.connect = function (callback) {
-    if (connected) {
-      if (callback) {
-        callback(null)
-      }
-      return
-    }
-
-    serialPort = new SerialPort(path, {}, false)
-
-    serialPort.on('error', function (err) {
-      cn.emit('error', err)
-    })
-
-    serialPort.open(function (err) {
-      if (err) {
-        if (callback) {
-          callback(err)
-        }
-        return
-      }
-
-      serialPort.on('data', function (data) {
-        cn._parser.parse(data)
-        fs.appendFileSync('/Users/Donald/Desktop/output.log', data)
-      })
-
-      serialPort.on('close', function () {
-        cn.disconnect()
-      })
-
-      connected = true
-
-      cn._connect()
-
-      if (callback) {
-        callback(null)
-      }
-    })
+  this._read = function (n) {
+    // do nothing
   }
 
-  this.disconnect = function (callback) {
-    if (!connected) {
-      if (callback) {
-        callback(null)
-      }
-      return
+  this._write = function (chunk, enc, next) {
+    if (serialPort) {
+      serialPort.write(chunk, next)
     }
+  }
 
-    connected = false
+  this._open = function (callback) {
+    callback = callback || Function()
+    if (serialPort) {
+      callback(null)
+    } else {
+      serialPort = new SerialPort(path, {}, false)
 
+      serialPort.on('error', function (err) {
+        stream.emit('error', err)
+      })
+
+      serialPort.open(function (err) {
+        if (err) {
+          callback(err)
+        } else {
+          isOpen = true
+
+          serialPort.on('data', function (chunk) {
+            stream.push(chunk)
+          })
+
+          serialPort.on('close', function () {
+            isOpen = false
+            stream.close()
+          })
+
+          callback(null)
+        }
+      })
+    }
+  }
+
+  this._close = function (callback) {
+    callback = callback || Function()
     if (!serialPort) {
-      if (callback) {
-        callback(null)
-      }
-      return
-    }
-
-    var sp = serialPort
-    serialPort = null
-    sp.drain(function (err) {
+      callback(null)
+    } else {
+      var sp = serialPort
+      serialPort = null
       sp.removeAllListeners('data')
       sp.removeAllListeners('close')
-      sp.close(function (err) {
-        sp.removeAllListeners('error')
-        cn._disconnect()
+      sp.removeAllListeners('error')
+      if (isOpen) {
+        sp.close(cleanup)
+      } else {
+        cleanup()
+      }
+      function cleanup(err) {
+        isOpen = false
         sp = null
-        if (callback) {
-          if (err) {
-            callback(err)
-          } else {
-            callback(null)
-          }
-        }
-      })
-    })
-  }
-
-  this.connected = function () {
-    return connected
-  }
-
-  this.sendData = function (data, callback) {
-    if (connected) {
-      serialPort.write(data, callback)
-    } else {
-      if (callback) {
-        callback(new Error('not connected.'))
+        callback(err)
       }
     }
-  }
-
-  this.stream = function () {
-    return serialPort
   }
 }
 

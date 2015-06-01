@@ -91,7 +91,7 @@ ImagoProtocol.messages = messages
 
 xtend(ImagoProtocol, {
   Message: Message,
-  BlockProtocol: BlockProtocol,
+  Block: BlockProtocol,
   Parser: Parser.bind(null, ImagoProtocol),
   Strategy: Strategy.bind(null, ImagoProtocol)
 })

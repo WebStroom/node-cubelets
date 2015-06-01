@@ -76,10 +76,32 @@ function Factory(Scanner, Connection) {
       con.write(data, callback)
     }
 
-    client._isAlive = undefined
+    client._isAlive = null
 
     this.isAlive = function () {
       return client._isAlive
+    }
+
+    var keepAliveTimer = null
+
+    this.startKeepAliveTimer = function (interval) {
+      client.stopKeepAliveTimer()
+      interval = interval || client._defaultTimeout
+      keepAliveTimer = setInterval(function () {
+        client.keepAlive(function (err) {
+          if (err) {
+            client.stopKeepAliveTimer()
+            client.emit('error', new Error('Keep alive timer expired.'))
+          }
+        })
+      }, interval)
+    }
+
+    this.stopKeepAliveTimer = function () {
+      if (keepAliveTimer) {
+        clearInterval(keepAliveTimer)
+        keepAliveTimer = null
+      }
     }
 
     this.setProtocol(Protocols.Imago)

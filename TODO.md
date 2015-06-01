@@ -1,3 +1,4 @@
 - refactor parser to have sane fn names
 - combine client and construction
 - re-implement read block message handler
+- get client/chrome working again

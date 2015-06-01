@@ -42,7 +42,7 @@ cubelets.connect(config.device, function (err, client) {
 
       test('ping', function (t) {
         t.plan(5)
-        var blockMessages = cubelets.Protocol.BlockProtocol.messages
+        var blockMessages = cubelets.Protocol.Block.messages
         var pingCode = blockMessages.PingRequest.code
         var pongCode = blockMessages.PongResponse.code
         var id = config.construction.type.passive

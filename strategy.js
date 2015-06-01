@@ -43,11 +43,11 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.keepAlive = function (timeout) {
+  this.keepAlive = function (callback) {
     throw new Error('not implemented')
   }
 
-  this.echo = function (data, callback, timeout) {
+  this.echo = function (data, callback) {
     throw new Error('not implemented')
   }
 
@@ -55,11 +55,11 @@ function Strategy(protocol, client) {
     client.sendCommand(new messages.SetBlockValueCommand(id, value), callback)
   }
 
-  this.clearBlockValue = function (id) {
+  this.clearBlockValue = function (id, callback) {
     throw new Error('not implemented')
   }
 
-  this.setBlockValueEventEnabled = function (enabled, callback, timeout) {
+  this.setBlockValueEventEnabled = function (enabled, callback) {
     throw new Error('not implemented')
   }
 

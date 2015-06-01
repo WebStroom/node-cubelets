@@ -48,12 +48,16 @@ function ImagoStrategy(protocol, client) {
     })
   }
 
-  this.echo = function (data, callback, timeout) {
-    client.sendRequest(new messages.EchoRequest(data), callback, timeout)
+  this.keepAlive = function (callback) {
+    client.echo(new Buffer(0), callback)
   }
 
-  this.setBlockValueEventEnabled = function (enabled, callback, timeout) {
-    client.sendRequest(new messages.RegisterBlockValueEventRequest(enabled), callback, timeout)
+  this.echo = function (data, callback) {
+    client.sendRequest(new messages.EchoRequest(data), callback)
+  }
+
+  this.setBlockValueEventEnabled = function (enabled, callback) {
+    client.sendRequest(new messages.RegisterBlockValueEventRequest(enabled), callback)
   }
 }
 

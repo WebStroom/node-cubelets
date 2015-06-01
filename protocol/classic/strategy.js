@@ -4,10 +4,15 @@ var Strategy = require('../../strategy')
 function ClassicStrategy(protocol, client) {
   Strategy.call(this, protocol, client)
 
-  this.sendRequest = function (request, callback, timeout) {
-    Strategy.sendRequest.call(this, request, callack, timeout)
+  var messages = protocol.messages
+
+  this.keepAlive = function (callback) {
+    client.sendRequest(new messages.KeepAliveRequest(), callback)
   }
 
+  this.clearBlockValue = function (id, callback) {
+    client.sendRequest(new messages.ClearBlockValueCommand(id), callback)
+  }
 }
 
 util.inherits(ClassicStrategy, Strategy)
