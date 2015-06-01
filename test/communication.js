@@ -1,11 +1,9 @@
 var test = require('tape')
 var cubelets = require('../index')
-var Client = require('../client/index')
-var Decoder = require('../decoder')
 var config = require('./config')
 var __ = require('underscore')
 
-var cn = new Client().connect(config.device, function (err, construction) {
+cubelets.connect(config.device, function (err, client) {
   test('connected', function (t) {
     t.plan(1)
     if (err) {
@@ -13,17 +11,19 @@ var cn = new Client().connect(config.device, function (err, construction) {
     } else {
       t.pass('connected')
 
+      var messages = cubelets.Protocol.messages
+
       test('commands', function (t) {
         t.plan(3)
-        cn.sendCommand(new cubelets.SetBlockValueCommand(0, 0), t.ifError)
-        cn.sendCommand(new cubelets.SetLEDColorCommand(0), t.ifError)
-        cn.sendCommand(new cubelets.SetLEDRGBCommand(0, 0, 0), t.ifError)
+        client.sendCommand(new messages.SetBlockValueCommand(0, 0), t.ifError)
+        client.sendCommand(new messages.SetLEDColorCommand(0), t.ifError)
+        client.sendCommand(new messages.SetLEDRGBCommand(0, 0, 0), t.ifError)
       })
 
       test('echo', function (t) {
         t.plan(2)
         var echo = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        cn.sendRequest(new cubelets.EchoRequest(echo), function (err, response) {
+        client.sendRequest(new messages.EchoRequest(echo), function (err, response) {
           t.ifError(err)
           t.deepEqual(echo, response.echo)
         })
@@ -31,9 +31,8 @@ var cn = new Client().connect(config.device, function (err, construction) {
 
       test('blocks present', function (t) {
         t.plan(2)
-        cn.sendRequest(new cubelets.GetAllBlocksRequest(), function (err, response) {
+        client.sendRequest(new messages.GetAllBlocksRequest(), function (err, response) {
           t.ifError(err, 'no response error')
-          console.log('response', response)
           var passive = __(response.blocks).find(function (block) {
             return block.id === config.construction.type.passive
           })
@@ -43,24 +42,25 @@ var cn = new Client().connect(config.device, function (err, construction) {
 
       test('ping', function (t) {
         t.plan(5)
-        var pingCode = cubelets.block.PingRequest.code
-        var pongCode = cubelets.block.PongResponse.code
+        var blockMessages = cubelets.Protocol.BlockProtocol.messages
+        var pingCode = blockMessages.PingRequest.code
+        var pongCode = blockMessages.PongResponse.code
         var id = config.construction.type.passive
         var payload = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        var pingRequest = new cubelets.block.PingRequest(id, payload)
-        cn.on('event', function listener(e) {
-          if (e instanceof cubelets.ReadBlockMessageEvent) {
+        var pingRequest = new blockMessages.PingRequest(id, payload)
+        client.on('event', function listener(e) {
+          console.log('e', e)
+          if (e instanceof messages.ReadBlockMessageEvent) {
             var pongResponse = e.blockMessage
             if (pongResponse.code() === pongCode && pongResponse.id === id) {
               t.pass('read pong message')
               t.equal(pongResponse.payload.length, payload.length, 'equal size')
               t.deepEqual(pongResponse.payload, payload, 'equivalent payload')
-              cn.removeListener('event', listener)
+              client.removeListener('event', listener)
             }
           }
         })
-        cn.sendRequest(new cubelets.WriteBlockMessageRequest(pingRequest), function (err, response) {
-          console.log('response', response)
+        client.sendRequest(new messages.WriteBlockMessageRequest(pingRequest), function (err, response) {
           t.ifError(err, 'no response error')
           t.equal(0, response.result, 'wrote ping message')
         })
@@ -68,7 +68,7 @@ var cn = new Client().connect(config.device, function (err, construction) {
 
       test('disconnect', function (t) {
         t.plan(1)
-        cn.disconnect(t.ifError)
+        client.disconnect(t.ifError)
       })
     }
   })

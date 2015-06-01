@@ -1,16 +1,13 @@
 var util = require('util')
-var assert = require('assert')
 var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
-var through = require('through2')
 
-var BluetoothSerialScanner = function () {
+var BluetoothSerialScanner = function (opts) {
   Scanner.call(this)
 
-  this.listRobotDevices = function (callback) {
-    assert(typeof callback === 'function')
+  this._getDevices = function (callback) {
     var serialPort = new BluetoothSerialPort()
     serialPort.listPairedDevices(function (pairedDevices) {
       var devices = []
@@ -23,141 +20,101 @@ var BluetoothSerialScanner = function () {
       callback(devices)
     })
   }
+
+  this._compareDevice = function (device, otherDevice) {
+    return device.address == otherDevice.address
+  }
 }
 
 util.inherits(BluetoothSerialScanner, Scanner)
 
-var BluetoothSerialConnection = function (device) {
-  Connection.call(this)
+var BluetoothSerialConnection = function (device, opts) {
+  Connection.call(this, device, opts)
   
   var address = device['address'] || '00:00:00:00:00:00'
-  var services = device['services']
+
   var channelID = 0
+  var services = device['services']
   if (typeof device['channelID'] !== 'undefined') {
     channelID = device.channelID
   } else if (Array.isArray(services) && services.length > 0) {
     channelID = services[0].channelID
   }
 
-  var cn = this
+  var stream = this
   var serialPort = null
-  var stream = null
-  var connected = false
+  var isOpen = false
 
-  this.connect = function (callback) {
-    if (connected) {
-      if (callback) {
-        callback(null)
-      }
-      return
-    }
-
-    serialPort = new BluetoothSerialPort()
-
-    stream = through(function write (chunk, enc, next) {
-      serialPort.write(chunk, next || Function())
-    })
-
-    serialPort.on('error', function (err) {
-      cn.emit('error', err)
-      stream.emit('error', err)
-    })
-
-    serialPort.connect(address, channelID, function (err) {
-      if (err) {
-        if (callback) {
-          callback(err)
-        }
-        return
-      }
-
-      serialPort.on('data', function (data) {
-        cn._parser.parse(data)
-        stream.push(data)
-      })
-
-      serialPort.once('closed', function () {
-        cn.disconnect()
-        stream.end()
-      })
-
-      serialPort.once('failure', function () {
-        cn.disconnect()
-        stream.end()
-      })
-
-      connected = true
-
-      cn._connect()
-
-      if (callback) {
-        callback(null)
-      }
-    })
+  this._read = function (n) {
+    // do nothing
   }
 
-  this.disconnect = function (callback) {
-    if (!connected) {
-      if (callback) {
-        callback(null)
-      }
-      return
+  this._write = function (chunk, enc, next) {
+    if (serialPort) {
+      serialPort.write(chunk, next)
     }
+  }
 
-    connected = false
+  this._open = function (callback) {
+    callback = callback || Function()
+    if (serialPort) {
+      callback(null)
+    } else {
+      serialPort = new BluetoothSerialPort()
 
-    if (!serialPort) {
-      if (callback) {
-        callback(null)
-      }
-      return
-    }
+      serialPort.on('error', function (err) {
+        stream.emit('error', err)
+      })
 
-    var sp = serialPort
-    var st = stream
-    serialPort = null
-    stream = null
-    sp.removeAllListeners('data')
-    sp.removeAllListeners('closed')
-    sp.removeAllListeners('failure')
-    function close() {
-      sp.removeAllListeners('error')
-      cn._disconnect()
-      st.end()
-      sp = null
-      st = null
-      if (callback) {
+      serialPort.connect(address, channelID, function (err) {
         if (err) {
           callback(err)
         } else {
+          isOpen = true
+
+          serialPort.on('data', function (chunk) {
+            stream.push(chunk)
+          })
+
+          serialPort.once('closed', function () {
+            isOpen = false
+            stream.close()
+          })
+
+          serialPort.once('failure', function () {
+            isOpen = false
+            stream.close()
+          })
+
           callback(null)
         }
+      })
+    }
+  }
+
+  this._close = function (callback) {
+    callback = callback || Function()
+    if (!serialPort) {
+      callback(null)
+    } else {
+      var sp = serialPort
+      serialPort = null
+      sp.removeAllListeners('data')
+      sp.removeAllListeners('closed')
+      sp.removeAllListeners('failure')
+      sp.removeAllListeners('error')
+      if (isOpen) {
+        sp.once('closed', cleanup)
+        sp.close()
+      } else {
+        cleanup()
+      }
+      function cleanup() {
+        isOpen = false
+        sp = null
+        callback(null)
       }
     }
-    if (serialPort.isOpen()) {
-      close()
-    } else {
-      sp.once('closed', close)
-      sp.close()
-    }
-  }
-
-  this.connected = function () {
-    return connected
-  }
-
-  this.sendData = function (data, callback) {
-    if (connected) {
-      serialPort.write(data, callback || Function())
-    } else {
-      if (callback) {
-        callback(new Error('Client is not connected.'))
-      }
-    }
-  }
-
-  this.stream = function () {
-    return stream
   }
 }
 

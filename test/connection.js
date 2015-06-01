@@ -1,50 +1,28 @@
 var test = require('tape')
 var device = require('./config').device
 var cubelets = require('../index')
-var Client = require('../client/index')
 
 test('connecting', function (t) {
-  t.plan(7)
+  t.plan(6)
 
-  var cl = new Client()
+  var connection
 
-  var cn = cl.connect(device, function (err) {
-    t.error(err, 'no err on connect')
+  cubelets.connect(device, function (err, client, con) {
+    t.ifError(err, 'no err on connect')
     t.pass('connect callback')
-  })
+    connection = con
 
-  cl.on('connection', function (connection) {
-    t.equal(cn, connection)
-    t.pass('client connection')
-  })
-
-  cn.on('connect', function () {
-    t.pass('connection connect')
-
-    cn.on('disconnect', function () {
-      t.pass('connection disconnect')
+    client.on('connect', function (con) {
+      t.equal(con, connection)
+      t.pass('client connect')
     })
 
-    cn.disconnect(function (err) {
-      t.error(err, 'no err on disconnect')
+    client.on('disconnect', function () {
+      t.pass('client disconnect')
     })
-  })
-})
 
-test('responding', function (t) {
-  t.plan(4)
-
-  var cn = new Client.Connection(device)
-  var GetConfigurationRequest = cubelets.GetConfigurationRequest
-
-  cn.connect(function (err) {
-    t.pass('connected')
-    cn.sendRequest(new GetConfigurationRequest(), function (err, response) {
-      t.error(err, 'no error')
-      t.ok(response, 'got response')
-      cn.disconnect(function () {
-        t.pass('disconnected')
-      })
+    client.disconnect(function (err) {
+      t.ifError(err, 'no err on disconnect')
     })
   })
 })

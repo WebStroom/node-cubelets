@@ -1,39 +1,116 @@
 var util = require('util')
 var events = require('events')
-var Construction = require('./construction')
+var xtend = require('xtend/mutable')
 
-module.exports = function  (Scanner, Connection) {
+var Protocols = {
+  Imago: require('./protocol/imago'),
+  Classic: require('./protocol/classic')
+}
 
-  function Client () {
+function Factory(Scanner, Connection) {
+
+  function Client (con) {
     events.EventEmitter.call(this)
 
-    this.connect = function (device, callback) {
-      var cn = new Connection(device)
-      var self = this
-      cn.connect(function (err) {
-        if (err) {
-          self.emit('error', err)
-          if (callback) {
-            callback(err)
-          }
-        } else {
-          self.emit('connection', cn)
-          if (callback) {
-            callback(null, new Construction(cn))
-          }
+    var client = this
+    
+    client._defaultTimeout = 5000
+
+    this.disconnect = function (callback) {
+      con.close(callback)
+    }
+
+    con.on('close', function listener(err) {
+      client.emit('disconnect', err)
+    })
+
+    var protocol, parser, strategy
+
+    this.setProtocol = function (newProtocol) {
+      if (newProtocol !== protocol) {
+        protocol = newProtocol
+        setParser(new protocol.Parser())
+        setStrategy(new protocol.Strategy(client))
+      }
+    }
+
+    this.getProtocol = function () {
+      return protocol
+    }
+
+    function setParser(newParser) {
+      if (parser) {
+        con.removeListener('data', parser.parse)
+        parser.removeAllListeners('message')
+      }
+      parser = newParser
+      parser.on('message', function (message) {
+        if (protocol.isEvent(message)) {
+          client.emit('event', message)
+        }
+        if (protocol.isResponse(message)) {
+          client.emit('response', message)
         }
       })
-      return cn
+      con.on('data', parser.parse)
     }
+
+    this.getParser = function () {
+      return parser
+    }
+
+    function setStrategy(newStrategy) {
+      strategy = newStrategy
+      xtend(client, strategy)
+    }
+
+    this.setDefaultTimeout = function(t) {
+      client._defaultTimeout = t
+    }
+
+    this.getDefaultTimeout = function () {
+      return client._defaultTimeout
+    }
+
+    this.sendData = function (data, callback) {
+      con.write(data, callback)
+    }
+
+    client._isAlive = undefined
+
+    this.isAlive = function () {
+      return client._isAlive
+    }
+
+    this.setProtocol(Protocols.Imago)
 
     return this
   }
 
   util.inherits(Client, events.EventEmitter)
 
-  Client.Scanner = Scanner
-  Client.Connection = Connection
+  xtend(Client, Scanner)
+  Client.Protocol = Protocols.Imago
+  xtend(Client.Protocol, Protocols)
+
+  Client.connect = function (device, callback) {
+    callback = callback || Function()
+    var con = new Connection(device)
+    var client = new Client(con)
+    con.open(function (err) {
+      if (err) {
+        callback(err)
+      } else {
+        callback(null, client, con)
+        client.emit('connect', con)
+      }
+    })
+
+    return con
+  }
 
   return Client
 
 }
+
+module.exports = Factory

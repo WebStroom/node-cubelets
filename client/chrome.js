@@ -38,7 +38,7 @@ function restartRuntime() {
 var ChromeScanner = function () {
   Scanner.call(this)
 
-  this.listRobotDevices = function (callback) {
+  this.getDevices = function (callback) {
     assert(typeof callback === 'function')
     bluetoothClient.getDevices(function (allDevices) {
       var devices = []
@@ -138,7 +138,7 @@ var ChromeConnection = function (device) {
       input.write(data, callback)
     } else {
       if (callback) {
-        callback(new Error('Client is not connected.'))
+        callback(new Error('not connected.'))
       }
     }
   }

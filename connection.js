@@ -1,134 +1,65 @@
 var util = require('util')
-var events = require('events')
-var Parser = require('./parser')
-var Protocol = require('./protocol/imago')
+var Duplex = require('readable-stream').Duplex
 
-var Connection = function (config) {
-  events.EventEmitter.call(this)
+var Connection = function (device, opts) {
+  Duplex.call(this, opts)
 
-  var cn = this
+  var self = this
+  var isOpen = false
 
-  this.connect = function (callback) {
-    throw new Error('Not implemented.')
+  this.isOpen = function () {
+    return isOpen
   }
 
-  this._connect = function () {
-    cn._parser = new Parser()
-    cn._parser.on('message', function (msg) {
-      if (Protocol.isEvent(msg)) {
-        cn.emit('event', msg)
-      } else if (Protocol.isResponse(msg)) {
-        cn.emit('response', msg)
-      }
-    })
-    process.nextTick(function () {
-      cn.emit('connect')
-    })
-  }
-
-  this.disconnect = function (callback) {
-    throw new Error('Not implemented.')
-  }
-
-  this._disconnect = function () {
-    if (this._parser) {
-      cn._parser.removeAllListeners('message')
-      cn._parser = null
-    }
-    process.nextTick(function () {
-      cn.emit('disconnect')
-    })
-  }
-
-  this.connected = function () {
-    throw new Error('Not implemented.')
-  }
-
-  this.stream = function () {
-    throw new Error('Not implemented.')
-  }
-
-  this.sendData = function (data, callback) {
-    cn.stream().write(data, callback)
-  }
-
-  this.sendMessage = function (message, callback) {
-    cn.sendData(message.encode(), callback)
-  }
-
-  this.sendCommand = this.sendMessage
-
-  this.sendRequest = function (request, callback, timeout) {
-    if (typeof callback !== 'function') {
-      cn.sendMessage(request)
-      return
-    }
-
-    timeout = timeout || 5000
-
-    var timer = setTimeout(function () {
-      cn.removeListener('response', waitForResponse)
-      if (callback) {
-        callback(new Error('Timed out waiting for response to request: ' + request.code()))
-      }
-    }, timeout)
-
-    function waitForResponse(response) {
-      if (Protocol.requestCodeForResponseCode(response.code()) === request.code()) {
-        clearTimeout(timer)
-        cn.removeListener('response', waitForResponse)
-        if (callback) {
-          callback(null, response)
+  this.open = function (callback) {
+    callback = callback || Function()
+    if (isOpen) {
+      callback(null)
+    } else {
+      self._open(function (err) {
+        if (err) {
+          callback(err)
+          self.emit('error', err)
+        } else {
+          isOpen = true
+          callback(null)
+          self.emit('open')
         }
-      }
+      })
     }
-
-    cn.on('response', waitForResponse)
-    cn.sendMessage(request)
   }
 
-  this.sendBlockRequest = function (blockRequest, callback, timeout) {
-    var writeBlockRequest = new Protocol.messages.WriteBlockMessageRequest(blockRequest)
+  this._open = function (callback) {
+    throw new Error('not implemented')
+  }
 
-    timeout = timeout || 10000
-
-    var timer = setTimeout(function () {
-      cn.removeListener('event', waitForBlockResponse)
-      if (callback) {
-        callback(new Error('Timed out waiting for block response to block request: ' + request.code()))
-      }
-    }, timeout)
-
-    function waitForBlockResponse(e) {
-      if (e.code() === Protocol.messages.ReadBlockMessageEvent.code) {
-        var blockResponse = e.blockMessage
-        if (blockResponse.code() === blockRequest.code() && blockResponse.id === blockRequest.id) {
-          clearTimeout(timer)
-          cn.removeListener('event', waitForBlockResponse)
-          if (callback) {
-            callback(null, blockResponse)
-          }
+  this.close = function (callback) {
+    callback = callback || Function()
+    if (!isOpen) {
+      callback(null)
+    } else {
+      isOpen = false
+      self._close(function (err) {
+        if (err) {
+          callback(err)
+          self.emit('error', err)
+        } else {
+          callback(null)
+          self.emit('close')
         }
-      }
+      })
     }
+  }
 
-    function onRequestError(err) {
-      cn.removeListener('event', waitForBlockResponse)
-      if (callback) {
-        callback(err)
-      }      
-    }
+  this._close = function (callback) {
+    throw new Error('not implemented')
+  }
 
-    cn.on('event', waitForBlockResponse)
-    cn.sendRequest(writeBlockRequest, function (err, response) {
-      if (err) {
-        onRequestError(err)
-      } else if (response.result !== 0) {
-        onRequestError(new Error('Failed to write block message with result: ' + response.result))
-      }
-    })
+  this.getDevice = function () {
+    return device
   }
 }
 
-util.inherits(Connection, events.EventEmitter)
+util.inherits(Connection, Duplex)
+
 module.exports = Connection

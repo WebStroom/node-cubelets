@@ -9,7 +9,7 @@ var fs = require('fs')
 var SerialScanner = function () {
   Scanner.call(this)
 
-  this.listRobotDevices = function (callback) {
+  this.getDevices = function (callback) {
     assert(typeof callback === 'function')
     var sp = require('serialport')
     sp.list(function (err, ports) {
@@ -127,11 +127,10 @@ var SerialConnection = function (device) {
 
   this.sendData = function (data, callback) {
     if (connected) {
-      fs.appendFileSync('/Users/Donald/Desktop/input.log', data)
       serialPort.write(data, callback)
     } else {
       if (callback) {
-        callback(new Error('Client is not connected.'))
+        callback(new Error('not connected.'))
       }
     }
   }

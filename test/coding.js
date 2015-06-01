@@ -13,7 +13,8 @@ test('messages', function (t) {
     var crc = 84
 
     var msg, body
-    msg = new cubelets.UploadToMemoryRequest(slot, programSize, blockType, version, isCustom, crc)
+    var msgs = cubelets.Protocol.messages
+    msg = new msgs.UploadToMemoryRequest(slot, programSize, blockType, version, isCustom, crc)
     body = msg.encodeBody()
     t.equal(body[0], slot)
     t.equal(body.readUInt16BE(1), programSize)

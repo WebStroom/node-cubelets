@@ -1,5 +1,5 @@
-var Client = require('./client/index')
+var cubelets = require('./index')
 
-Client.Scanner.listRobotDevices(function (devices) {
+cubelets.getDevices(function (devices) {
   console.log(devices)
 })

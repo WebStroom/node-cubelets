@@ -1,4 +1,4 @@
-var Decoder = require('../decoder')
+var Decoder = require('../protocol/decoder')
 
 function id(b2, b1, b0) {
   return Decoder.decodeID(new Buffer([b2, b1, b0]))

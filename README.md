@@ -27,14 +27,12 @@ Then, open a connection:
 
 ```
 var cubelets = require('cubelets')
-var CubeletsClient = cubelets.Client
 
-var client = new CubeletsClient()
 var device = {
   path: '/dev/cu.Cubelet-GPW-AMP-SPP'
 }
 
-var connection = client.connect(device, function (err, construction) {
+cubelets.connect(device, function (err, client) {
   console.log('connected to', device)
 })
 
@@ -46,8 +44,7 @@ Discover
 Once connected, you can discover other Cubelets connected to the Bluetooth Cubelet.
 
 ```
-construction.on('change', function () {
-  console.log('Construction changed:')
+client.on('blocksChanged', function () {
   console.log('Origin block', construction.getOriginBlock())
   console.log('Neighbor blocks', construction.getNeighborBlocks())
   console.log('All blocks', construction.getAllBlocks())
@@ -56,6 +53,8 @@ construction.on('change', function () {
   console.log('Edges', construction.getEdges())
   console.log('Graph', construction.getGraph())
 })
+
+client.discoverBlocks()
 ```
 
 The change event will fire when the robot construction changes in any detectable way, included if a block is added, removed, or moved.
