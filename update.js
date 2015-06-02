@@ -114,11 +114,11 @@ function update(device, callback) {
 
 cubelets.connect(device, function (err, client) {
   if (err) {
-    console.err('connect:', err)
+    console.err('connect', err)
   } else {
     update(client, function (err) {
       if (err) {
-        console.err('update:', err)
+        console.err('update', err)
       }
     })
   }

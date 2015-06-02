@@ -32,7 +32,7 @@ var device = {
   path: '/dev/cu.Cubelet-GPW-AMP-SPP'
 }
 
-cubelets.connect(device, function (err, client) {
+var client = cubelets.connect(device, function (err) {
   console.log('connected to', device)
 })
 
