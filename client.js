@@ -123,12 +123,12 @@ function Factory(Scanner, Connection) {
       if (err) {
         callback(err)
       } else {
-        callback(null, client, con)
+        callback(null, con)
         client.emit('connect', con)
       }
     })
 
-    return con
+    return client
   }
 
   return Client

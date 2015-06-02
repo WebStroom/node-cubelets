@@ -5,15 +5,12 @@ var cubelets = require('../index')
 test('connecting', function (t) {
   t.plan(6)
 
-  var connection
-
-  cubelets.connect(device, function (err, client, con) {
+  var client = cubelets.connect(device, function (err, con) {
     t.ifError(err, 'no err on connect')
     t.pass('connect callback')
-    connection = con
 
-    client.on('connect', function (con) {
-      t.equal(con, connection)
+    client.on('connect', function (c) {
+      t.equal(con, c)
       t.pass('client connect')
     })
 

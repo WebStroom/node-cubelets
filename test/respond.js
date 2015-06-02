@@ -7,7 +7,7 @@ test('responding', function (t) {
 
   var GetConfigurationRequest = cubelets.Protocol.messages.GetConfigurationRequest
 
-  cubelets.connect(device, function (err, client) {
+  var client = cubelets.connect(device, function (err) {
     t.ifError(err, 'no connect err')
     t.pass('connect callback')
     client.sendRequest(new GetConfigurationRequest(), function (err, response) {

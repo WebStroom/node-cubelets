@@ -1,5 +1,4 @@
 var util = require('util')
-var assert = require('assert')
 var ChromeBluetoothClient = require('chrome-bluetooth-client')
 var ChromeRuntimeStream = require('chrome-runtime-stream')
 var BufferArrayStream = require('buffer-array-stream')
@@ -38,7 +37,7 @@ function restartRuntime() {
 var ChromeScanner = function () {
   Scanner.call(this)
 
-  this.getDevices = function (callback) {
+  this._getDevices = function (callback) {
     assert(typeof callback === 'function')
     bluetoothClient.getDevices(function (allDevices) {
       var devices = []
@@ -51,6 +50,10 @@ var ChromeScanner = function () {
       callback(devices)
     })
   }
+
+  this._compareDevice = function (device, otherDevice) {
+    return device.address == otherDevice.address
+  }
 }
 
 util.inherits(ChromeScanner, Scanner)
@@ -58,93 +61,71 @@ util.inherits(ChromeScanner, Scanner)
 var ChromeConnection = function (device) {
   Connection.call(this)
   
-  var cn = this
+  var stream = this
   var address = device['address'] || '00:00:00:00:00:00'
   var uuid = device['uuid']
   var input, socketStream, output
-  var connected = false
+  var isOpen = false
 
-  this.connect = function (callback) {
-    if (connected) {
-      if (callback) {
-        callback(null)
-      }
-      return
-    }
-
-    bluetoothClient.socket.connect(address, uuid, function (connectInfo) {
-      var port = chrome.runtime.connect(appId, {name: connectInfo.port})
-      socketStream = new ChromeRuntimeStream(port)
-      input = BufferArrayStream.fromBuffer()
-      output = BufferArrayStream.toBuffer()
-      input.pipe(socketStream).pipe(output)
-
-      output.on('data', function (data) {
-        cn._parser.parse(data)
-      })
-
-      socketStream.on('end', function () {
-        cn.disconnect()
-      })
-
-      connected = true
-
-      cn._connect()
-
-      if (callback) {
-        callback(null)
-      }
-    })
+  this._read = function (n) {
+    // do nothing
   }
 
-  this.disconnect = function (callback) {
-    if (!connected) {
-      if (callback) {
-        callback(null)
-      }
-      return
+  this._write = function (chunk, enc, next) {
+    if (socketStream) {
+      input.write(chunk, next)
     }
-
-    connected = false
-
-    if (!socketStream) {
-      if (callback) {
-        callback(null)
-      }
-      return
-    }
-
-    var ss = socketStream
-    socketStream = null
-    output.removeAllListeners('data')
-    ss.removeAllListeners('close')
-    ss.end(function () {
-      cn._disconnect()
-      ss = null
-      output = null
-      input = null
-      if (callback) {
-        callback(null)
-      }
-    })
   }
 
-  this.connected = function () {
-    return connected
-  }
-
-  this.sendData = function (data, callback) {
-    if (connected) {
-      input.write(data, callback)
+  this._open = function (callback) {
+    callback = callback || Function()
+    if (socketStream) {
+      callback(null)
     } else {
-      if (callback) {
-        callback(new Error('not connected.'))
-      }
+      bluetoothClient.socket.connect(address, uuid, function (connectInfo) {
+        var port = chrome.runtime.connect(appId, { name: connectInfo.port })
+        socketStream = new ChromeRuntimeStream(port)
+        input = BufferArrayStream.fromBuffer()
+        output = BufferArrayStream.toBuffer()
+        input.pipe(socketStream).pipe(output)
+
+        isOpen = true
+
+        output.on('data', function (chunk) {
+          stream.push(chunk)
+        })
+
+        socketStream.once('end', function () {
+          isOpen = false
+          stream.close()
+        })
+
+        callback(null)
+      })
     }
   }
 
-  this.stream = function () {
-    return socketStream
+  this._close = function (callback) {
+    callback = callback || Function()
+    if (!socketStream) {
+      callback(null)
+    } else {
+      var ss = socketStream
+      socketStream = null
+      output.removeAllListeners('data')
+      ss.removeAllListeners('close')
+      if (isOpen) {
+        ss.once('end', cleanup)
+        ss.end(cleanup)
+      } else {
+        cleanup()
+      }
+      function cleanup() {
+        isOpen = false
+        input = ss = output = null
+        callback(null)
+      }
+    }
   }
 }
 

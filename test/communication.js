@@ -3,7 +3,7 @@ var cubelets = require('../index')
 var config = require('./config')
 var __ = require('underscore')
 
-cubelets.connect(config.device, function (err, client) {
+var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
     t.plan(1)
     if (err) {

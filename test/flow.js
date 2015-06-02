@@ -8,7 +8,7 @@ test.only('echo flood', function (t)  {
 
   t.plan(1 * n + 1)
 
-  cubelets.connect(device, function (err, client) {
+  var client = cubelets.connect(device, function (err) {
     if (err) {
       t.end(err)
     } else {
@@ -47,7 +47,7 @@ test('config flood', function (t) {
 
   t.plan(n + 1)
 
-  cubelets.connect(device, function (err, client) {
+  var client = cubelets.connect(device, function (err) {
     if (err) {
       t.end(err)
     } else {
