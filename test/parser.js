@@ -5,7 +5,6 @@ test('can parse', function (t) {
     t.plan(8)
 
     var Protocol = cubelets.Protocol
-    var msgs = Protocol.messages
     var parser = new Protocol.Parser()
 
     var message
@@ -21,7 +20,7 @@ test('can parse', function (t) {
 
     parser.parse(new Buffer([ '<'.charCodeAt(0) ]))
     t.equal(0, count)
-    parser.parse(new Buffer([ msgs.EchoResponse.code ]))
+    parser.parse(new Buffer([ Protocol.messages.EchoResponse.code ]))
     parser.parse(new Buffer([ 0x0E ]))
     t.equal(0, count)
     parser.parse(new Buffer([ '>'.charCodeAt(0) ]))
@@ -30,7 +29,7 @@ test('can parse', function (t) {
     t.equal(0, count)
     parser.parse(new Buffer([ 0 ]))
     t.equal(1, count)
-    t.ok(message instanceof msgs.EchoResponse, 'is echo response')
+    t.ok(message instanceof Protocol.messages.EchoResponse, 'is echo response')
 
     parser.parse(new Buffer([
       '<'.charCodeAt(0),
@@ -39,5 +38,5 @@ test('can parse', function (t) {
       '>'.charCodeAt(0)
     ]))
     t.equal(2, count)
-    t.ok(message instanceof msgs.DebugEvent, 'is debug event')
+    t.ok(message instanceof Protocol.messages.DebugEvent, 'is debug event')
 })

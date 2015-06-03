@@ -8,8 +8,8 @@ function device() {
   return process.browser ? {
     "address": "00:04:3e:08:21:a9"
   } : {
-    "path": "/dev/tty.Cubelet-GPW-AMP-SPP",
-    "address": "00:04:3e:08:21:db",
+    "path": "/dev/tty.Cubelet-BWG-AMP-SPP",
+    "address": "00-04-3e-08-20-d5",
     "channelID": 1
   }
 }
@@ -21,7 +21,8 @@ function construction() {
     knob: id(6, 5, 4),
     distance: id(7, 5, 4),
     flashlight: id(12, 11, 10),
-    bargraph: id(9, 8, 7)
+    bargraph: id(9, 8, 7),
+    drive: id(9, 8, 7)
   }
   return {
     "type": type,

@@ -2,6 +2,7 @@ var fs = require('fs')
 var test = require('tape')
 var device = require('./config').device
 var cubelets = require('../index')
+var Protocol = cubelets.Protocol
 
 test.only('echo flood', function (t)  {
   var n = 500
@@ -13,9 +14,8 @@ test.only('echo flood', function (t)  {
       t.end(err)
     } else {
       var buffers = []
-      var messages = cubelets.Protocol.messages
       for (var i = 0; i < n; ++i) {
-        buffers.push(new messages.EchoRequest(new Buffer([ i ])).encode())
+        buffers.push(new Protocol.messages.EchoRequest(new Buffer([ i ])).encode())
       }
       var data = Buffer.concat(buffers)
       var x = 0
@@ -52,9 +52,8 @@ test('config flood', function (t) {
       t.end(err)
     } else {
       var buffers = []
-      var messages = cubelets.Protocol.messages
       for (var i = 0; i < n; ++i) {
-        buffers.push(new messages.GetConfigurationRequest().encode())
+        buffers.push(new Protocol.messages.GetConfigurationRequest().encode())
       }
       var data = Buffer.concat(buffers)
       var x = 0

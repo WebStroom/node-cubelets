@@ -1,6 +1,7 @@
 var test = require('tape')
 var cubelets = require('../index')
-var Version = require('../version')
+var Protocol = cubelets.Protocol
+var Version = cubelets.Version
  
 test('messages', function (t) {
     t.plan(8)
@@ -13,8 +14,7 @@ test('messages', function (t) {
     var crc = 84
 
     var msg, body
-    var msgs = cubelets.Protocol.messages
-    msg = new msgs.UploadToMemoryRequest(slot, programSize, blockType, version, isCustom, crc)
+    msg = new Protocol.messages.UploadToMemoryRequest(slot, programSize, blockType, version, isCustom, crc)
     body = msg.encodeBody()
     t.equal(body[0], slot)
     t.equal(body.readUInt16BE(1), programSize)

@@ -5,13 +5,12 @@ var __ = require('underscore')
 
 var config = require('../config')
 var cubelets = require('../../index')
-var Client = require('../../client/index')
-var Decoder = require('../../decoder')
+var Protocol = cubelets.Protocol
 var Cubelet = cubelets.Cubelet
 var Version = cubelets.Version
 var Program = cubelets.Program
 
-var cn = new Client().connect(config.device, function (err, construction) {
+var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
     t.plan(1)
     if (err) {
@@ -48,7 +47,7 @@ var cn = new Client().connect(config.device, function (err, construction) {
 
       // test('read memory table', function (t) {
       //   t.plan(3)
-      //   cn.sendRequest(new cubelets.GetMemoryTableRequest(), function (err, response) {
+      //   client.sendRequest(new Protocol.messages.GetMemoryTableRequest(), function (err, response) {
       //     t.ifError(err, 'no response err')
       //     t.ok(response, 'response ok')
       //     t.ok(response.slots, 'slots ok')
@@ -64,9 +63,9 @@ var cn = new Client().connect(config.device, function (err, construction) {
       //   var version = new Version(1, 2, 3)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
       //   // send an upload request
-      //   cn.sendRequest(request, function (err, response) {
+      //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no response err')
       //     t.ok(response, 'response ok')
       //     t.equal(response.result, 1, 'result fail')
@@ -81,23 +80,23 @@ var cn = new Client().connect(config.device, function (err, construction) {
       //   var version = new Version(1, 2, 3)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
       //   // send an upload request
-      //   cn.sendRequest(request, function (err, response) {
+      //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no response err')
       //     t.ok(response, 'response ok')
       //     t.equal(response.result, 0, 'result success')
       //   })
       //   // wait for an upload complete event
-      //   cn.on('event', function listener (e) {
-      //     if (e instanceof cubelets.UploadToMemoryCompleteEvent) {
-      //       cn.removeListener('event', listener)
+      //   client.on('event', function listener (e) {
+      //     if (e instanceof Protocol.messages.UploadToMemoryCompleteEvent) {
+      //       client.removeListener('event', listener)
       //       t.ok(e, 'event ok')
       //       t.pass('sent data')
       //     }
       //   })
       //   // send the data
-      //   cn.sendData(smallSlotData, function (err) {
+      //   client.sendData(smallSlotData, function (err) {
       //     t.ifError(err, 'no err')
       //   })
       // })
@@ -110,9 +109,9 @@ var cn = new Client().connect(config.device, function (err, construction) {
       //   var version = new Version(1, 2, 3)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
       //   // send an upload request
-      //   cn.sendRequest(request, function (err, response) {
+      //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no response err')
       //     t.ok(response, 'response ok')
       //     t.equal(response.result, 1, 'result fail')
@@ -127,29 +126,29 @@ var cn = new Client().connect(config.device, function (err, construction) {
       //   var version = new Version(4, 5, 6)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
       //   // send an upload request
-      //   cn.sendRequest(request, function (err, response) {
+      //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no upload response err')
       //     t.ok(response, 'upload response ok')
       //     t.equal(response.result, 0, 'upload result success')
       //   })
       //   // wait for an upload complete event
-      //   cn.on('event', function listener (e) {
-      //     if (e instanceof cubelets.UploadToMemoryCompleteEvent) {
-      //       cn.removeListener('event', listener)
+      //   client.on('event', function listener (e) {
+      //     if (e instanceof Protocol.messages.UploadToMemoryCompleteEvent) {
+      //       client.removeListener('event', listener)
       //       t.ok(e, 'event ok')
       //       t.equal(e.result, 0, 'event result success')
       //       testMemoryTable()
       //     }
       //   })
       //   // send the data
-      //   cn.sendData(smallSlotData, function (err) {
+      //   client.sendData(smallSlotData, function (err) {
       //     t.ifError(err, 'no data err')
       //   })
       //   // then test the table again once upload is complete
       //   function testMemoryTable() {
-      //     cn.sendRequest(new cubelets.GetMemoryTableRequest(), function (err, response) {
+      //     client.sendRequest(new Protocol.messages.GetMemoryTableRequest(), function (err, response) {
       //       t.ifError(err, 'no response err')
       //       t.ok(response, 'response ok')
       //       var slots = response.slots
@@ -165,60 +164,121 @@ var cn = new Client().connect(config.device, function (err, construction) {
       //   }
       // })
 
+      // test('target block exists', function (t) {
+      //   t.plan(3)
+      //   client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
+      //     t.ifError(err, 'no blocks response err')
+      //     t.ok(response, 'blocks response ok')
+      //     var bargraph = __(response.blocks).find(function (block) {
+      //       return block.id === config.construction.type.bargraph
+      //     })
+      //     t.ok(bargraph, 'has a bargraph')
+      //     t.end()
+      //   })
+      // })
+
+      // test('can flash a mini bargraph hex', function (t) {
+      //   t.plan(9)
+
+      //   // check the program is valid
+      //   var id = config.construction.type.bargraph
+      //   var hex = fs.readFileSync(__dirname + '/mini-bargraph.hex')
+      //   var program = new Program(hex)
+      //   t.ok(program.valid, 'program valid')
+
+      //   var slotIndex = 2
+      //   var slotData = program.data
+      //   var slotSize = Math.ceil(slotData.length / lineLength)
+      //   var blockType = Cubelet.Types.BARGRAPH.id
+      //   var version = new Version(4, 5, 6)
+      //   var isCustom = false
+      //   var crc = 0xcc
+
+      //   // send an upload request
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   client.sendRequest(request, function (err, response) {
+      //     t.ifError(err, 'no upload response err')
+      //     t.ok(response, 'upload response ok')
+      //     t.equal(response.result, 0, 'upload result success')
+      //   })
+      //   // wait for an upload complete event
+      //   client.on('event', function listener (e) {
+      //     if (e instanceof Protocol.messages.UploadToMemoryCompleteEvent) {
+      //       client.removeListener('event', listener)
+      //       t.ok(e, 'event ok')
+      //       t.equal(e.result, 0, 'event result success')
+      //       testFlash()
+      //     }
+      //   })
+      //   // send the data
+      //   client.sendData(program.data, function (err) {
+      //     console.log('send data callback', err)
+      //   })
+
+      //   function testFlash() {
+      //     var request = new Protocol.messages.FlashMemoryToBlockRequest(id, slotIndex)
+      //     client.sendRequest(request, function (err, response) {
+      //       t.ifError(err, 'no flash response err')
+      //       t.ok(response, 'flash response ok')
+      //       t.equal(response.result, 0, 'flash result success')
+      //     }, 1000 * 10)
+      //   }
+      // })
+
       test('target block exists', function (t) {
         t.plan(3)
-        cn.sendRequest(new cubelets.GetAllBlocksRequest(), function (err, response) {
+        client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
           t.ifError(err, 'no blocks response err')
           t.ok(response, 'blocks response ok')
-          var bargraph = __(response.blocks).find(function (block) {
-            return block.id === config.construction.type.bargraph
+          var drive = __(response.blocks).find(function (block) {
+            return block.id === config.construction.type.drive
           })
-          t.ok(bargraph, 'has a bargraph')
+          t.ok(drive, 'has a drive')
           t.end()
         })
       })
 
-      test('can flash a mini bargraph hex', function (t) {
+      test('can flash a drive hex', function (t) {
         t.plan(9)
 
         // check the program is valid
-        var id = config.construction.type.bargraph
-        var hex = fs.readFileSync(__dirname + '/mini-bargraph.hex')
+        var id = config.construction.type.drive
+        var hex = fs.readFileSync(__dirname + '/drive.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
 
-        var slotIndex = 2
+        var slotIndex = 5
         var slotData = program.data
         var slotSize = Math.ceil(slotData.length / lineLength)
-        var blockType = Cubelet.Types.BARGRAPH.id
+        var blockType = Cubelet.Types.DRIVE.id
         var version = new Version(4, 5, 6)
         var isCustom = false
         var crc = 0xcc
 
         // send an upload request
-        var request = new cubelets.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
-        cn.sendRequest(request, function (err, response) {
+        var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+        client.sendRequest(request, function (err, response) {
           t.ifError(err, 'no upload response err')
           t.ok(response, 'upload response ok')
           t.equal(response.result, 0, 'upload result success')
         })
         // wait for an upload complete event
-        cn.on('event', function listener (e) {
-          if (e instanceof cubelets.UploadToMemoryCompleteEvent) {
-            cn.removeListener('event', listener)
+        client.on('event', function listener (e) {
+          if (e instanceof Protocol.messages.UploadToMemoryCompleteEvent) {
+            client.removeListener('event', listener)
             t.ok(e, 'event ok')
             t.equal(e.result, 0, 'event result success')
             testFlash()
           }
         })
         // send the data
-        cn.sendData(program.data, function (err) {
+        client.sendData(program.data, function (err) {
           console.log('send data callback', err)
         })
 
         function testFlash() {
-          var request = new cubelets.FlashMemoryToBlockRequest(id, slotIndex)
-          cn.sendRequest(request, function (err, response) {
+          var request = new Protocol.messages.FlashMemoryToBlockRequest(id, slotIndex)
+          client.sendRequest(request, function (err, response) {
             t.ifError(err, 'no flash response err')
             t.ok(response, 'flash response ok')
             t.equal(response.result, 0, 'flash result success')
@@ -234,7 +294,7 @@ var cn = new Client().connect(config.device, function (err, construction) {
 
       test('disconnect', function (t) {
         t.plan(1)
-        cn.disconnect(t.ifError)
+        client.disconnect(t.ifError)
       })
     }
   })
