@@ -306,7 +306,7 @@ function debugExternalMemory() {
   this.readTable = function () {
     return function (t) {
       t.plan(1)
-      var stream = cn.stream()
+      var stream = client.getConnection()
       var n = 0
       var totalSize = 0x14000
       stream.write(new Buffer([
@@ -329,7 +329,7 @@ function debugExternalMemory() {
   this.readSlot = function (slotIndex, slotSize) {
     return function (t) {
       t.plan(1)
-      var stream = cn.stream()
+      var stream = client.getConnection()
       var n = 0
       stream.write(new Buffer([
         '<'.charCodeAt(0),
