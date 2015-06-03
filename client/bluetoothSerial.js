@@ -32,13 +32,10 @@ var BluetoothSerialConnection = function (device, opts) {
   Connection.call(this, device, opts)
   
   var address = device['address'] || '00:00:00:00:00:00'
-  var channelID = 0
   var services = device['services']
-  if (typeof device['channelID'] !== 'undefined') {
-    channelID = device.channelID
-  } else if (Array.isArray(services) && services.length > 0) {
-    channelID = services[0].channelID
-  }
+  var channelID = (typeof device['channelID'] !== undefined) ?
+    device.channelID : (Array.isArray(services) && services.length > 0) ?
+      services[0].channelID : 1
 
   var stream = this
   var serialPort = null

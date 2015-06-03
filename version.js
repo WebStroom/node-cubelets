@@ -19,14 +19,14 @@ module.exports = function Version(major, minor, patch) {
   }
 
   this.isGreaterThan = function (v) {
-    return v.equals(this) ? false : 
+    return v.isEqual(this) ? false : 
       v.major > this.major ? false :
         v.minor > this.minor ? false :
           v.patch > this.patch ? false : true
   }
 
   this.isLessThan = function (v) {
-    return v.equals(this) ? false :
+    return v.isEqual(this) ? false :
       v.major < this.major ? false :
         v.minor < this.minor ? false :
           v.patch < this.patch ? false : true

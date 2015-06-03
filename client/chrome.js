@@ -38,7 +38,6 @@ var ChromeScanner = function () {
   Scanner.call(this)
 
   this._getDevices = function (callback) {
-    assert(typeof callback === 'function')
     bluetoothClient.getDevices(function (allDevices) {
       var devices = []
       allDevices.forEach(function (device) {
@@ -58,12 +57,13 @@ var ChromeScanner = function () {
 
 util.inherits(ChromeScanner, Scanner)
 
-var ChromeConnection = function (device) {
-  Connection.call(this)
+var ChromeConnection = function (device, opts) {
+  Connection.call(this, device, opts)
   
-  var stream = this
   var address = device['address'] || '00:00:00:00:00:00'
   var uuid = device['uuid']
+
+  var stream = this
   var input, socketStream, output
   var isOpen = false
 
