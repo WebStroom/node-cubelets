@@ -1,4 +1,5 @@
 var util = require('util')
+var Version = require('../../version')
 var Strategy = require('../../strategy')
 var Cubelet = require('../../cubelet')
 var Types = Cubelet.Types
@@ -280,6 +281,89 @@ function ImagoStrategy(protocol, client) {
 
   this.setBlockValueEventEnabled = function (enabled, callback) {
     client.sendRequest(new messages.RegisterBlockValueEventRequest(enabled), callback)
+  }
+
+  this.uploadProgramToMemory = function (program, slot, callback) {
+    var lineLength = 18
+    var slotData = program.data
+    var slotSize = Math.ceil(slotData.length / lineLength)
+    var slotIndex = slot.index
+    var blockType = slot.blockType
+    var version = slot.version
+    var isCustom = slot.isCustom
+    var crc = slot.crc
+    var request = new messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+    var timeout = slotSize * 1000 // 1 second per line?
+
+    var timer = setTimeout(function () {
+      client.removeListener('event', waitForCompleteEvent)
+      if (callback) {
+        callback(new Error('Timed out waiting for upload to complete.'))
+      }
+    }, timeout)
+
+    function waitForCompleteEvent(e) {
+      if (e instanceof messages.UploadToMemoryCompleteEvent) {
+        clearTimeout(timer)
+        client.removeListener('event', waitForCompleteEvent)
+        if (callback) {
+          callback(null)
+        }
+      }
+    }
+
+    client.on('event', waitForCompleteEvent)
+    client.sendRequest(request, function (err) {
+      if (err) {
+        client.removeListener('event', waitForCompleteEvent)
+        if (callback) {
+          callback(err)
+        }
+      } else {
+        client.sendData(slotData, function (err) {
+          if (err) {
+            client.removeListener('event', waitForCompleteEvent)
+            if (callback) {
+              callback(err)
+            }
+          }
+        })
+      }
+    })
+  }
+
+  this.flashMemoryToBlock = function (id, slotIndex, callback) {
+    var request = new messages.FlashMemoryToBlockRequest(id, slotIndex)
+    client.sendRequest(request, function (err, response) {
+      if (callback) {
+        if (err) {
+          callback(err)
+        } else if (response.result !== 0) {
+          callback(new Error('Flashing failed.'))
+        } else {
+          callback(null)
+        }
+      }
+    })
+  }
+
+  this.flashProgramToBlock = function (program, block, callback) {
+    var slot = {
+      index: 0,
+      blockType: block.type.id,
+      version: new Version(0, 0, 0),
+      isCustom: false,
+      crc: 0xcc
+    }
+    client.uploadProgramToMemory(program, slot, function (err) {
+      if (err) {
+        if (callback) {
+          callback(err)
+        }
+      } else {
+        client.flashMemoryToBlock(block.id, slot.index, callback)
+      }
+    })
   }
 }
 

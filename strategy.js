@@ -111,6 +111,10 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
+  this.flashProgramToBlock = function (program, block, callback) {
+    throw new Error('not implemented')
+  }
+
 }
 
 module.exports = Strategy
