@@ -31,94 +31,132 @@ function detectBranch(client, callback) {
   client.setProtocol(Protocol.Classic)
   client.keepAlive(function (err) {
     if (!err) {
-      callback(null, client, branches.CLASSIC)
+      callback(null, branches.CLASSIC)
     } else {
       client.setProtocol(Protocol.Imago)
       client.getConfiguration(function (err, response) {
         if (!err) {
-          callback(null, client,
+          callback(null,
             (response.customApplication === 2) ? 
               branches.BOOTSTRAP : branches.IMAGO)
         } else {
-          callback(err, client)
+          callback(err)
         }
       })
     }
   })
 }
 
-function flash(client, branch, callback) {
-  console.log('flash')
-  switch (branch) {
-    case branches.BOOTSTRAP:
-      callback(null, client)
-      break
-    default:
+function flashBootstrapIfNeeded(client, callback) {
+  detectBranch(client, function (err, branch) {
+    if (branch !== branches.BOOTSTRAP) {
       flashBootstrap(client, callback)
-      break
-  }
+    } else {
+      callback(null, client)
+    }
+  })
 }
 
 function flashBootstrap(client, callback) {
   callback(null, client)
 }
 
-function flashImago(client, callback) {
-  callback(null, client)
-}
-
-function queueUntilDone(client, callback) {
-  console.log('queue until done')
+function queueBlocksUntilDone(client, callback) {
+  console.log('queue blocks until done')
   var waitingQueue = []
   var doneQueue = []
-  function enqueue(q, id) {
-    !exists(q, id) && q.unshift(id)
+
+  function enqueue(q, block) {
+    q.unshift(block)
   }
+
   function dequeue(q) {
-    return q.pop(q)
+    return q.pop()
   }
-  function exists(q, id) {
-    return q.indexOf(id) > -1
+
+  function exists(q, block) {
+    return q.indexOf(block) > -1
   }
-  async.until(function () {
-    return done
-  }, function (callback) {
-    client.getNeighborBlocks(function (err, blocks) {
+
+  function empty(q) {
+    return q.length === 0
+  }
+
+  function getNeighborBlocks(callback) {
+    client.getNeighborBlocks(function (err, response) {
       if (err) {
         callback(err)
       } else {
-        blocks.forEach(function (block) {
-          var id = block.id
-          if (!exists(doneQueue, id)) {
-            enqueue(waitingQueue, id)
-          }
+        response.blocks.forEach(function (block) {
+          if (!exists(waitingQueue, block))
+            enqueue(waitingQueue, block)
         })
+        callback(null)
       }
     })
-  }, callback.bind(this, client))
+  }
+
+  function flashBlock(callback) {
+    if (empty(waitingQueue)) {
+      callback(null)
+    } else {
+      var block = dequeue(waitingQueue)
+      var typeId = block.type.id
+      var program = programs[typeId]
+      if (program) {
+        client.flashProgramToBlock(block, program, callback)
+      } else {
+        callback(new Error('No program found for block type: ' + block.type ? block.type.name : block))
+      }
+    }
+  }
+
+  function waitIfEmpty(callback) {
+    var delay = 7500
+    if (waitingQueue.length === 0) {
+      setTimeout(function () {
+        callback(null)
+      }, 5000)
+    }
+  }
+
+  async.until(function () {
+    return done
+  }, function (next) {
+    async.seq(
+      getNeighborBlocks,
+      flashBlock,
+      waitIfEmpty
+    )(next)
+  }, callback)
 }
 
-function update(device, callback) {
+function flashImago(client, callback) {
+  console.log('flash imago')
+  callback(null, client)
+}
+
+function update(client, callback) {
   console.log('update')
-  async.seq([
-    cubelets.connect,
-    detectBranch,
-    queueUntilDone,
-    client.disconnect
-  ], device, callback)
+  async.seq(
+    flashBootstrapIfNeeded,
+    queueBlocksUntilDone,
+    flashImago
+  )(client, callback)
 
   this.done = function () {
     done = true
   }
 }
 
-cubelets.connect(device, function (err, client) {
+var client = cubelets.connect(device, function (err) {
   if (err) {
-    console.err('connect', err)
+    console.error(err)
   } else {
     update(client, function (err) {
+      client.disconnect()
       if (err) {
-        console.err('update', err)
+        console.error(err)
       }
     })
   }
