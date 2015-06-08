@@ -24,4 +24,19 @@ UploadToMemoryRequest.prototype.encodeBody = function () {
   return body
 }
 
+UploadToMemoryRequest.prototype.decodeBody = function (body) {
+  if (body.length !== 9) {
+    this.error = new Error('Size should be 9 bytes but is', body.length, 'bytes.')
+    return false
+  }
+
+  this.slotIndex = body.readUInt8(0)
+  this.slotSize = body.readUInt16BE(1)
+  this.blockType = body.readUInt8(3)
+  this.version = Message.Decoder.decodeVersion(data.slice(body.slice(4, 7)))
+  this.isCustom = body.readUInt8(7)
+  this.crc = body.readUInt8(8)
+  return true
+}
+
 module.exports = UploadToMemoryRequest

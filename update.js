@@ -49,9 +49,11 @@ function detectBranch(client, callback) {
 
 function flashBootstrapIfNeeded(client, callback) {
   detectBranch(client, function (err, branch) {
-    if (branch !== branches.BOOTSTRAP) {
+    if (branch === branches.BOOTSTRAP) {
+      console.log('flashing bootstrap')
       flashBootstrap(client, callback)
     } else {
+      console.log('skipping bootstrap')
       callback(null, client)
     }
   })
@@ -70,6 +72,10 @@ function queueBlocksUntilDone(client, callback) {
     q.unshift(block)
   }
 
+  function peek(q) {
+    return q.slice(-1)[0]
+  }
+
   function dequeue(q) {
     return q.pop()
   }
@@ -83,14 +89,19 @@ function queueBlocksUntilDone(client, callback) {
   }
 
   function getNeighborBlocks(callback) {
+    console.log('get neighbor blocks')
     client.getNeighborBlocks(function (err, response) {
       if (err) {
         callback(err)
       } else {
         response.blocks.forEach(function (block) {
-          if (!exists(waitingQueue, block))
+          if (!exists(waitingQueue, block)) {
+            console.log('enqueing', block)
             enqueue(waitingQueue, block)
+          }
         })
+        console.log('waiting:', waitingQueue)
+        console.log('done:', doneQueue)
         callback(null)
       }
     })
@@ -98,21 +109,33 @@ function queueBlocksUntilDone(client, callback) {
 
   function flashBlock(callback) {
     if (empty(waitingQueue)) {
+      console.log('nothing to flash')
       callback(null)
     } else {
-      var block = dequeue(waitingQueue)
+      var block = peek(waitingQueue)
       var typeId = block.type.id
       var program = programs[typeId]
-      if (program) {
-        client.flashProgramToBlock(block, program, callback)
-      } else {
+      if (!program) {
         callback(new Error('No program found for block type: ' + block.type ? block.type.name : block))
+      } else {
+        console.log('flashing', block.type.name)
+        client.flashProgramToBlock(block, program, function (err) {
+          if (err) {
+            callback(err)
+          } else {
+            enqueue(doneQueue, dequeue(waitingQueue))
+            console.log('waiting:', waitingQueue)
+            console.log('done:', doneQueue)
+            callback(null)
+          }
+        })
       }
     }
   }
 
   function waitIfEmpty(callback) {
     var delay = 7500
+    console.log('waiting', delay+'ms')
     if (waitingQueue.length === 0) {
       setTimeout(function () {
         callback(null)
@@ -157,6 +180,8 @@ var client = cubelets.connect(device, function (err) {
       client.disconnect()
       if (err) {
         console.error(err)
+      } else {
+        console.log('update successful')
       }
     })
   }

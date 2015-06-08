@@ -3,18 +3,22 @@ var Message = require('../message')
 
 var UploadToMemoryResponse = function (result) {
   Message.call(this)
-  this.result = result
+  this.result = result || 0
 }
 
 util.inherits(UploadToMemoryResponse, Message)
 
-UploadToMemoryResponse.prototype.decode = function (data) {
-  if (data.length !== 1) {
-    this.error = new Error('Size should be 1 byte but is', data.length, 'bytes.')
+UploadToMemoryResponse.prototype.encodeBody = function () {
+  return new Buffer([ this.result ])
+}
+
+UploadToMemoryResponse.prototype.decodeBody = function (body) {
+  if (body.length !== 1) {
+    this.error = new Error('Size should be 1 byte but is', body.length, 'bytes.')
     return false
   }
 
-  this.result = data.readUInt8(0)
+  this.result = body.readUInt8(0)
   return true
 }
 

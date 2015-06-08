@@ -8,7 +8,7 @@ var SetBlockValueResponse = function (result) {
 
 util.inherits(SetBlockValueResponse, Message)
 
-SetBlockValueResponse.prototype.decode = function (data) {
+SetBlockValueResponse.prototype.decodeBody = function (data) {
   if (data.length !== 1) {
     this.error = new Error('Size should be 1 byte but is', data.length, 'bytes.')
     return false

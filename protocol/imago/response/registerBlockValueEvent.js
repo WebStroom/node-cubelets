@@ -8,7 +8,7 @@ var RegisterBlockValueEventResponse = function (result) {
 
 util.inherits(RegisterBlockValueEventResponse, Message)
 
-RegisterBlockValueEventResponse.prototype.decode = function (data) {
+RegisterBlockValueEventResponse.prototype.decodeBody = function (data) {
   if (data.length !== 1) {
     this.error = new Error('Size should be 1 byte but is', data.length, 'bytes.')
     return false

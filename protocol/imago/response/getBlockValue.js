@@ -10,7 +10,7 @@ var GetBlockValueResponse = function (id, value, result) {
 
 util.inherits(GetBlockValueResponse, Message)
 
-GetBlockValueResponse.prototype.decode = function (data) {
+GetBlockValueResponse.prototype.decodeBody = function (data) {
   if (data.length !== 5) {
     this.error = new Error('Size should be 5 bytes but is', data.length, 'bytes.')
     return false

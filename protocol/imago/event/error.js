@@ -9,7 +9,7 @@ var ErrorEvent = function (errorCode, messageCode) {
 
 util.inherits(ErrorEvent, Message)
 
-ErrorEvent.prototype.decode = function (data) {
+ErrorEvent.prototype.decodeBody = function (data) {
   if (data.length > 0) {
     this.errorCode = data.readUInt8(0)
   }

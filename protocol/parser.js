@@ -182,7 +182,7 @@ var Parser = function (protocol) {
   // Emits a parsed response
   var emitMessage = function (body) {
     var message = new type()
-    message.decode(body)
+    message.decodeBody(body)
     emitter.emit('message', message)
   }
 

@@ -16,4 +16,15 @@ FlashMemoryToBlockRequest.prototype.encodeBody = function () {
   ])
 }
 
+FlashMemoryToBlockRequest.prototype.decodeBody = function (body) {
+  if (body.length !== 4) {
+    this.error = new Error('Size should be 4 bytes but is', body.length, 'bytes.')
+    return false
+  }
+
+  this.slotIndex = body.readUInt8(0)
+  this.id = Message.Decoder.decodeID(data.slice(body.slice(1, 4)))
+  return true
+}
+
 module.exports = FlashMemoryToBlockRequest

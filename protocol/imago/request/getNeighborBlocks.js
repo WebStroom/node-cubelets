@@ -14,4 +14,9 @@ GetNeighborBlocksRequest.prototype.encodeBody = function () {
     new Buffer([ this.hopCount ])
 }
 
+GetNeighborBlocksRequest.prototype.decodeBody = function (body) {
+  this.hopCount = body.length === 0 ? 0 : body[0]
+  return true
+}
+
 module.exports = GetNeighborBlocksRequest

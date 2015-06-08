@@ -8,7 +8,7 @@ var GetMemoryTableResponse = function (slots) {
 
 util.inherits(GetMemoryTableResponse, Message)
 
-GetMemoryTableResponse.prototype.decode = function (data) {
+GetMemoryTableResponse.prototype.decodeBody = function (data) {
   if (data.length < 4) {
     this.error = new Error('Size should be at least 4 bytes.')
     return false

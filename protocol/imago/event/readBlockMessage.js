@@ -9,7 +9,7 @@ var ReadBlockMessageEvent = function (blockMessage) {
 
 util.inherits(ReadBlockMessageEvent, Message)
 
-ReadBlockMessageEvent.prototype.decode = function (data) {
+ReadBlockMessageEvent.prototype.decodeBody = function (data) {
   if (data.length < 5) {
     this.error = new Error('Size should be at least 5 bytes but is', data.length, 'bytes.')
     return false

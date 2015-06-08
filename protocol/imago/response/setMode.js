@@ -8,7 +8,7 @@ var SetModeResponse = function (mode) {
 
 util.inherits(SetModeResponse, Message)
 
-SetModeResponse.prototype.decode = function (data) {
+SetModeResponse.prototype.decodeBody = function (data) {
   if (data.length !== 1) {
     this.error = new Error('Size should be 1 byte but is', data.length, 'bytes.')
     return false

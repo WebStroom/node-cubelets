@@ -12,4 +12,9 @@ EchoRequest.prototype.encodeBody = function () {
   return this.echo
 }
 
+EchoRequest.prototype.decodeBody = function (body) {
+  this.echo = body
+  return true
+}
+
 module.exports = EchoRequest

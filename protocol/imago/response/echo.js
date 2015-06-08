@@ -8,8 +8,12 @@ var EchoResponse = function (echo) {
 
 util.inherits(EchoResponse, Message)
 
-EchoResponse.prototype.decode = function (data) {
-  this.echo = data
+EchoResponse.prototype.encodeBody = function () {
+  return this.echo
+}
+
+EchoResponse.prototype.decodeBody = function (body) {
+  this.echo = body
   return true
 }
 

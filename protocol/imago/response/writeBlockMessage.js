@@ -8,7 +8,7 @@ var WriteBlockMessageResponse = function (result) {
 
 util.inherits(WriteBlockMessageResponse, Message)
 
-WriteBlockMessageResponse.prototype.decode = function (data) {
+WriteBlockMessageResponse.prototype.decodeBody = function (data) {
   if (data.length !== 1) {
     this.error = new Error('Size should be 1 byte but is', data.length, 'bytes.')
     return false
