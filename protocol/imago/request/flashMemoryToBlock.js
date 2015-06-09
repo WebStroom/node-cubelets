@@ -23,7 +23,7 @@ FlashMemoryToBlockRequest.prototype.decodeBody = function (body) {
   }
 
   this.slotIndex = body.readUInt8(0)
-  this.id = Message.Decoder.decodeID(data.slice(body.slice(1, 4)))
+  this.id = Message.Decoder.decodeID(body.slice(1, 4))
   return true
 }
 

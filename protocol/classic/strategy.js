@@ -6,8 +6,8 @@ function ClassicStrategy(protocol, client) {
 
   var messages = protocol.messages
 
-  this.keepAlive = function (callback) {
-    client.sendRequest(new messages.KeepAliveRequest(), callback)
+  this.ping = function (callback, timeout) {
+    client.sendRequest(new messages.KeepAliveRequest(), callback, timeout)
   }
 
   this.clearBlockValue = function (id, callback) {

@@ -39,6 +39,7 @@ function NetConnection(socket) {
   })
 
   reply(messages.EchoRequest, function (req) {
+    console.log('echo')
     send(new messages.EchoResponse(req.echo))
   })
 
@@ -47,27 +48,42 @@ function NetConnection(socket) {
   })
 
   reply(messages.UploadToMemoryRequest, function (req) {
-    var delay = 1000
+    // var lineSize = 18
+    // var progress = 0
+    // var total = req.slotSize * lineSize
+    // parser.setRawMode(true)
+    // parser.on('raw', function listener(data) {
+    //   progress += data.length
+    //   console.log('progress', progress)
+    //   if (progress >= slotSize) {
+    //     parser.removeListener('raw', listener)
+    //     parser.setRawMode(false)
+    //     var extra = progress - slotSize
+    //     parser.parse(data.slice(data.length - extra))
+    //     console.log('parsing', extra, 'extra bytes')
+    //   }
+    // })
     send(new messages.UploadToMemoryResponse(0))
     setTimeout(function () {
       send(new messages.UploadToMemoryCompleteEvent())
-    }, delay)
+    }, 1000)
   })
 
   reply(messages.FlashMemoryToBlockRequest, function (req) {
     //TODO: add flashing mutex
     var id = req.id
     var delay = 1000
-    var count = 10
+    // var count = 10
+    var count = 1
     var i = 0
     var size = 4000 //TODO: look up size in slotIndex
-    var interval = setInterval(function () {
-      var progress = Math.ceil(i / count * size)
-      send(new messages.FlashProgressEvent(id, progress))
-      i++
-    }, delay)
+    // var interval = setInterval(function () {
+    //   var progress = Math.ceil(i / count * size)
+    //   send(new messages.FlashProgressEvent(id, progress))
+    //   i++
+    // }, delay)
     setTimeout(function () {
-      clearInterval(interval)
+      // clearInterval(interval)
       send(new messages.FlashMemoryToBlockResponse(0))
     }, count * delay)
   })

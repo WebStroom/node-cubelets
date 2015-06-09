@@ -16,6 +16,10 @@ function Factory(Scanner, Connection) {
     
     client._defaultTimeout = 5000
 
+    this.getConnection = function () {
+      return con
+    }
+
     this.disconnect = function (callback) {
       con.close(callback)
     }
@@ -84,16 +88,17 @@ function Factory(Scanner, Connection) {
 
     var keepAliveTimer = null
 
-    this.startKeepAliveTimer = function (interval) {
+    this.startKeepAliveTimer = function (interval, timeout) {
       client.stopKeepAliveTimer()
-      interval = interval || client._defaultTimeout
+      timeout = timeout || client._defaultTimeout
+      interval = interval || (2 * timeout)
       keepAliveTimer = setInterval(function () {
-        client.keepAlive(function (err) {
+        client.ping(function (err) {
           if (err) {
             client.stopKeepAliveTimer()
             client.emit('error', new Error('Keep alive timer expired.'))
           }
-        })
+        }, timeout)
       }, interval)
     }
 
@@ -105,7 +110,6 @@ function Factory(Scanner, Connection) {
     }
 
     this.setProtocol(Protocols.Imago)
-
     return this
   }
 

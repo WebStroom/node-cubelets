@@ -43,7 +43,7 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.keepAlive = function (callback) {
+  this.ping = function (callback) {
     throw new Error('not implemented')
   }
 

@@ -75,6 +75,11 @@
       "name": "passive",
       "category": "think"
     },
+    "THRESHOLD": {
+      "id": 64,
+      "name": "threshold",
+      "category": "think"
+    },
     "ROTATE": {
       "id": 46,
       "name": "rotate",
@@ -92,9 +97,7 @@
     }
   },
   "urls": {
-    "api": "http://cubelets-programming.appspot.com/api",
-    "build": "http://avr-gcc2.modrobotics.com/hex.php/?u=",
-    "firmware": "http://cubelets-programming.appspot.com",
+    "appspot": "http://cubelets-programming.appspot.com",
     "compile": "http://compile.modrobotics.com"
   },
   "databases": {

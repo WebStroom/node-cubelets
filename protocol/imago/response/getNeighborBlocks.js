@@ -32,7 +32,8 @@ GetNeighborBlocksResponse.prototype.decodeBody = function (body) {
     /* format: [ id2, id1, id0, face ] */
     blocks.push({
       id: Message.Decoder.decodeID(body.slice(p + 0, p + 3)),
-      faceIndex: body.readUInt8(p + 3)
+      faceIndex: body.readUInt8(p + 3),
+      hopCount: 1 // hop count is implied for neighbor blocks
     })
   }
 

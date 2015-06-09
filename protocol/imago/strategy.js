@@ -54,11 +54,11 @@ function ImagoStrategy(protocol, client) {
     })
   }
 
-  this.keepAlive = function (callback) {
-    client.echo(new Buffer(0), callback)
+  this.ping = function (callback, timeout) {
+    client.echo(new Buffer(0), callback, timeout)
   }
 
-  this.echo = function (data, callback) {
+  this.echo = function (data, callback, timeout) {
     client.sendRequest(new messages.EchoRequest(data), callback)
   }
 
@@ -108,13 +108,7 @@ function ImagoStrategy(protocol, client) {
       var moved = []
       var updated = false
       if (cubelet) {
-        var rank = getRank(hopCount)
-        var dupe = __(rank).find(function (d) {
-          return d.hopCount === hopCount
-        })
-        if (dupe) {
-          cubelet = dupe
-        } else if (cubelet.hopCount !== hopCount) {
+        if (hopCount !== cubelet.hopCount) {
           var fromHopCount = cubelet.hopCount
           moveRank(cubelet, hopCount)
           moved.push(cubelet)
@@ -214,16 +208,10 @@ function ImagoStrategy(protocol, client) {
     )(new messages.GetNeighborBlocksRequest(), callback)
   }
 
-  function onFetchBlocks(b) {
-    if (b) {
-      b.forEach(function (block) {
-        blocks.upsert(block.id, block.hopCount, Types.UNKNOWN)
-      })
-    }    
-  }
-
   function onFetchNeighborBlocks(response, callback) {
-    onFetchBlocks(response.blocks)
+    response.blocks.forEach(function (block) {
+      blocks.upsert(block.id, 1, Types.UNKNOWN)
+    })
     if (callback) {
       callback(null, client.getNeighborBlocks())
     }
@@ -320,6 +308,8 @@ function ImagoStrategy(protocol, client) {
           callback(err)
         }
       } else {
+        //XXX: hack for demo
+        slotData = new Buffer(0)
         client.sendData(slotData, function (err) {
           if (err) {
             client.removeListener('event', waitForCompleteEvent)
