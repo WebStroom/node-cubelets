@@ -23,7 +23,6 @@ var InfoService = function() {
 
   this.fetchCubeletInfo = function (cubelets, callback) {
     callback = callback || Function()
-
     if (cubelets.length === 0) {
       callback(null)
     } else {

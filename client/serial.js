@@ -49,10 +49,35 @@ var SerialConnection = function (device, opts) {
     // do nothing
   }
 
-  this._write = function (chunk, enc, next) {
-    if (serialPort) {
-      serialPort.write(chunk, next)
+  this._write = function (data, enc, next) {
+    var chunkSize = 60
+
+    function write(data, callback) {
+      if (serialPort) {
+        serialPort.write(data, callback)
+      } else {
+        callback(new Error('disconnected'))
+      }
     }
+
+    function writeChunk(i) {
+      var start = i * chunkSize
+      var end = start + chunkSize
+      var chunk = data.slice(start, end)
+      if (chunk.length > 0) {
+        write(chunk, function (err) {
+          if (err) {
+            next(err)
+          } else {
+            writeChunk(i + 1)
+          }
+        })
+      } else {
+        next()
+      }
+    }
+
+    writeChunk(0)
   }
 
   this._open = function (callback) {

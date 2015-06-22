@@ -6,7 +6,7 @@ var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
 
-var appId = 'fehdhddkknkaeimadppmacaoclnllcjm'
+var appId = 'ahdpdhnpkbnjfppkaicocidhgglkmapj'
 var running = false
 var bluetoothClient = null
 

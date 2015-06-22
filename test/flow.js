@@ -4,8 +4,10 @@ var device = require('./config').device
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
 
-test.only('echo flood', function (t)  {
-  var n = 500
+var outputFile = fs.openSync('./output.bin', 'w')
+
+test('echo flood', function (t)  {
+  var n = 5000
 
   t.plan(1 * n + 1)
 
@@ -42,8 +44,8 @@ test.only('echo flood', function (t)  {
   })
 })
 
-test('config flood', function (t) {
-  var n = 500
+test.only('config flood', function (t) {
+  var n = 5000
 
   t.plan(n + 1)
 
@@ -51,17 +53,22 @@ test('config flood', function (t) {
     if (err) {
       t.end(err)
     } else {
+      console.time('time elapsed')
       var buffers = []
       for (var i = 0; i < n; ++i) {
         buffers.push(new Protocol.messages.GetConfigurationRequest().encode())
       }
       var data = Buffer.concat(buffers)
       var x = 0
+      client.on('data', function (data) {
+        fs.writeSync(outputFile, data, 0, data.length)
+      })
       client.on('response', function listener(response) {
         ++x
         t.pass('response ' + x)
         if (x === n) {
           client.disconnect(t.ifError) // +1
+          console.timeEnd('time elapsed')
         }
       })
       client.on('error', function (err) {
@@ -69,6 +76,7 @@ test('config flood', function (t) {
         client.disconnect()
         t.end()
       })
+
       client.sendData(data, function (err) {
         if (err) {
           client.disconnect()

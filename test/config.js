@@ -8,8 +8,8 @@ function device() {
   return process.browser ? {
     "address": "00:04:3e:08:21:a9"
   } : {
-    "path": "/dev/tty.Cubelet-BWW-AMP-SPP",
-    "address": "00-04-3e-08-21-a7",
+    "path": "COM4",
+    "address": "00:04:3e:08:21:db",
     "channelID": 1
   }
 }

@@ -41,10 +41,9 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('ping', function (t) {
         t.plan(5)
-        var pongCode = .code
         var id = config.construction.type.passive
         var payload = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        var pingRequest = new blockMessages.PingRequest(id, payload)
+        var pingRequest = new Protocol.Block.messages.PingRequest(id, payload)
         client.on('event', function listener(e) {
           if (e instanceof Protocol.messages.ReadBlockMessageEvent && e.blockMessage instanceof Protocol.Block.messages.PongResponse) {
             var pongResponse = e.blockMessage

@@ -24,6 +24,10 @@ function Factory(Scanner, Connection) {
       con.close(callback)
     }
 
+    con.on('data', function (data) {
+      client.emit('data', data)
+    })
+
     con.on('close', function listener(err) {
       client.emit('disconnect', err)
     })
