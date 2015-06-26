@@ -229,7 +229,9 @@ function ImagoStrategy(protocol, client) {
   }
 
   function onFetchAllBlocks(response, callback) {
-    onFetchBlocks(response.blocks)
+    response.blocks.forEach(function (block) {
+      blocks.upsert(block.id, block.hopCount, Types.UNKNOWN)
+    })
     if (callback) {
       callback(null, client.getAllBlocks())
     }

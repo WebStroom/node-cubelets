@@ -47,7 +47,6 @@ var BluetoothSerialConnection = function (device, opts) {
 
   this._write = function (chunk, enc, next) {
     if (serialPort) {
-      console.log('<<', chunk)
       serialPort.write(chunk, next)
     }
   }
@@ -70,7 +69,6 @@ var BluetoothSerialConnection = function (device, opts) {
           isOpen = true
 
           serialPort.on('data', function (chunk) {
-            console.log('>>', chunk)
             stream.push(chunk)
           })
 
