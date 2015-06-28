@@ -9,12 +9,7 @@ var GetBlockValueRequest = function (id) {
 util.inherits(GetBlockValueRequest, Message)
 
 GetBlockValueRequest.prototype.encodeBody = function () {
-  var encodedID = Message.Encoder.encodeID(this.id)
-  return new Buffer([
-    encodedID.readUInt8(0),
-    encodedID.readUInt8(1),
-    encodedID.readUInt8(2)
-  ])
+  return Message.Encoder.encodeID(this.id)
 }
 
 module.exports = GetBlockValueRequest

@@ -1,10 +1,12 @@
 var util = require('util')
+var Strategy = require('../strategy')
 var Version = require('../../version')
-var Strategy = require('../../strategy')
 var Cubelet = require('../../cubelet')
 var Types = Cubelet.Types
 var xtend = require('xtend/mutable')
 var async = require('async')
+var CommandBuffer = require('../commandBuffer')
+var RequestQueue = require('../requestQueue')
 var __ = require('underscore')
 
 function ImagoStrategy(protocol, client) {
@@ -164,14 +166,11 @@ function ImagoStrategy(protocol, client) {
     }
 
     function addRank(cubelet) {
-      var hopCount = cubelet.hopCount
-      var rank = getRank(hopCount)
-      rank.push(cubelet)
+      getRank(cubelet.hopCount).push(cubelet)
     }
 
     function removeRank(cubelet) {
-      var hopCount = cubelet.hopCount
-      var rank = getRank(hopCount)
+      var rank = getRank(cubelet.hopCount)
       var i = __(rank).indexOf(cubelet)
       if (i > -1) {
         rank.splice(i, 1)

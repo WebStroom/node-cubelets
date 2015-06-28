@@ -39,7 +39,6 @@ function NetConnection(socket) {
   })
 
   reply(messages.EchoRequest, function (req) {
-    console.log('echo')
     send(new messages.EchoResponse(req.echo))
   })
 
@@ -93,9 +92,9 @@ function NetConnection(socket) {
     var reply = replies[code]
     if (typeof reply === 'function') {
       reply(msg)
+      stream.emit('request', msg)
     } else {
-      //XXX: "unrecognized message"
-      send(new messages.ErrorEvent(1, code))
+      stream.emit('command', msg)
     }
   })
 

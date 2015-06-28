@@ -4,17 +4,27 @@ var config = require('./config')
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
 
+var numTotalReads = 500
+var numTotalWrites = 500
+var writeInterval = 1000/10
+
+function writeValue(t) {
+  return 255 * Math.sin(t/10)
+}
+
+var cubeletIDs = [
+  config.construction.passive.id,
+  config.construction.knob.id,
+  config.construction.flashlight.id
+]
+
+test('fat packets', function (t) {
+  t.plan(1 + numReads + numWrites + 1)
+
+  //TODO
+})
+
 test('skinny packets', function (t)  {
-  var numTotalReads = 500
-  var numTotalWrites = 500
-  var writeInterval = 1000/10
-
-  var writeIDs = [
-    config.construction.passive.id,
-    config.construction.knob.id,
-    config.construction.flashlight.id
-  ]
-
   t.plan(1 + numReads + numWrites + 1)
 
   var client = cubelets.connect(config.device, function (err) {
@@ -30,7 +40,17 @@ test('skinny packets', function (t)  {
       })
 
       // Enable block value events (1+)
-      client.sendRequest(new Protocol.messages.RegisterBlockValueRequest(true), function (err, response) {
+      client.registerBlockValueEvent(function (err, res) {
+        if (err) {
+          t.end(err)
+        } else if (response.result !== 0) {
+          t.fail('register fail')
+        } else {
+          t.pass('register success')
+        }
+      })
+
+      client.sendRequest(new Protocol.messages.RegisterBlockValueEventRequest(cubeletIDs), function (err, response) {
         if (err) {
           t.end(err)
         } else if (response.result !== 0) {
@@ -41,9 +61,12 @@ test('skinny packets', function (t)  {
       })
 
       // Start writes
+      var writeTime = 0
       var numWrites = 0
       var writeTimer = setInterval(function () {
-        client.sendCommand(new Protocol.messages.SetBlockValueCommand())
+        client.sendCommand(new Protocol.messages.SetBlockValueCommand([
+          { id: cubeletIDs. }
+        ]))
         numWrites++
         t.pass('write ' + numWrites)
         if (numTotalWrites === numWrites) {

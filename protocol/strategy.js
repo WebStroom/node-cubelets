@@ -1,6 +1,9 @@
+var RequestQueue = require('./requestQueue')
+
 function Strategy(protocol, client) {
 
   var messages = protocol.messages
+  var requestQueue = new RequestQueue(protocol, client)
 
   this.sendMessage = function (message, callback) {
     client.sendData(message.encode(), callback)
@@ -11,32 +14,7 @@ function Strategy(protocol, client) {
   }
 
   this.sendRequest = function (request, callback, timeout) {
-    if (typeof callback !== 'function') {
-      client.sendMessage(request)
-      return
-    }
-
-    timeout = timeout || client._defaultTimeout
-
-    var timer = setTimeout(function () {
-      client.removeListener('response', waitForResponse)
-      if (callback) {
-        callback(new Error('Timed out waiting for response to request: ' + request.code()))
-      }
-    }, timeout)
-
-    function waitForResponse(response) {
-      if (protocol.requestCodeForResponseCode(response.code()) === request.code()) {
-        clearTimeout(timer)
-        client.removeListener('response', waitForResponse)
-        if (callback) {
-          callback(null, response)
-        }
-      }
-    }
-
-    client.on('response', waitForResponse)
-    client.sendMessage(request)
+    requestQueue.push(request, callback, timeout)
   }
 
   this.sendBlockRequest = function (blockRequest, callback, timeout) {
@@ -104,11 +82,19 @@ function Strategy(protocol, client) {
   }
 
   this.clearBlockValue = function (id, callback) {
-    throw new Error('not implemented')
+    client.sendCommand(new messages.ClearBlockValueCommand(id, value), callback)
   }
 
-  this.setBlockValueEventEnabled = function (enabled, callback) {
-    throw new Error('not implemented')
+  this.registerBlockValueEvent = function (ids, callback) {
+    client.sendRequest(new messages.RegisterBlockValueEvent(ids), callback)
+  }
+
+  this.unregisterBlockValueEvent = function (ids, callback) {
+    client.sendRequest(new messages.UnregisterBlockValueEvent(ids), callback)
+  }
+
+  this.unregisterAllBlockValueEvents = function (ids, callback) {
+    client.sendRequest(new messages.UnregisterAllBlockValueEvents(), callback)
   }
 
   this.flashProgramToBlock = function (program, block, callback) {

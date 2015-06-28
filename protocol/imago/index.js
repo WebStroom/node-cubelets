@@ -7,8 +7,10 @@ var xtend = require('xtend/mutable')
 
 var messages = {
   SetBlockValueCommand: require('./command/setBlockValue'),
+  ClearBlockValueCommand: require('./command/clearBlockValue'),
   SetLEDColorCommand: require('./command/setLEDColor'),
   SetLEDRGBCommand: require('./command/setLEDRGB'),
+
   GetConfigurationRequest: require('./request/getConfiguration'),
   GetConfigurationResponse: require('./response/getConfiguration'),
   GetModeRequest: require('./request/getMode'),
@@ -21,6 +23,10 @@ var messages = {
   SetBlockValueResponse: require('./response/setBlockValue'),
   RegisterBlockValueEventRequest: require('./request/registerBlockValueEvent'),
   RegisterBlockValueEventResponse: require('./response/registerBlockValueEvent'),
+  UnregisterBlockValueEventRequest: require('./request/unregisterBlockValueEvent'),
+  UnregisterBlockValueEventResponse: require('./response/unregisterBlockValueEvent'),
+  UnregisterAllBlockValueEventsRequest: require('./request/unregisterAllBlockValueEvents'),
+  UnregisterAllBlockValueEventsResponse: require('./response/unregisterAllBlockValueEvents'),
   GetAllBlocksRequest: require('./request/getAllBlocks'),
   GetAllBlocksResponse: require('./response/getAllBlocks'),
   GetNeighborBlocksRequest: require('./request/getNeighborBlocks'),
@@ -35,6 +41,7 @@ var messages = {
   UploadToMemoryResponse: require('./response/uploadToMemory'),
   FlashMemoryToBlockRequest: require('./request/flashMemoryToBlock'),
   FlashMemoryToBlockResponse: require('./response/flashMemoryToBlock'),
+
   DebugEvent: require('./event/debug'),
   BlockValueEvent: require('./event/blockValue'),
   ReadBlockMessageEvent: require('./event/readBlockMessage'),
@@ -46,6 +53,7 @@ var messages = {
 var ImagoProtocol = new Protocol({
   commands: [
     [0x41, messages.SetBlockValueCommand],
+    [0x4F, messages.ClearBlockValueCommand],
     [0x42, messages.SetLEDColorCommand],
     [0x43, messages.SetLEDRGBCommand],
   ],
@@ -59,6 +67,8 @@ var ImagoProtocol = new Protocol({
     [0x07, messages.GetAllBlocksRequest],
     [0x08, messages.GetNeighborBlocksRequest],
     [0x09, messages.WriteBlockMessageRequest],
+    [0x0A, messages.UnregisterBlockValueEventRequest],
+    [0x0B, messages.UnregisterAllBlockValueEventsRequest],
     [0x10, messages.EchoRequest],
     [0x20, messages.GetMemoryTableRequest],
     [0x21, messages.UploadToMemoryRequest],
@@ -74,6 +84,8 @@ var ImagoProtocol = new Protocol({
     [0x87, messages.GetAllBlocksResponse],
     [0x88, messages.GetNeighborBlocksResponse],
     [0x89, messages.WriteBlockMessageResponse],
+    [0x8A, messages.UnregisterBlockValueEventResponse],
+    [0x8B, messages.UnregisterAllBlockValueEventsResponse],
     [0x90, messages.EchoResponse],
     [0xA0, messages.GetMemoryTableResponse],
     [0xA1, messages.UploadToMemoryResponse],
@@ -83,8 +95,8 @@ var ImagoProtocol = new Protocol({
     [0xE0, messages.DebugEvent],
     [0xE1, messages.BlockValueEvent],
     [0xE2, messages.ReadBlockMessageEvent],
-    [0xE3, messages.UploadToMemoryCompleteEvent],
-    [0xE4, messages.FlashProgressEvent],
+    [0xF0, messages.UploadToMemoryCompleteEvent],
+    [0xF4, messages.FlashProgressEvent],
     [0xFF, messages.ErrorEvent],
   ]
 })

@@ -1,5 +1,5 @@
 var util = require('util')
-var Strategy = require('../../strategy')
+var Strategy = require('../strategy')
 
 function ClassicStrategy(protocol, client) {
   Strategy.call(this, protocol, client)
@@ -8,10 +8,6 @@ function ClassicStrategy(protocol, client) {
 
   this.ping = function (callback, timeout) {
     client.sendRequest(new messages.KeepAliveRequest(), callback, timeout)
-  }
-
-  this.clearBlockValue = function (id, callback) {
-    client.sendRequest(new messages.ClearBlockValueCommand(id), callback)
   }
 }
 

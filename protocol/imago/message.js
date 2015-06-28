@@ -34,6 +34,14 @@ Message.prototype.encode = function () {
   ])
 }
 
+// Returns a priority compared to an other message:
+//   0: same priority
+//  >1: higher priority
+//  <1: lower priority
+Message.prototype.prioritize = function (otherMessage) {
+  return 0
+}
+
 module.exports = Message
 module.exports.Encoder = Encoder
 module.exports.Decoder = Decoder

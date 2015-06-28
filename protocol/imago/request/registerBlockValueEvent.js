@@ -1,17 +1,15 @@
 var util = require('util')
 var Message = require('../message')
 
-var RegisterBlockValueEventRequest = function (enabled) {
+var RegisterBlockValueEventRequest = function (id) {
   Message.call(this)
-  this.enabled = enabled
+  this.id = id
 }
 
 util.inherits(RegisterBlockValueEventRequest, Message)
 
 RegisterBlockValueEventRequest.prototype.encodeBody = function () {
-  return new Buffer([
-    this.enabled ? 1 : 0
-  ])
+  return Message.Encoder.encodeID(this.id)
 }
 
 module.exports = RegisterBlockValueEventRequest
