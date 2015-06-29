@@ -29,7 +29,7 @@ module.exports = function RequestQueue(client) {
     client.sendMessage(request)
   })
 
-  this.push = function(request, callback, timeout) {
+  this.push = function (request, callback, timeout) {
     queue.push({
       request: request,
       timeout: timeout || client._defaultTimeout

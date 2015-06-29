@@ -76,7 +76,6 @@ var ChromeConnection = function (device, opts) {
 
     function write(data, callback) {
       if (socketStream) {
-        console.log('chunk <<', data)
         input.write(data, callback)
       } else {
         callback(new Error('disconnected'))
@@ -88,6 +87,7 @@ var ChromeConnection = function (device, opts) {
       var end = start + chunkSize
       var chunk = data.slice(start, end)
       if (chunk.length > 0) {
+        console.log('<<', chunk)
         write(chunk, function (err) {
           if (err) {
             next(err)

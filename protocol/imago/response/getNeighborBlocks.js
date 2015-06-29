@@ -20,7 +20,7 @@ GetNeighborBlocksResponse.prototype.encodeBody = function () {
 }
 
 GetNeighborBlocksResponse.prototype.decodeBody = function (body) {
-  if (body.length % 4 != 0) {
+  if (body.length % 4 !== 0) {
     this.error = new Error('Size should be divisible by 4.')
     return false
   }

@@ -1,7 +1,7 @@
 var util = require('util')
 var Message = require('../message')
 
-var GetNeighborBlocksCommand = function(id, value) {
+var GetNeighborBlocksCommand = function (id, value) {
   Message.call(this)
 }
 

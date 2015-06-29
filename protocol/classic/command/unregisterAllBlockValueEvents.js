@@ -1,7 +1,7 @@
 var util = require('util')
 var Message = require('../message')
 
-var UnregisterAllBlockValueEvents = function(id) {
+var UnregisterAllBlockValueEvents = function () {
   Message.call(this)
 }
 

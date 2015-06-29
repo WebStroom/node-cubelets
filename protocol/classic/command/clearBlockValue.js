@@ -1,14 +1,14 @@
 var util = require('util')
 var Message = require('../message')
 
-var ClearBlockValueCommand = function(id) {
+var ClearBlockValueCommand = function (id) {
   Message.call(this)
   this.id = id
 }
 
 util.inherits(ClearBlockValueCommand, Message)
 
-ClearBlockValueCommand.prototype.encodeBody = function() {
+ClearBlockValueCommand.prototype.encodeBody = function () {
   var encodedID = Message.Encoder.encodeID(this.id)
   return new Buffer([
     0x0,

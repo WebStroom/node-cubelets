@@ -9,7 +9,7 @@ var GetAllBlocks = function (blocks) {
 util.inherits(GetAllBlocks, Message)
 
 GetAllBlocks.prototype.decodeBody = function (data) {
-  if (data.length % 5 != 0) {
+  if (data.length % 5 !== 0) {
     this.error = new Error('Size should be divisible by 5.')
     return false
   }

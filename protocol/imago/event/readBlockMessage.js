@@ -33,7 +33,7 @@ ReadBlockMessageEvent.prototype.decodeBody = function (data) {
   }
 
   var body = data.slice(5, 5 + size)
-  return this.blockMessage.decode(body)
+  return this.blockMessage.decodeBody(body)
 }
 
 module.exports = ReadBlockMessageEvent

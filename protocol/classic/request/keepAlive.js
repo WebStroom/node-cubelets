@@ -1,7 +1,7 @@
 var util = require('util')
 var Message = require('../message')
 
-var KeepAliveRequest = function() {
+var KeepAliveRequest = function () {
   Message.call(this)
 }
 

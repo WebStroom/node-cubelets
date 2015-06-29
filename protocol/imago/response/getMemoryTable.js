@@ -17,7 +17,7 @@ GetMemoryTableResponse.prototype.decodeBody = function (data) {
   var mask = data.readUInt32BE(0)
   var slotsLength = data.length - 4
 
-  if (slotsLength % 7 != 0) {
+  if (slotsLength % 7 !== 0) {
     this.error = new Error('Slots size should be divisible by 7.')
     return false
   }

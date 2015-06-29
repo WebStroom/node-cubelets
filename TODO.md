@@ -1,4 +1,3 @@
-- command buffer
-- prioritize set/clear commands and setLED/setColor together
+- eliminate callbacks on command writes?
 - re-implement read block message handler with streams and back pressure?
 - detect incompatible avr block types in upgrade.js

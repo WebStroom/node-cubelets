@@ -7,7 +7,7 @@ var GetConfigurationResponse = function (id) {
 
 util.inherits(GetConfigurationResponse, Message)
 
-GetConfigurationResponse.prototype.decode = function (data) {
+GetConfigurationResponse.prototype.decodeBody = function (body) {
   throw new Error('not implemented')
 }
 

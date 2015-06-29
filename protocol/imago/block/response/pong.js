@@ -8,8 +8,8 @@ var PongResponse = function (id, payload) {
 
 util.inherits(PongResponse, Message)
 
-PongResponse.prototype.decode = function (data) {
-  this.payload = data
+PongResponse.prototype.decode = function (body) {
+  this.payload = body
   return true
 }
 
