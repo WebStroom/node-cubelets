@@ -13,10 +13,54 @@ function writeValue(t) {
 }
 
 var cubeletIDs = [
-  config.construction.passive.id,
-  config.construction.knob.id,
-  config.construction.flashlight.id
+  config.construction.passive,
+  config.construction.knob,
+  config.construction.flashlight
 ]
+
+test.only('write data', function (t) {
+
+  var data = new Buffer(0)
+  for (var i = 0; i < 5000; ++i) {
+    data = Buffer.concat([data, new Buffer([1, 2, 3, 4])])
+  }
+
+  var client = cubelets.connect(config.device, function (err) {
+    if (err) {
+      t.end(err)
+    } else {
+      client.sendData(data, Function())
+    }
+  })
+
+})
+
+test('write packets', function (t) {
+  var n = 100
+
+  t.plan(n)
+
+  var client = cubelets.connect(config.device, function (err) {
+    if (err) {
+      t.end(err)
+    } else {
+      var value = 0
+      var timer = setInterval(function () {
+        if (n-- > 0) {
+          value = value === 0 ? 255 : 0
+          client.setManyBlockValues([
+            { id: 855566, value: value },
+            { id: 789258, value: value }
+          ])
+          t.pass('value ' + n)
+        } else {
+          console.log('done')
+          clearInterval(timer)
+        }
+      }, 50)
+    }
+  })
+})
 
 test('fat packets', function (t) {
   t.plan(1 + numReads + numWrites + 1)
@@ -64,9 +108,8 @@ test('skinny packets', function (t)  {
       var writeTime = 0
       var numWrites = 0
       var writeTimer = setInterval(function () {
-        client.sendCommand(new Protocol.messages.SetBlockValueCommand([
-          { id: cubeletIDs. }
-        ]))
+        //TODO:
+        //client.sendCommand()
         numWrites++
         t.pass('write ' + numWrites)
         if (numTotalWrites === numWrites) {

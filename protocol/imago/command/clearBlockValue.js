@@ -1,6 +1,5 @@
 var util = require('util')
 var Message = require('../message')
-var SetBlockValueCommand = require('./setBlockValue')
 
 var ClearBlockValueCommand = function (id) {
   Message.call(this)
@@ -24,8 +23,7 @@ ClearBlockValueCommand.prototype.decodeBody = function (body) {
 }
 
 ClearBlockValueCommand.prototype.prioritize = function (otherCommand) {
-  if (otherCommand instanceof ClearBlockValueCommand ||
-      otherCommand instanceof SetBlockValueCommand) {
+  if (otherCommand instanceof ClearBlockValueCommand) {
     return otherCommand.id === this.id ? 1 : 0
   } else {
     return 0

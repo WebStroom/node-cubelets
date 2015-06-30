@@ -16,6 +16,14 @@ function Factory(Scanner, Connection) {
     
     client._defaultTimeout = 5000
 
+    this.setDefaultTimeout = function (t) {
+      client._defaultTimeout = t
+    }
+
+    this.getDefaultTimeout = function () {
+      return client._defaultTimeout
+    }
+
     this.getConnection = function () {
       return con
     }
@@ -72,45 +80,8 @@ function Factory(Scanner, Connection) {
       xtend(client, strategy)
     }
 
-    this.setDefaultTimeout = function(t) {
-      client._defaultTimeout = t
-    }
-
-    this.getDefaultTimeout = function () {
-      return client._defaultTimeout
-    }
-
     this.sendData = function (data, callback) {
       con.write(data, callback)
-    }
-
-    client._isAlive = null
-
-    this.isAlive = function () {
-      return client._isAlive
-    }
-
-    var keepAliveTimer = null
-
-    this.startKeepAliveTimer = function (interval, timeout) {
-      client.stopKeepAliveTimer()
-      timeout = timeout || client._defaultTimeout
-      interval = interval || (2 * timeout)
-      keepAliveTimer = setInterval(function () {
-        client.ping(function (err) {
-          if (err) {
-            client.stopKeepAliveTimer()
-            client.emit('error', new Error('Keep alive timer expired.'))
-          }
-        }, timeout)
-      }, interval)
-    }
-
-    this.stopKeepAliveTimer = function () {
-      if (keepAliveTimer) {
-        clearInterval(keepAliveTimer)
-        keepAliveTimer = null
-      }
     }
 
     this.setProtocol(Protocols.Imago)

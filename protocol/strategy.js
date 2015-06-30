@@ -4,16 +4,18 @@ var RequestQueue = require('./requestQueue')
 function Strategy(protocol, client) {
 
   var messages = protocol.messages
-  var commandBuffer = new CommandBuffer(client, 1000/10)
-  var requestQueue = new RequestQueue(client)
 
   this.sendMessage = function (message, callback) {
     client.sendData(message.encode(), callback)
   }
 
+  //var commandBuffer = new CommandBuffer(client, (1000 / 50))
+
   this.sendCommand = function (command, callback) {
-    commandBuffer.push(command)
+    client.sendMessage(command, callback)
   }
+
+  var requestQueue = new RequestQueue(client)
 
   this.sendRequest = function (request, callback, timeout) {
     requestQueue.push(request, callback, timeout)
@@ -21,6 +23,29 @@ function Strategy(protocol, client) {
 
   this.sendBlockRequest = function (blockRequest, callback, timeout) {
     throw new Error('not implemented')
+  }
+
+  var keepAliveTimer = null
+
+  this.startKeepAliveTimer = function (interval, timeout) {
+    client.stopKeepAliveTimer()
+    timeout = timeout || client.getDefaultTimeout()
+    interval = interval || (2 * timeout)
+    keepAliveTimer = setInterval(function () {
+      client.ping(function (err) {
+        if (err) {
+          client.stopKeepAliveTimer()
+          client.emit('error', new Error('Keep alive timer expired.'))
+        }
+      }, timeout)
+    }, interval)
+  }
+
+  this.stopKeepAliveTimer = function () {
+    if (keepAliveTimer) {
+      clearInterval(keepAliveTimer)
+      keepAliveTimer = null
+    }
   }
 
   this.ping = function (callback) {
@@ -77,6 +102,10 @@ function Strategy(protocol, client) {
 
   this.filterBlocksByHopCount = function (hopCount) {
     throw new Error('not implemented')
+  }
+
+  this.setManyBlockValues = function (blocks, callback) {
+    client.sendCommand(new messages.SetManyBlockValuesCommand(blocks), callback)
   }
 
   this.setBlockValue = function (id, value, callback) {

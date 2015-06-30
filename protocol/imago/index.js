@@ -7,6 +7,7 @@ var xtend = require('xtend/mutable')
 
 var messages = {
   SetBlockValueCommand: require('./command/setBlockValue'),
+  SetManyBlockValuesCommand: require('./command/setManyBlockValues'),
   ClearBlockValueCommand: require('./command/clearBlockValue'),
   SetLEDColorCommand: require('./command/setLEDColor'),
   SetLEDRGBCommand: require('./command/setLEDRGB'),
@@ -52,7 +53,7 @@ var messages = {
 
 var ImagoProtocol = new Protocol({
   commands: [
-    [0x41, messages.SetBlockValueCommand],
+    [0x41, messages.SetManyBlockValuesCommand],
     [0x42, messages.ClearBlockValueCommand],
     [0x43, messages.SetLEDColorCommand],
     [0x44, messages.SetLEDRGBCommand],

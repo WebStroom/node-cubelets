@@ -105,9 +105,6 @@ function ImagoStrategy(protocol, client) {
 
     this.upsert = function (id, hopCount, type) {
       var cubelet = exists(id)
-      var added = []
-      var removed = []
-      var moved = []
       var updated = false
       if (cubelet) {
         if (hopCount !== cubelet.hopCount) {
@@ -121,7 +118,6 @@ function ImagoStrategy(protocol, client) {
         cubelet = new Cubelet(id, type, hopCount)
         addId(cubelet)
         addRank(cubelet)
-        added.push(cubelet)
         client.emit('addBlock', cubelet)
         updated = true
       }
@@ -129,6 +125,10 @@ function ImagoStrategy(protocol, client) {
         client.emit('updateBlocks')
       }
       return cubelet
+    }
+
+    this.merge = function (blocks, hopCount) {
+      // TODO: intersection
     }
 
     function exists(id) {
