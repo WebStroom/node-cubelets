@@ -3,3 +3,4 @@ node_modules/
 hex/
 .project
 *.log
+test/*.bin
