@@ -6,7 +6,7 @@ var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
 
-var appId = 'fehdhddkknkaeimadppmacaoclnllcjm'
+var appId = 'ahdpdhnpkbnjfppkaicocidhgglkmapj'
 var running = false
 var bluetoothClient = null
 
@@ -72,40 +72,9 @@ var ChromeConnection = function (device, opts) {
   }
 
   this._write = function (data, enc, next) {
-    var chunkSize = 60
-
-    function write(data, callback) {
-      if (socketStream) {
-        input.write(data, callback)
-      } else {
-        callback(new Error('disconnected'))
-      }
-    }
-
-    function writeChunk(i) {
-      var start = i * chunkSize
-      var end = start + chunkSize
-      var chunk = data.slice(start, end)
-      if (chunk.length > 0) {
-        console.log('<<', chunk)
-        write(chunk, function (err) {
-          if (err) {
-            next(err)
-          } else {
-            writeChunk(i + 1)
-          }
-        })
-      } else {
-        next()
-      }
-    }
-
-    writeChunk(0)
-    /*
     if (socketStream) {
       input.write(data, next)
     }
-    */
   }
 
   this._open = function (callback) {
