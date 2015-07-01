@@ -11,7 +11,7 @@ util.inherits(ClearBlockValueCommand, Message)
 
 ClearBlockValueCommand.prototype.encodeBody = function () {
   return Buffer.concat(__(this.blocks).map(function (block) {
-    return Message.Encoder.encodeID(this.id)
+    return Message.Encoder.encodeID(block.id)
   }))
 }
 

@@ -40,16 +40,12 @@ function Strategy(protocol, client) {
   this.fetchConfiguration = function (callback) {
     throw new Error('not implemented')
   }
-
-  this.fetchOriginBlock = function (callback) {
-    throw new Error('not implemented')
-  }
-
+  
   this.getOriginBlock = function () {
     throw new Error('not implemented')
   }
 
-  this.fetchNeighborBlocks = function (callback) {
+  this.fetchOriginBlock = function (callback) {
     throw new Error('not implemented')
   }
 
@@ -57,11 +53,15 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.fetchAllBlocks = function (callback) {
+  this.fetchNeighborBlocks = function (callback) {
     throw new Error('not implemented')
   }
 
   this.getAllBlocks = function () {
+    throw new Error('not implemented')
+  }
+
+  this.fetchAllBlocks = function (callback) {
     throw new Error('not implemented')
   }
 

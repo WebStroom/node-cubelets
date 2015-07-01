@@ -83,10 +83,6 @@ function ImagoStrategy(protocol, client) {
       return cubelet
     }
 
-    this.merge = function (blocks, hopCount) {
-      // TODO: intersection
-    }
-
     function exists(id) {
       return this.idMap[id]
     }
@@ -225,19 +221,21 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.setBlockValue = function (id, value, callback) {
-    client.sendCommand(new messages.SetBlockValueCommand(id, value), callback)
+    var block = { id: id, value: value }
+    client.sendCommand(new messages.SetBlockValueCommand([ block ]), callback)
   }
 
   this.setManyBlockValues = function (blocks, callback) {
-    client.sendCommand(new messages.SetManyBlockValuesCommand(blocks), callback)
+    client.sendCommand(new messages.SetBlockValueCommand(blocks), callback)
   }
 
   this.clearBlockValue = function (id, callback) {
-    client.sendCommand(new messages.ClearBlockValueCommand(id, value), callback)
+    var block = { id: id }
+    client.sendCommand(new messages.ClearBlockValueCommand([ block ]), callback)
   }
 
   this.clearManyBlockValues = function (blocks, callback) {
-    client.sendCommand(new messages.ClearBlockValueCommand(id, value), callback)
+    client.sendCommand(new messages.ClearBlockValueCommand(blocks), callback)
   }
 
   this.clearAllBlockValues = function (callback) {

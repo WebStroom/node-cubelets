@@ -1,8 +1,8 @@
 var util = require('util')
 var events = require('events')
 var xtend = require('xtend/mutable')
-var CommandQueue = require('../commandQueue')
-var RequestQueue = require('../requestQueue')
+var CommandQueue = require('./commandQueue')
+var RequestQueue = require('./requestQueue')
 
 var Protocols = {
   Imago: require('./protocol/imago'),

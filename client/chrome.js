@@ -74,6 +74,7 @@ var ChromeConnection = function (device, opts) {
   this._write = function (data, enc, next) {
     if (socketStream) {
       input.write(data, next)
+      console.log('<<', data)
     }
   }
 

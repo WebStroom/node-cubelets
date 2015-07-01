@@ -8,9 +8,9 @@ var DebugEvent = function (data) {
 
 util.inherits(DebugEvent, Message)
 
-DebugEvent.prototype.decodeBody = function (data) {
+DebugEvent.prototype.decodeBody = function (body) {
   console.log('DEBUG',
-    ((this.data = data))
+    ((this.data = body))
   ); return true
 }
 

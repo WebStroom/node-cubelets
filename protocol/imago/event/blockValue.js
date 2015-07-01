@@ -9,14 +9,24 @@ var BlockValueEvent = function (id, value) {
 
 util.inherits(BlockValueEvent, Message)
 
-BlockValueEvent.prototype.decodeBody = function (data) {
-  if (data.length != 4) {
-    this.error = new Error('Size should be 4 bytes but is', data.length, 'bytes.')
+BlockValueEvent.prototype.decodeBody = function (body) {
+  if (body.length % 4 !== 0) {
+    this.error = new Error('Size should be divisible by 4.')
     return false
   }
 
-  this.id = Message.Decoder.decodeID(data.slice(0, 3))
-  this.value = data.readUInt8(3)
+  var blocks = []
+  var count = body.length / 4
+  for (var i = 0; i < count; ++i) {
+    var p = i * 4
+    /* format: [ id2, id1, id0, value ] */
+    blocks.push({
+      id: Message.Decoder.decodeID(body.slice(p + 0, p + 3)),
+      value: body.readUInt8(p + 3)
+    })
+  }
+
+  this.blocks = blocks
   return true
 }
 
