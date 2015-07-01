@@ -1,6 +1,6 @@
 var __ = require('underscore')
 
-module.exports = function CommandBuffer(client, rate) {
+module.exports = function CommandQueue(client, rate) {
 
   var commands = []
 

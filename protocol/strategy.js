@@ -1,27 +1,8 @@
-var CommandBuffer = require('./commandBuffer')
-var RequestQueue = require('./requestQueue')
-
 function Strategy(protocol, client) {
 
   var messages = protocol.messages
 
-  this.sendMessage = function (message, callback) {
-    client.sendData(message.encode(), callback)
-  }
-
-  //var commandBuffer = new CommandBuffer(client, (1000 / 50))
-
-  this.sendCommand = function (command, callback) {
-    client.sendMessage(command, callback)
-  }
-
-  var requestQueue = new RequestQueue(client)
-
-  this.sendRequest = function (request, callback, timeout) {
-    requestQueue.push(request, callback, timeout)
-  }
-
-  this.sendBlockRequest = function (blockRequest, callback, timeout) {
+  this.ping = function (callback) {
     throw new Error('not implemented')
   }
 
@@ -48,19 +29,15 @@ function Strategy(protocol, client) {
     }
   }
 
-  this.ping = function (callback) {
-    throw new Error('not implemented')
-  }
-
   this.echo = function (data, callback) {
     throw new Error('not implemented')
   }
 
-  this.fetchConfiguration = function (callback) {
+  this.getConfiguration = function () {
     throw new Error('not implemented')
   }
 
-  this.getConfiguration = function () {
+  this.fetchConfiguration = function (callback) {
     throw new Error('not implemented')
   }
 
@@ -104,16 +81,24 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.setManyBlockValues = function (blocks, callback) {
-    client.sendCommand(new messages.SetManyBlockValuesCommand(blocks), callback)
+  this.setBlockValue = function (id, value, callback) {
+    throw new Error('not implemented')
   }
 
-  this.setBlockValue = function (id, value, callback) {
-    client.sendCommand(new messages.SetBlockValueCommand(id, value), callback)
+  this.setManyBlockValues = function (blocks, callback) {
+    throw new Error('not implemented')
   }
 
   this.clearBlockValue = function (id, callback) {
-    client.sendCommand(new messages.ClearBlockValueCommand(id, value), callback)
+    throw new Error('not implemented')
+  }
+
+  this.clearManyBlockValues = function (blocks, callback) {
+    throw new Error('not implemented')
+  }
+
+  this.clearAllBlockValues = function (callback) {
+    throw new Error('not implemented')
   }
 
   this.registerBlockValueEvent = function (id, callback) {
@@ -126,6 +111,10 @@ function Strategy(protocol, client) {
 
   this.unregisterAllBlockValueEvents = function (callback) {
     client.sendRequest(new messages.UnregisterAllBlockValueEventsRequest(), callback)
+  }
+
+  this.sendBlockRequest = function (blockRequest, callback, timeout) {
+    throw new Error('not implemented')
   }
 
   this.flashProgramToBlock = function (program, block, callback) {

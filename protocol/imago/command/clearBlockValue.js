@@ -1,30 +1,23 @@
 var util = require('util')
 var Message = require('../message')
+var __ = require('underscore')
 
-var ClearBlockValueCommand = function (id) {
+var ClearBlockValueCommand = function (blocks) {
   Message.call(this)
-  this.id = id
+  this.blocks = blocks
 }
 
 util.inherits(ClearBlockValueCommand, Message)
 
 ClearBlockValueCommand.prototype.encodeBody = function () {
-  return Message.Encoder.encodeID(this.id)
-}
-
-ClearBlockValueCommand.prototype.decodeBody = function (body) {
-  if (body.length !== 3) {
-    this.error = new Error('Size should be 3 bytes but is', body.length, 'bytes.')
-    return false
-  }
-
-  this.id = Message.Decoder.decodeID(body)
-  return true
+  return Buffer.concat(__(this.blocks).map(function (block) {
+    return Message.Encoder.encodeID(this.id)
+  }))
 }
 
 ClearBlockValueCommand.prototype.prioritize = function (otherCommand) {
   if (otherCommand instanceof ClearBlockValueCommand) {
-    return otherCommand.id === this.id ? 1 : 0
+    return 1
   } else {
     return 0
   }

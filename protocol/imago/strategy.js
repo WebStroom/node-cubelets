@@ -5,56 +5,12 @@ var Cubelet = require('../../cubelet')
 var Types = Cubelet.Types
 var xtend = require('xtend/mutable')
 var async = require('async')
-var CommandBuffer = require('../commandBuffer')
-var RequestQueue = require('../requestQueue')
 var __ = require('underscore')
 
 function ImagoStrategy(protocol, client) {
   Strategy.call(this, protocol, client)
 
   var messages = protocol.messages
-
-  this.sendBlockRequest = function (blockRequest, callback, timeout) {
-    var writeBlockRequest = new messages.WriteBlockMessageRequest(blockRequest)
-
-    timeout = timeout || client._defaultTimeout
-
-    var timer = setTimeout(function () {
-      client.removeListener('event', waitForBlockResponse)
-      if (callback) {
-        callback(new Error('Timed out waiting for block response to block request: ' + request.code()))
-      }
-    }, timeout)
-
-    function waitForBlockResponse(e) {
-      if (e.code() === messages.ReadBlockMessageEvent.code) {
-        var blockResponse = e.blockMessage
-        if (blockResponse.code() === blockRequest.code() && blockResponse.id === blockRequest.id) {
-          clearTimeout(timer)
-          client.removeListener('event', waitForBlockResponse)
-          if (callback) {
-            callback(null, blockResponse)
-          }
-        }
-      }
-    }
-
-    function onRequestError(err) {
-      client.removeListener('event', waitForBlockResponse)
-      if (callback) {
-        callback(err)
-      }      
-    }
-
-    client.on('event', waitForBlockResponse)
-    client.sendRequest(writeBlockRequest, function (err, response) {
-      if (err) {
-        onRequestError(err)
-      } else if (response.result !== 0) {
-        onRequestError(new Error('Failed to write block message with result: ' + response.result))
-      }
-    })
-  }
 
   this.ping = function (callback, timeout) {
     client.echo(new Buffer(0), callback, timeout)
@@ -65,6 +21,10 @@ function ImagoStrategy(protocol, client) {
   }
 
   var configuration = null
+
+  this.getConfiguration = function () {
+    return configuration
+  }
 
   this.fetchConfiguration = function (callback) {
     async.seq(
@@ -79,10 +39,6 @@ function ImagoStrategy(protocol, client) {
     if (callback) {
       callback(null, response)
     }
-  }
-
-  this.getConfiguration = function () {
-    return configuration
   }
 
   var blocks = (function () {
@@ -200,6 +156,10 @@ function ImagoStrategy(protocol, client) {
     return blocks.origin
   }
 
+  this.getNeighborBlocks = function () {
+    return blocks.filterByHopCount(1)
+  }
+
   this.fetchNeighborBlocks = function (callback) {
     async.seq(
       client.sendRequest,
@@ -216,8 +176,16 @@ function ImagoStrategy(protocol, client) {
     }
   }
 
-  this.getNeighborBlocks = function () {
-    return blocks.filterByHopCount(1)
+  this.getAllBlocks = function () {
+    return __(blocks.idMap).chain()
+      .values()
+      .sortBy(function (cubelet) {
+        return cubelet.hopCount
+      })
+      .filter(function (cubelet) {
+        return cubelet.hopCount > 0
+      })
+      .value()
   }
 
   this.fetchAllBlocks = function (callback) {
@@ -234,18 +202,6 @@ function ImagoStrategy(protocol, client) {
     if (callback) {
       callback(null, client.getAllBlocks())
     }
-  }
-
-  this.getAllBlocks = function () {
-    return __(blocks.idMap).chain()
-      .values()
-      .sortBy(function (cubelet) {
-        return cubelet.hopCount
-      })
-      .filter(function (cubelet) {
-        return cubelet.hopCount > 0
-      })
-      .value()
   }
 
   this.startBlockDiscovery = function (callback) {
@@ -268,8 +224,66 @@ function ImagoStrategy(protocol, client) {
     return blocks.filterByHopCount(hopCount)
   }
 
-  this.setBlockValueEventEnabled = function (enabled, callback) {
-    client.sendRequest(new messages.RegisterBlockValueEventRequest(enabled), callback)
+  this.setBlockValue = function (id, value, callback) {
+    client.sendCommand(new messages.SetBlockValueCommand(id, value), callback)
+  }
+
+  this.setManyBlockValues = function (blocks, callback) {
+    client.sendCommand(new messages.SetManyBlockValuesCommand(blocks), callback)
+  }
+
+  this.clearBlockValue = function (id, callback) {
+    client.sendCommand(new messages.ClearBlockValueCommand(id, value), callback)
+  }
+
+  this.clearManyBlockValues = function (blocks, callback) {
+    client.sendCommand(new messages.ClearBlockValueCommand(id, value), callback)
+  }
+
+  this.clearAllBlockValues = function (callback) {
+    throw new Error('not implemented')
+  }
+
+  this.sendBlockRequest = function (blockRequest, callback, timeout) {
+    var writeBlockRequest = new messages.WriteBlockMessageRequest(blockRequest)
+
+    timeout = timeout || client._defaultTimeout
+
+    var timer = setTimeout(function () {
+      client.removeListener('event', waitForBlockResponse)
+      if (callback) {
+        callback(new Error('Timed out waiting for block response to block request: ' + request.code()))
+      }
+    }, timeout)
+
+    function waitForBlockResponse(e) {
+      if (e.code() === messages.ReadBlockMessageEvent.code) {
+        var blockResponse = e.blockMessage
+        if (blockResponse.code() === blockRequest.code() && blockResponse.id === blockRequest.id) {
+          clearTimeout(timer)
+          client.removeListener('event', waitForBlockResponse)
+          if (callback) {
+            callback(null, blockResponse)
+          }
+        }
+      }
+    }
+
+    function onRequestError(err) {
+      client.removeListener('event', waitForBlockResponse)
+      if (callback) {
+        callback(err)
+      }      
+    }
+
+    client.on('event', waitForBlockResponse)
+    client.sendRequest(writeBlockRequest, function (err, response) {
+      if (err) {
+        onRequestError(err)
+      } else if (response.result !== 0) {
+        onRequestError(new Error('Failed to write block message with result: ' + response.result))
+      }
+    })
   }
 
   this.uploadProgramToMemory = function (program, slot, callback) {

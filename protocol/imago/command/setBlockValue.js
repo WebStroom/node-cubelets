@@ -1,35 +1,26 @@
 var util = require('util')
 var Message = require('../message')
+var __ = require('underscore')
 
-var SetBlockValueCommand = function (id, value) {
+var SetBlockValueCommand = function (blocks) {
   Message.call(this)
-  this.id = id
-  this.value = value
+  this.blocks = blocks
 }
 
 util.inherits(SetBlockValueCommand, Message)
 
 SetBlockValueCommand.prototype.encodeBody = function () {
-  return Buffer.concat([
-    Message.Encoder.encodeID(this.id),
-    new Buffer([ this.value ])
-  ])
-}
-
-SetBlockValueCommand.prototype.decodeBody = function (body) {
-  if (body.length !== 4) {
-    this.error = new Error('Size should be 4 bytes but is', body.length, 'bytes.')
-    return false
-  }
-
-  this.id = Message.Decoder.decodeID(body.slice(0, 3))
-  this.value = body.readUInt8(3)
-  return true
+  return Buffer.concat(__(this.blocks).map(function (block) {
+    return Buffer.concat([
+      Message.Encoder.encodeID(block.id),
+      new Buffer([ block.value ])
+    ])
+  }))
 }
 
 SetBlockValueCommand.prototype.prioritize = function (otherCommand) {
   if (otherCommand instanceof SetBlockValueCommand) {
-    return otherCommand.id === this.id ? 1 : 0
+    return 1
   } else {
     return 0
   }

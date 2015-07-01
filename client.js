@@ -1,6 +1,8 @@
 var util = require('util')
 var events = require('events')
 var xtend = require('xtend/mutable')
+var CommandQueue = require('../commandQueue')
+var RequestQueue = require('../requestQueue')
 
 var Protocols = {
   Imago: require('./protocol/imago'),
@@ -84,7 +86,26 @@ function Factory(Scanner, Connection) {
       con.write(data, callback)
     }
 
+    this.sendMessage = function (message, callback) {
+      client.sendData(message.encode(), callback)
+    }
+
+    //TODO: Determine correct commmand rate.
+    //var commandQueue = new CommandQueue(client, (1000 / 15))
+
+    this.sendCommand = function (command, callback) {
+      //commandQueue.push(command, callback)
+      client.sendMessage(command, callback)
+    }
+
+    var requestQueue = new RequestQueue(client)
+
+    this.sendRequest = function (request, callback, timeout) {
+      requestQueue.push(request, callback, timeout)
+    }
+
     this.setProtocol(Protocols.Imago)
+
     return this
   }
 
