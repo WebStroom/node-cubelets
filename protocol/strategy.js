@@ -113,10 +113,6 @@ function Strategy(protocol, client) {
     client.sendRequest(new messages.UnregisterAllBlockValueEventsRequest(), callback)
   }
 
-  this.sendBlockRequest = function (blockRequest, callback, timeout) {
-    throw new Error('not implemented')
-  }
-
   this.flashProgramToBlock = function (program, block, callback) {
     throw new Error('not implemented')
   }

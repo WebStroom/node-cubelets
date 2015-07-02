@@ -1,4 +1,5 @@
 var util = require('util')
+var config = require('../config')
 var ChromeBluetoothClient = require('chrome-bluetooth-client')
 var ChromeRuntimeStream = require('chrome-runtime-stream')
 var BufferArrayStream = require('buffer-array-stream')
@@ -6,7 +7,7 @@ var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
 
-var appId = 'ahdpdhnpkbnjfppkaicocidhgglkmapj'
+var appId = config.chrome.appId
 var running = false
 var bluetoothClient = null
 

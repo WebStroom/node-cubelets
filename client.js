@@ -91,11 +91,10 @@ function Factory(Scanner, Connection) {
     }
 
     //TODO: Determine correct commmand rate.
-    //var commandQueue = new CommandQueue(client, (1000 / 15))
+    var commandQueue = new CommandQueue(client, (1000 / 20))
 
     this.sendCommand = function (command, callback) {
-      //commandQueue.push(command, callback)
-      client.sendMessage(command, callback)
+      commandQueue.push(command, callback)
     }
 
     var requestQueue = new RequestQueue(client)

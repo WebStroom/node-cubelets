@@ -102,5 +102,8 @@
   },
   "databases": {
     "info": "info.db"
+  },
+  "chrome": {
+    "appId": "fehdhddkknkaeimadppmacaoclnllcjm"
   }
 }
