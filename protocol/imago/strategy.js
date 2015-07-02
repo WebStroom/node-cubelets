@@ -321,8 +321,6 @@ function ImagoStrategy(protocol, client) {
           callback(err)
         }
       } else {
-        //XXX: hack for demo
-        slotData = new Buffer(0)
         client.sendData(slotData, function (err) {
           if (err) {
             client.removeListener('event', waitForCompleteEvent)

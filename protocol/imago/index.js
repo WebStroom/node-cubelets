@@ -95,8 +95,8 @@ var ImagoProtocol = new Protocol({
     [0xE0, messages.DebugEvent],
     [0xE1, messages.BlockValueEvent],
     [0xE2, messages.ReadBlockMessageEvent],
-    [0xF0, messages.UploadToMemoryCompleteEvent],
-    [0xF4, messages.FlashProgressEvent],
+    [0xE3, messages.UploadToMemoryCompleteEvent],
+    [0xE4, messages.FlashProgressEvent],
     [0xFF, messages.ErrorEvent],
   ]
 })
