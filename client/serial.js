@@ -3,7 +3,6 @@ var SerialPort = require('serialport').SerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
-var fs = require('fs')
 
 var SerialScanner = function () {
   Scanner.call(this)
@@ -17,7 +16,7 @@ var SerialScanner = function () {
       } else {
         ports.forEach(function (port) {
           var name = port.comName
-          if (name.indexOf('Cubelet') > 0) {
+          if (name.indexOf('Cubelet') === 0) {
             devices.push({
               path: name
             })
