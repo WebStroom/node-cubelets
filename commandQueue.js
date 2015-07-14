@@ -8,7 +8,6 @@ module.exports = function CommandQueue(client, rate) {
     if (commands.length > 0) {
       var cmd = commands.pop()
       client.sendMessage(cmd)
-      console.log('send command', cmd)
     }
   }, rate)
 
