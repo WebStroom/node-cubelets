@@ -12,7 +12,7 @@ util.inherits(SetBlockValueCommand, Message)
 SetBlockValueCommand.prototype.encodeBody = function () {
   return Buffer.concat(__(this.blocks).map(function (block) {
     return Buffer.concat([
-      Message.Encoder.encodeID(block.id),
+      Message.Encoder.encodeId(block.blockId),
       new Buffer([ block.value ])
     ])
   }))

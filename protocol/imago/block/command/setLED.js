@@ -1,8 +1,8 @@
 var util = require('util')
 var Message = require('../message')
 
-var SetLEDCommand = function (id, enable) {
-  Message.call(this, id)
+var SetLEDCommand = function (blockId, enable) {
+  Message.call(this, blockId)
   this.enable = enable
 }
 

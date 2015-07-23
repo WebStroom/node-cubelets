@@ -6,6 +6,7 @@ var BufferArrayStream = require('buffer-array-stream')
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
+var xtend = require('xtend')
 
 var appId = config.chrome.appId
 var running = false
@@ -44,7 +45,9 @@ var ChromeScanner = function () {
       allDevices.forEach(function (device) {
         var name = device.name
         if (name.indexOf('Cubelet') === 0) {
-          devices.push(device)
+          devices.push(xtend(device, {
+            deviceId: device.address
+          }))
         }
       })
       callback(devices)

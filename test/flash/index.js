@@ -59,11 +59,11 @@ var client = cubelets.connect(config.device, function (err) {
       //   t.plan(3)
       //   var slotIndex = 31
       //   var slotSize = smallSlotData.length / 18
-      //   var blockType = Cubelet.Types.PASSIVE.id
+      //   var blockTypeId = Cubelet.Types.PASSIVE.typeId
       //   var version = new Version(1, 2, 3)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockTypeId, version, isCustom, crc)
       //   // send an upload request
       //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no response err')
@@ -76,11 +76,11 @@ var client = cubelets.connect(config.device, function (err) {
       //   t.plan(6)
       //   var slotIndex = 30
       //   var slotSize = smallSlotData.length / 18
-      //   var blockType = Cubelet.Types.PASSIVE.id
+      //   var blockTypeId = Cubelet.Types.PASSIVE.typeId
       //   var version = new Version(1, 2, 3)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockTypeId, version, isCustom, crc)
       //   // send an upload request
       //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no response err')
@@ -105,11 +105,11 @@ var client = cubelets.connect(config.device, function (err) {
       //   t.plan(3)
       //   var slotIndex = 30
       //   var slotSize = 911 // 16k =~ 910 lines
-      //   var blockType = Cubelet.Types.PASSIVE.id
+      //   var blockTypeId = Cubelet.Types.PASSIVE.typeId
       //   var version = new Version(1, 2, 3)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockTypeId, version, isCustom, crc)
       //   // send an upload request
       //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no response err')
@@ -122,11 +122,11 @@ var client = cubelets.connect(config.device, function (err) {
       //   t.plan(15)
       //   var slotIndex = 22
       //   var slotSize = Math.ceil(smallSlotData.length / lineLength)
-      //   var blockType = Cubelet.Types.PASSIVE.id
+      //   var blockTypeId = Cubelet.Types.PASSIVE.typeId
       //   var version = new Version(4, 5, 6)
       //   var isCustom = false
       //   var crc = 0xcc
-      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockTypeId, version, isCustom, crc)
       //   // send an upload request
       //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no upload response err')
@@ -155,7 +155,7 @@ var client = cubelets.connect(config.device, function (err) {
       //       t.ok(slots[slotIndex], 'slot exists')
       //       var slot = slots[slotIndex]
       //       t.equal(slot.slotSize, slotSize)
-      //       t.equal(slot.blockType, blockType)
+      //       t.equal(slot.blockTypeId, blockTypeId)
       //       t.equal(slot.version.major, version.major)
       //       t.equal(slot.version.minor, version.minor)
       //       t.equal(slot.version.patch, version.patch)
@@ -170,7 +170,7 @@ var client = cubelets.connect(config.device, function (err) {
       //     t.ifError(err, 'no blocks response err')
       //     t.ok(response, 'blocks response ok')
       //     var bargraph = __(response.blocks).find(function (block) {
-      //       return block.id === config.construction.type.bargraph
+      //       return block.blockId === config.construction.type.bargraph
       //     })
       //     t.ok(bargraph, 'has a bargraph')
       //     t.end()
@@ -181,7 +181,7 @@ var client = cubelets.connect(config.device, function (err) {
       //   t.plan(9)
 
       //   // check the program is valid
-      //   var id = config.construction.type.bargraph
+      //   var blockId = config.construction.type.bargraph
       //   var hex = fs.readFileSync(__dirname + '/mini-bargraph.hex')
       //   var program = new Program(hex)
       //   t.ok(program.valid, 'program valid')
@@ -189,13 +189,13 @@ var client = cubelets.connect(config.device, function (err) {
       //   var slotIndex = 2
       //   var slotData = program.data
       //   var slotSize = Math.ceil(slotData.length / lineLength)
-      //   var blockType = Cubelet.Types.BARGRAPH.id
+      //   var blockTypeId = Cubelet.Types.BARGRAPH.typeId
       //   var version = new Version(4, 5, 6)
       //   var isCustom = false
       //   var crc = 0xcc
 
       //   // send an upload request
-      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+      //   var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockTypeId, version, isCustom, crc)
       //   client.sendRequest(request, function (err, response) {
       //     t.ifError(err, 'no upload response err')
       //     t.ok(response, 'upload response ok')
@@ -216,7 +216,7 @@ var client = cubelets.connect(config.device, function (err) {
       //   })
 
       //   function testFlash() {
-      //     var request = new Protocol.messages.FlashMemoryToBlockRequest(id, slotIndex)
+      //     var request = new Protocol.messages.FlashMemoryToBlockRequest(blockId, slotIndex)
       //     client.sendRequest(request, function (err, response) {
       //       t.ifError(err, 'no flash response err')
       //       t.ok(response, 'flash response ok')
@@ -231,7 +231,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no blocks response err')
           t.ok(response, 'blocks response ok')
           var drive = __(response.blocks).find(function (block) {
-            return block.id === config.construction.type.drive
+            return block.blockId === config.construction.type.drive
           })
           t.ok(drive, 'has a drive')
           t.end()
@@ -242,7 +242,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(9)
 
         // check the program is valid
-        var id = config.construction.type.drive
+        var blockId = config.construction.type.drive
         var hex = fs.readFileSync(__dirname + '/drive.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
@@ -250,13 +250,13 @@ var client = cubelets.connect(config.device, function (err) {
         var slotIndex = 5
         var slotData = program.data
         var slotSize = Math.ceil(slotData.length / lineLength)
-        var blockType = Cubelet.Types.DRIVE.id
+        var blockTypeId = Cubelet.Types.DRIVE.typeId
         var version = new Version(4, 5, 6)
         var isCustom = false
         var crc = 0xcc
 
         // send an upload request
-        var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
+        var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockTypeId, version, isCustom, crc)
         client.sendRequest(request, function (err, response) {
           t.ifError(err, 'no upload response err')
           t.ok(response, 'upload response ok')
@@ -277,7 +277,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
 
         function testFlash() {
-          var request = new Protocol.messages.FlashMemoryToBlockRequest(id, slotIndex)
+          var request = new Protocol.messages.FlashMemoryToBlockRequest(blockId, slotIndex)
           client.sendRequest(request, function (err, response) {
             t.ifError(err, 'no flash response err')
             t.ok(response, 'flash response ok')

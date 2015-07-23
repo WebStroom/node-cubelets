@@ -3,6 +3,7 @@ var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
+var xtend = require('xtend')
 
 var BluetoothSerialScanner = function (opts) {
   Scanner.call(this)
@@ -14,7 +15,9 @@ var BluetoothSerialScanner = function (opts) {
       pairedDevices.forEach(function (pairedDevice) {
         var name = pairedDevice.name
         if (name.indexOf('Cubelet') === 0) {
-          devices.push(pairedDevice)
+          devices.push(xtend(pairedDevice, {
+            deviceId: pairedDevice.address
+          }))
         }
       })
       callback(devices)

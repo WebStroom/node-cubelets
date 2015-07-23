@@ -1,8 +1,8 @@
 var util = require('util')
 var SetBlockValueCommand = require('../command/setBlockValue')
 
-var SetBlockValueRequest = function (id, value) {
-  SetBlockValueCommand.call(this, id, value)
+var SetBlockValueRequest = function (blockId, value) {
+  SetBlockValueCommand.call(this, blockId, value)
 }
 
 util.inherits(SetBlockValueRequest, SetBlockValueCommand)

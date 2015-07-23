@@ -1,10 +1,10 @@
 var util = require('util')
 var Message = require('../message')
 
-var FlashMemoryToBlockRequest = function (id, slotIndex) {
+var FlashMemoryToBlockRequest = function (blockId, slotIndex) {
   Message.call(this)
   this.slotIndex = slotIndex
-  this.id = id
+  this.blockId = blockId
 }
 
 util.inherits(FlashMemoryToBlockRequest, Message)
@@ -12,7 +12,7 @@ util.inherits(FlashMemoryToBlockRequest, Message)
 FlashMemoryToBlockRequest.prototype.encodeBody = function () {
   return Buffer.concat([
     new Buffer([ this.slotIndex ]),
-    Message.Encoder.encodeID(this.id)
+    Message.Encoder.encodeId(this.blockId)
   ])
 }
 
@@ -23,7 +23,7 @@ FlashMemoryToBlockRequest.prototype.decodeBody = function (body) {
   }
 
   this.slotIndex = body.readUInt8(0)
-  this.id = Message.Decoder.decodeID(body.slice(1, 4))
+  this.blockId = Message.Decoder.decodeId(body.slice(1, 4))
   return true
 }
 

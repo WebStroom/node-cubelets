@@ -1,7 +1,7 @@
 var Decoder = require('../protocol/decoder')
 
-function id(b2, b1, b0) {
-  return Decoder.decodeID(new Buffer([b2, b1, b0]))
+function blockId(b2, b1, b0) {
+  return Decoder.decodeId(new Buffer([b2, b1, b0]))
 }
 
 function device() {
@@ -16,13 +16,13 @@ function device() {
 
 function construction() {
   var type = {
-    bluetooth: id(22, 21, 20),
-    passive: id(3, 2, 1),
-    knob: id(6, 5, 4),
-    distance: id(7, 5, 4),
-    flashlight: id(12, 11, 10),
-    bargraph: id(13, 14, 14),
-    drive: id(9, 8, 7)
+    bluetooth: blockId(22, 21, 20),
+    passive: blockId(3, 2, 1),
+    knob: blockId(6, 5, 4),
+    distance: blockId(7, 5, 4),
+    flashlight: blockId(12, 11, 10),
+    bargraph: blockId(13, 14, 14),
+    drive: blockId(9, 8, 7)
   }
   return {
     "type": type,

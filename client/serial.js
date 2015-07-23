@@ -15,10 +15,12 @@ var SerialScanner = function () {
         callback(devices)
       } else {
         ports.forEach(function (port) {
-          var name = port.comName
-          if (name.indexOf('Cubelet') === 0) {
+          var comName = port.comName
+          if (comName.indexOf('Cubelet') === 0) {
             devices.push({
-              path: name
+              name: comName,
+              path: comName,
+              deviceId: comName
             })
           }
         })

@@ -1,10 +1,9 @@
 var util = require('util')
 var Message = require('../message')
 
-var BlockValueEvent = function (id, value) {
+var BlockValueEvent = function (blocks) {
   Message.call(this)
-  this.id = id
-  this.value = value
+  this.blocks = blocks
 }
 
 util.inherits(BlockValueEvent, Message)
@@ -21,7 +20,7 @@ BlockValueEvent.prototype.decodeBody = function (body) {
     var p = i * 4
     /* format: [ id2, id1, id0, value ] */
     blocks.push({
-      id: Message.Decoder.decodeID(body.slice(p + 0, p + 3)),
+      blockId: Message.Decoder.decodeId(body.slice(p + 0, p + 3)),
       value: body.readUInt8(p + 3)
     })
   }

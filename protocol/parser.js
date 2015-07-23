@@ -189,7 +189,6 @@ var Parser = function (protocol) {
   // Emits extra data
   var emitExtra = function (data) {
     emitter.emit('extra', data)
-    console.log('extra', data)
   }
 
   // Emits raw data

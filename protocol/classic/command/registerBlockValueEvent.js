@@ -1,15 +1,15 @@
 var util = require('util')
 var Message = require('../message')
 
-var RegisterBlockValueEventCommand = function (id) {
+var RegisterBlockValueEventCommand = function (blockId) {
   Message.call(this)
-  this.id = id
+  this.blockId = blockId
 }
 
 util.inherits(RegisterBlockValueEventCommand, Message)
 
 RegisterBlockValueEventCommand.prototype.encodeBody = function () {
-  return Message.Encoder.encodeID(this.id)
+  return Message.Encoder.encodeId(this.blockId)
 }
 
 module.exports = RegisterBlockValueEventCommand

@@ -1,8 +1,8 @@
 var util = require('util')
 var Message = require('../message')
 
-var SetValueCommand = function (id, value) {
-  Message.call(this, id)
+var SetValueCommand = function (blockId, value) {
+  Message.call(this, blockId)
   this.value = value
 }
 

@@ -1,9 +1,9 @@
 var util = require('util')
 var Message = require('../message')
 
-var BlockValueEvent = function (id, value) {
+var BlockValueEvent = function (blockId, value) {
   Message.call(this)
-  this.id = id
+  this.blockId = blockId
   this.value = value
 }
 
@@ -15,7 +15,7 @@ BlockValueEvent.prototype.decode = function (data) {
     return false
   }
 
-  this.id = Message.Decoder.decodeID(data.slice(0, 3))
+  this.blockId = Message.Decoder.decodeId(data.slice(0, 3))
   this.value = data.readUInt8(3)
   return true
 }

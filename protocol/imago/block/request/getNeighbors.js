@@ -1,8 +1,8 @@
 var util = require('util')
 var Message = require('../message')
 
-var GetNeighborsRequest = function (id) {
-  Message.call(this, id)
+var GetNeighborsRequest = function (blockId) {
+  Message.call(this, blockId)
 }
 
 util.inherits(GetNeighborsRequest, Message)

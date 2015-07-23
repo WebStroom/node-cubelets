@@ -1,21 +1,21 @@
 var util = require('util')
 var Message = require('../message')
 
-var SetBlockValueCommand = function (id, value) {
+var SetBlockValueCommand = function (blockId, value) {
   Message.call(this)
-  this.id = id
+  this.blockId = blockId
   this.value = value
 }
 
 util.inherits(SetBlockValueCommand, Message)
 
 SetBlockValueCommand.prototype.encodeBody = function () {
-  var encodedID = Message.Encoder.encodeID(this.id)
+  var encodedId = Message.Encoder.encodeId(this.blockId)
   return new Buffer([
     this.value,
-    encodedID.readUInt8(0),
-    encodedID.readUInt8(1),
-    encodedID.readUInt8(2)
+    encodedId.readUInt8(0),
+    encodedId.readUInt8(1),
+    encodedId.readUInt8(2)
   ])
 }
 

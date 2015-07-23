@@ -1,15 +1,15 @@
 var util = require('util')
 var Message = require('../message')
 
-var UnregisterBlockValueEventRequest = function (id) {
+var UnregisterBlockValueEventRequest = function (blockId) {
   Message.call(this)
-  this.id = id
+  this.blockId = blockId
 }
 
 util.inherits(UnregisterBlockValueEventRequest, Message)
 
 UnregisterBlockValueEventRequest.prototype.encodeBody = function () {
-  return Message.Encoder.encodeID(this.id)
+  return Message.Encoder.encodeId(this.blockId)
 }
 
 UnregisterBlockValueEventRequest.prototype.decodeBody = function (body) {
@@ -18,7 +18,7 @@ UnregisterBlockValueEventRequest.prototype.decodeBody = function (body) {
     return false
   }
 
-  this.id = Message.Decoder.decodeID(body)
+  this.blockId = Message.Decoder.decodeId(body)
   return true
 }
 

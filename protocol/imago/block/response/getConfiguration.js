@@ -1,8 +1,8 @@
 var util = require('util')
 var Message = require('../message')
 
-var GetConfigurationResponse = function (id) {
-  Message.call(this, id)
+var GetConfigurationResponse = function (blockId) {
+  Message.call(this, blockId)
 }
 
 util.inherits(GetConfigurationResponse, Message)

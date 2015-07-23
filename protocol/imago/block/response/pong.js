@@ -1,8 +1,8 @@
 var util = require('util')
 var Message = require('../message')
 
-var PongResponse = function (id, payload) {
-  Message.call(this, id)
+var PongResponse = function (blockId, payload) {
+  Message.call(this, blockId)
   this.payload = payload
 }
 

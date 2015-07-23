@@ -3,8 +3,7 @@ var test = require('tape')
 var config = require('./config')
 var cubelets = require('../index')
 
-
-var cubeletIDs = {
+var blockIds = {
   flashlight: config.construction.type.flashlight,
   bargraph: config.construction.type.bargraph
 }
@@ -28,8 +27,8 @@ test('connect', function (t) {
             value = value === 255 ? 0 : value + 1
             t.pass('wrote values ' + value)
             client.setManyBlockValues([
-              { id: cubeletIDs.flashlight, value: value },
-              { id: cubeletIDs.bargraph, value: value }
+              { blockId: blockIds.flashlight, value: value },
+              { blockId: blockIds.bargraph, value: value }
             ])
           } else {
             clearInterval(timer)

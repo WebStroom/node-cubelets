@@ -1,8 +1,8 @@
 var util = require('util')
 var Message = require('../message')
 
-var JumpCommand = function (id, mode) {
-  Message.call(this, id)
+var JumpCommand = function (blockId, mode) {
+  Message.call(this, blockId)
   this.mode = mode
 }
 

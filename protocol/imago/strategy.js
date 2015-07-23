@@ -2,7 +2,8 @@ var util = require('util')
 var Strategy = require('../strategy')
 var Version = require('../../version')
 var Cubelet = require('../../cubelet')
-var Types = Cubelet.Types
+var Blocks = require('../../blocks')
+var BlockTypes = Cubelet.BlockTypes
 var xtend = require('xtend/mutable')
 var async = require('async')
 var __ = require('underscore')
@@ -33,112 +34,15 @@ function ImagoStrategy(protocol, client) {
     )(new messages.GetConfigurationRequest(), callback)
   }
 
+  var blocks = new Blocks()
+
   function onFetchConfiguration(response, callback) {
-    var id = response.id
-    blocks.upsert(id, 0, Types.BLUETOOTH)
+    var blockId = response.blockId
+    blocks.setOrigin(blockId, BlockTypes.BLUETOOTH)
     if (callback) {
       callback(null, response)
     }
   }
-
-  var blocks = (function () {
-
-    var self = this
-
-    this.origin = null
-    this.idMap = {}
-    this.hopCountMap = { 0: [], 1: [], 2: [] }
-
-    this.findById = function (id) {
-      return __(this.idMap).find(function (cubelet, otherId) {
-        return otherId === id
-      })
-    }
-
-    this.filterByHopCount = function (hopCount) {
-      return this.hopCountMap[hopCount] || []
-    }
-
-    this.upsert = function (id, hopCount, type) {
-      var cubelet = exists(id)
-      var updated = false
-      if (cubelet) {
-        if (hopCount !== cubelet.hopCount) {
-          var fromHopCount = cubelet.hopCount
-          moveRank(cubelet, hopCount)
-          moved.push(cubelet)
-          client.emit('moveBlock', cubelet, fromHopCount)
-          updated = true
-        }
-      } else {
-        cubelet = new Cubelet(id, type, hopCount)
-        addId(cubelet)
-        addRank(cubelet)
-        client.emit('addBlock', cubelet)
-        updated = true
-      }
-      if (updated) {
-        client.emit('updateBlocks')
-      }
-      return cubelet
-    }
-
-    function exists(id) {
-      return this.idMap[id]
-    }
-
-    function add(cubelet) {
-      addId(cubelet)
-      addRank(cubelet)
-    }
-
-    function remove(cubelet) {
-      removeId(cubelet)
-      removeRank(cubelet)
-    }
-
-    function addId(cubelet) {
-      var id = cubelet.id
-      this.idMap[id] = cubelet
-    }
-
-    function removeId(cubelet) {
-      var id = cubelet.id
-      if (id) {
-        delete this.idMap[id]
-      }
-    }
-
-    function getRank(hopCount) {
-      var rank = this.hopCountMap[hopCount]
-      if (!__(rank).isArray()) {
-        rank = this.hopCountMap[hopCount] = []
-      }
-      return rank
-    }
-
-    function addRank(cubelet) {
-      getRank(cubelet.hopCount).push(cubelet)
-    }
-
-    function removeRank(cubelet) {
-      var rank = getRank(cubelet.hopCount)
-      var i = __(rank).indexOf(cubelet)
-      if (i > -1) {
-        rank.splice(i, 1)
-      }
-    }
-
-    function moveRank(cubelet, toHopCount) {
-      if (toHopCount !== cubelet.hopCount) {
-        removeRank(cubelet)
-        cubelet.hopCount = toHopCount
-        addRank(cubelet)
-      }
-    }
-
-    return self
-  })()
 
   this.fetchOriginBlock = function (callback) {
     client.fetchConfiguration(function (err) {
@@ -149,7 +53,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.getOriginBlock = function () {
-    return blocks.origin
+    return blocks.getOrigin()
   }
 
   this.getNeighborBlocks = function () {
@@ -165,7 +69,7 @@ function ImagoStrategy(protocol, client) {
 
   function onFetchNeighborBlocks(response, callback) {
     response.blocks.forEach(function (block) {
-      blocks.upsert(block.id, 1, Types.UNKNOWN)
+      blocks.upsert(block.blockId, 1, BlockTypes.UNKNOWN)
     })
     if (callback) {
       callback(null, client.getNeighborBlocks())
@@ -173,15 +77,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.getAllBlocks = function () {
-    return __(blocks.idMap).chain()
-      .values()
-      .sortBy(function (cubelet) {
-        return cubelet.hopCount
-      })
-      .filter(function (cubelet) {
-        return cubelet.hopCount > 0
-      })
-      .value()
+    return blocks.getAll()
   }
 
   this.fetchAllBlocks = function (callback) {
@@ -193,7 +89,7 @@ function ImagoStrategy(protocol, client) {
 
   function onFetchAllBlocks(response, callback) {
     response.blocks.forEach(function (block) {
-      blocks.upsert(block.id, block.hopCount, Types.UNKNOWN)
+      blocks.upsert(block.blockId, block.hopCount, BlockTypes.UNKNOWN)
     })
     if (callback) {
       callback(null, client.getAllBlocks())
@@ -212,16 +108,16 @@ function ImagoStrategy(protocol, client) {
     // TODO: stop map updates
   }
 
-  this.findBlockById = function (id) {
-    return blocks.findById(id)
+  this.findBlockById = function (blockId) {
+    return blocks.findById(blockId)
   }
 
   this.filterBlocksByHopCount = function (hopCount) {
     return blocks.filterByHopCount(hopCount)
   }
 
-  this.setBlockValue = function (id, value, callback) {
-    var block = { id: id, value: value }
+  this.setBlockValue = function (blockId, value, callback) {
+    var block = { blockId: blockId, value: value }
     client.sendCommand(new messages.SetBlockValueCommand([ block ]), callback)
   }
 
@@ -229,8 +125,8 @@ function ImagoStrategy(protocol, client) {
     client.sendCommand(new messages.SetBlockValueCommand(blocks), callback)
   }
 
-  this.clearBlockValue = function (id, callback) {
-    var block = { id: id }
+  this.clearBlockValue = function (blockId, callback) {
+    var block = { blockId: blockId }
     client.sendCommand(new messages.ClearBlockValueCommand([ block ]), callback)
   }
 
@@ -257,7 +153,7 @@ function ImagoStrategy(protocol, client) {
     function waitForBlockResponse(e) {
       if (e.code() === messages.ReadBlockMessageEvent.code) {
         var blockResponse = e.blockMessage
-        if (blockResponse.code() === blockRequest.code() && blockResponse.id === blockRequest.id) {
+        if (blockResponse.code() === blockRequest.code() && blockResponse.blockId === blockRequest.blockId) {
           clearTimeout(timer)
           client.removeListener('event', waitForBlockResponse)
           if (callback) {
@@ -333,8 +229,8 @@ function ImagoStrategy(protocol, client) {
     })
   }
 
-  this.flashMemoryToBlock = function (id, slotIndex, callback) {
-    var request = new messages.FlashMemoryToBlockRequest(id, slotIndex)
+  this.flashMemoryToBlock = function (blockId, slotIndex, callback) {
+    var request = new messages.FlashMemoryToBlockRequest(blockId, slotIndex)
     client.sendRequest(request, function (err, response) {
       if (callback) {
         if (err) {
@@ -351,7 +247,7 @@ function ImagoStrategy(protocol, client) {
   this.flashProgramToBlock = function (program, block, callback) {
     var slot = {
       index: 0,
-      blockType: block.type.id,
+      blockTypeId: block.type.typeId,
       version: new Version(0, 0, 0),
       isCustom: false,
       crc: 0xcc
@@ -362,7 +258,7 @@ function ImagoStrategy(protocol, client) {
           callback(err)
         }
       } else {
-        client.flashMemoryToBlock(block.id, slot.index, callback)
+        client.flashMemoryToBlock(block.blockId, slot.index, callback)
       }
     })
   }

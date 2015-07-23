@@ -1,7 +1,7 @@
 var Version = require('../version')
 
 // Decodes a 3-byte ID
-module.exports.decodeID = function (data) {
+module.exports.decodeId = function (data) {
   if (data.length < 3) {
     return 0
   }

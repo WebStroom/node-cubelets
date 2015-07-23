@@ -24,7 +24,7 @@ GetNeighborBlocksEvent.prototype.decode = function (data) {
   var count = data.length / 3
   for (var i = 0; i < count; ++i) {
     blocks.push({
-      id: Message.Decoder.decodeID(data.slice(p + 0, p + 3)),
+      blockId: Message.Decoder.decodeId(data.slice(p + 0, p + 3)),
       hopCount: 0
     })
     p += 3

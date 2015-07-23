@@ -5,11 +5,26 @@ var Connection = require('../connection')
 var Client = require('../client')
 var xtend = require('xtend')
 
+var host = 'localhost'
+var port = 3000
+
+if (process.browser) {
+  net.setProxy({
+    hostname: host,
+    port: port
+  })
+}
+
 var NetScanner = function () {
   Scanner.call(this)
 
   this._getDevices = function (callback) {
-    callback([])
+    callback([{
+      name: 'Cubelet Network',
+      deviceId: port,
+      host: host,
+      port: port
+    }])
   }
 }
 

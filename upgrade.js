@@ -29,11 +29,11 @@ var FirmwareType = {
 var programs = {}
 
 function loadProgram(blockType) {
-  var typeID = blockType.id
+  var typeId = blockType.typeId
   //XXX: path to actual hex programs
   // var file = path.join('./upgrade/programs/', blockType.name + '.hex')
   var data = fs.readFileSync('./upgrade/program.hex')
-  programs[typeID] = new Program(data)
+  programs[typeId] = new Program(data)
 }
 
 loadProgram(Types.BARGRAPH)
@@ -163,12 +163,12 @@ function queueBlocksUntilDone(client, callback) {
 
   function flashNextBlock(callback) {
     var block = peek(waitingQueue)
-    var typeID = block.type.id
-    var program = programs[typeID]
+    var typeId = block.type.typeId
+    var program = programs[typeId]
     if (!program) {
-      callback(new Error('No program found for block type: ' + typeID))
+      callback(new Error('No program found for block type: ' + typeId))
     } else {
-      console.log('flashing block', block.id)
+      console.log('flashing block', block.blockId)
       client.flashProgramToBlock(program, block, function (err) {
         if (err) {
           callback(err)

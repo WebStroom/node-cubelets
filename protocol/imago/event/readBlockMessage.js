@@ -22,8 +22,8 @@ ReadBlockMessageEvent.prototype.decodeBody = function (body) {
     return false
   }
 
-  var id = Message.Decoder.decodeID(body.slice(1, 4))
-  this.blockMessage = new type(id)
+  var blockId = Message.Decoder.decodeId(body.slice(1, 4))
+  this.blockMessage = new type(blockId)
 
   var size = body.readUInt8(4)
   var byteCount = body.length - 5 

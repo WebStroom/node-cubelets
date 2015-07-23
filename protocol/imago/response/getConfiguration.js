@@ -1,9 +1,8 @@
 var util = require('util')
 var Message = require('../message')
 
-var GetConfigurationResponse = function (id) {
+var GetConfigurationResponse = function () {
   Message.call(this)
-  this.id = id
 }
 
 util.inherits(GetConfigurationResponse, Message)
@@ -13,7 +12,7 @@ GetConfigurationResponse.prototype.encodeBody = function () {
     Message.Encoder.encodeVersion(this.hardwareVersion),
     Message.Encoder.encodeVersion(this.bootloaderVersion),
     Message.Encoder.encodeVersion(this.applicationVersion),
-    Message.Encoder.encodeID(this.id),
+    Message.Encoder.encodeId(this.blockId),
     new Buffer([
       this.mode,
       this.customApplication
@@ -30,7 +29,7 @@ GetConfigurationResponse.prototype.decodeBody = function (body) {
   this.hardwareVersion = Message.Decoder.decodeVersion(body.slice(0, 3))
   this.bootloaderVersion = Message.Decoder.decodeVersion(body.slice(3, 6))
   this.applicationVersion = Message.Decoder.decodeVersion(body.slice(6, 9))
-  this.id = Message.Decoder.decodeID(body.slice(9, 12))
+  this.blockId = Message.Decoder.decodeId(body.slice(9, 12))
   this.mode = body.readUInt8(12)
   this.customApplication = body.readUInt8(13)
   this.hasCustomApplication = (this.customApplication !== 0)

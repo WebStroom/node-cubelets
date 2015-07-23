@@ -1,14 +1,15 @@
 var args = process.argv
 if (args.length !== 3) {
-  console.log('Usage: node sim PORT')
+  console.log('Usage: node bin/demo PORT')
   process.exit(1)
 }
 
-var NetServer = require('./server/net')
+var Demo = require('../demo')
+var DemoServer = require('../server/http')(Demo)
 var port = parseInt(process.argv[2])
 var connection
 
-var server = NetServer.createServer(function (newConnection) {
+var server = DemoServer.createServer(function (newConnection) {
   console.log('new client connected')
   connection = newConnection
 })
@@ -42,7 +43,7 @@ var i = 0
 var blocks = []
 
 function createBlock() {
-  var ids = [
+  var blockIds = [
     19808, // passive (avr)
      6766, // knob (avr)
     40834, // drive (pic)
@@ -52,7 +53,7 @@ function createBlock() {
     64451, // battery (pic)
   ]
   var block = {
-    id: ids[i],
+    blockId: blockIds[i],
     hopCount: 1,
     faceIndex: i
   }
@@ -65,7 +66,7 @@ function addBlock() {
     var block = createBlock()
     blocks.unshift(block)
     connection.addBlock(block)
-    console.log('added block', block.id)
+    console.log('added block', block.blockId)
     console.log('blocks:', blocks)
   }
 }
@@ -74,7 +75,7 @@ function removeBlock() {
   if (blocks.length > 0) {
     var block = blocks.pop()
     connection.removeBlock(block)
-    console.log('removed block', block.id)
+    console.log('removed block', block.blockId)
     console.log('blocks:', blocks)
   }
 }

@@ -1,15 +1,15 @@
 var util = require('util')
 var Message = require('../message')
 
-var GetBlockValueRequest = function (id) {
+var GetBlockValueRequest = function (blockId) {
   Message.call(this)
-  this.id = id
+  this.blockId = blockId
 }
 
 util.inherits(GetBlockValueRequest, Message)
 
 GetBlockValueRequest.prototype.encodeBody = function () {
-  return Message.Encoder.encodeID(this.id)
+  return Message.Encoder.encodeId(this.blockId)
 }
 
 module.exports = GetBlockValueRequest

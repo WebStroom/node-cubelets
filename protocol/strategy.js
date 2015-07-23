@@ -73,7 +73,7 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.findBlockById = function (id) {
+  this.findBlockById = function (blockId) {
     throw new Error('not implemented')
   }
 
@@ -81,7 +81,7 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.setBlockValue = function (id, value, callback) {
+  this.setBlockValue = function (blockId, value, callback) {
     throw new Error('not implemented')
   }
 
@@ -89,7 +89,7 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.clearBlockValue = function (id, callback) {
+  this.clearBlockValue = function (blockId, callback) {
     throw new Error('not implemented')
   }
 
@@ -101,12 +101,12 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.registerBlockValueEvent = function (id, callback) {
-    client.sendRequest(new messages.RegisterBlockValueEventRequest(id), callback)
+  this.registerBlockValueEvent = function (blockId, callback) {
+    client.sendRequest(new messages.RegisterBlockValueEventRequest(blockId), callback)
   }
 
-  this.unregisterBlockValueEvent = function (id, callback) {
-    client.sendRequest(new messages.UnregisterBlockValueEventRequest(id), callback)
+  this.unregisterBlockValueEvent = function (blockId, callback) {
+    client.sendRequest(new messages.UnregisterBlockValueEventRequest(blockId), callback)
   }
 
   this.unregisterAllBlockValueEvents = function (callback) {

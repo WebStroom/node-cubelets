@@ -1,9 +1,9 @@
 var Encoder = require('../../encoder')
 var Decoder = require('../../decoder')
 
-var Message = function (id) {
+var Message = function (blockId) {
   this.timestamp = (new Date).getTime()
-  this.id = id
+  this.blockId = blockId
 }
 
 Message.prototype.code = function () {
@@ -15,10 +15,9 @@ Message.prototype.decodeBody = function (body) {
 }
 
 Message.prototype.encodeHeader = function (sizeOfBody) {
-  var toID = this.id
   return Buffer.concat([
     new Buffer([ this.code() ]),
-    Encoder.encodeID(toID),
+    Encoder.encodeId(this.blockId),
     new Buffer([ sizeOfBody ])
   ])
 }

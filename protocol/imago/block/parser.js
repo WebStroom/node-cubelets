@@ -8,7 +8,7 @@ var Parser = function () {
   // Possible parser states
   var State = {
     HEADER_TYPE:1,
-    HEADER_ID:2,
+    HEADER_BLOCK_ID:2,
     HEADER_SIZE:3,
     BODY:4
   }
@@ -18,7 +18,7 @@ var Parser = function () {
   var data = new Buffer(0)
   var code = -1
   var type = undefined
-  var id = undefined
+  var blockId = undefined
   var size = 0
   var index = 0
   var extraBytes = []
@@ -53,7 +53,7 @@ var Parser = function () {
       data = data.slice(index)
       code = -1
       type = undefined
-      id = undefined
+      blockId = undefined
       size = 0
       index = 0
     }
@@ -64,9 +64,9 @@ var Parser = function () {
       state = State.HEADER_ID
     }
 
-    function parseHeaderID() {
+    function parseHeaderBlockId() {
       var slice = data.slice(index, index + 3)
-      id = Decoder.decodeID(slice)
+      blockId = Decoder.decodeId(slice)
       index += slice.length
       state = State.HEADER_SIZE
     }
@@ -101,8 +101,8 @@ var Parser = function () {
         case State.HEADER_TYPE:
           parseHeaderType()
           break
-        case State.HEADER_ID:
-          parseHeaderID()
+        case State.HEADER_BLOCK_ID:
+          parseHeaderId()
           break
         case State.HEADER_SIZE:
           parseHeaderSize()
@@ -123,7 +123,7 @@ var Parser = function () {
 
   // Emits a parsed response
   var emitMessage = function (body) {
-    var message = new type(id)
+    var message = new type(blockId)
     message.decode(body)
     emitter.emit('message', message)
   }

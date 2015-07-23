@@ -1,18 +1,17 @@
-var Types = require('./config.json')['types']
+var Types = require('./config.json')['blockTypes']
 var __ = require('underscore')
 
-var Cubelet = function (id, type, hopCount, mcu) {
-  this.id = id
-  this.type = type || Types.UNKNOWN
+var Cubelet = function (blockId, hopCount, blockType) {
+  this.blockId = blockId
   this.hopCount = hopCount
-  this.mcu = mcu
+  this.blockType = blockType || Types.UNKNOWN
 }
 
 module.exports = Cubelet
-module.exports.Types = Types
+module.exports.BlockTypes = Types
 
-module.exports.typeForTypeID = function(typeID) {
-  return __(Types).find(function(type) {
-    return type.id == typeID
+module.exports.typeForTypeId = function (typeId) {
+  return __(Types).find(function (type) {
+    return type.typeId === typeId
   }) || Types.UNKNOWN
 }
