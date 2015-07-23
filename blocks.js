@@ -42,7 +42,6 @@ function Blocks() {
   }
 
   self.upsert = function (blockId, hopCount, type) {
-    console.log('upsert', blockId, hopCount, type)
     var block = exists(blockId)
     var updated = false
     if (block) {

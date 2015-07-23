@@ -42,7 +42,6 @@ var DemoConnection = function (device, opts) {
 
   this._write = function (chunk, enc, next) {
     if (demo) {
-      console.log('transform <<', chunk)
       transform.push(chunk)
       next()
     }
@@ -54,7 +53,6 @@ var DemoConnection = function (device, opts) {
       callback(null)
     } else {
       transform = through(function (chunk, enc, next) {
-        console.log('transform >>', chunk)
         stream.push(chunk)
         next()
       })

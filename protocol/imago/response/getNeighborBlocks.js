@@ -25,8 +25,6 @@ GetNeighborBlocksResponse.prototype.decodeBody = function (body) {
     return false
   }
 
-  console.log('DECODED NEIGHBORS!!!!!!!')
-
   var blocks = []
   var count = body.length / 4
   for (var i = 0; i < count; ++i) {

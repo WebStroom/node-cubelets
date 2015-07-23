@@ -8,13 +8,25 @@ var GetAllBlocks = function (blocks) {
 
 util.inherits(GetAllBlocks, Message)
 
+GetAllBlocks.prototype.encodeBody = function () {
+  var body = new Buffer([])
+  this.blocks.forEach(function (block) {
+    body = Buffer.concat([ body,
+      Message.Encoder.encodeId(block.blockId),
+      new Buffer([
+        block.hopCount,
+        block.faceIndex
+      ])
+    ])
+  })
+  return body
+}
+
 GetAllBlocks.prototype.decodeBody = function (body) {
   if (body.length % 5 !== 0) {
     this.error = new Error('Size should be divisible by 5.')
     return false
   }
-
-  console.log('DECODED ALL!!!!!!!')
 
   var blocks = []
   var count = body.length / 5

@@ -66,8 +66,6 @@ function addBlock() {
     var block = createBlock()
     blocks.unshift(block)
     connection.addBlock(block)
-    console.log('added block', block.blockId)
-    console.log('blocks:', blocks)
   }
 }
 
@@ -75,7 +73,5 @@ function removeBlock() {
   if (blocks.length > 0) {
     var block = blocks.pop()
     connection.removeBlock(block)
-    console.log('removed block', block.blockId)
-    console.log('blocks:', blocks)
   }
 }

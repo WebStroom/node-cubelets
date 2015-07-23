@@ -120,7 +120,6 @@ function Demo(socket) {
   parser.on('message', function (msg) {
     var code = msg.code()
     var reply = replies[code]
-    console.log('parser blocks', getBlocks())
     if (typeof reply === 'function') {
       reply(msg)
       stream.emit('request', msg)
@@ -134,7 +133,6 @@ function Demo(socket) {
   })
 
   socket.on('data', function (chunk) {
-    console.log('demo >>', chunk)
     parser.parse(chunk)
   })
 
@@ -143,7 +141,6 @@ function Demo(socket) {
   })
 
   function send(msg) {
-    console.log('demo <<', msg.encode())
     stream.write(msg.encode())
   }
 
