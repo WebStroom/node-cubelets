@@ -3,6 +3,7 @@ var Version = require('./version')
 var Cubelet = require('./cubelet')
 var Protocol = require('./protocol/imago')
 var Message = Protocol.Message
+var __ = require('underscore')
 
 function Demo(socket) {
   var blockId = 1337
@@ -11,25 +12,26 @@ function Demo(socket) {
   var applicationVersion = new Version(4, 0, 0)
   var mode = 1
   var customApplication = 0
-  var blocks = []
 
-  function getBlocks() {
-    return blocks
+  var allBlocks = []
+
+  function getAllBlocks() {
+    return allBlocks
   }
 
   function addBlock(block) {
-    blocks.push(block)
+    allBlocks.push(block)
   }
 
   function removeBlock(block) {
-    var i = blocks.indexOf(block)
+    var i = allBlocks.indexOf(block)
     if (i > -1) {
-      blocks.splice(i, 1)
+      allBlocks.splice(i, 1)
     }
   }
 
   var parser = new Protocol.Parser()
-  var messages  = Protocol.messages
+  var messages = Protocol.messages
 
   var replies = {}
   function reply(Request, handler) {
@@ -62,16 +64,56 @@ function Demo(socket) {
 
   reply(messages.GetNeighborBlocksRequest, function (req) {
     console.log('get neighbor blocks?', req)
-    var blocks = getBlocks()
-    send(new messages.GetNeighborBlocksResponse(blocks.filter(function (block) {
+    var blocks = getAllBlocks().filter(function (block) {
       return block.hopCount === 1
-    })))
+    })
+    send(new messages.GetNeighborBlocksResponse(blocks))
   })
 
   reply(messages.GetAllBlocksRequest, function (req) {
     console.log('get all blocks?', req)
-    var blocks = getBlocks()
+    var blocks = getAllBlocks()
     send(new messages.GetAllBlocksResponse(blocks))
+  })
+
+  reply(messages.WriteBlockMessageRequest, function (req) {
+    send(new messages.WriteBlockMessageResponse(0))
+
+    var bm = Protocol.Block.messages
+    var PingRequest = bm.PingRequest
+    var PongResponse = bm.PongResponse
+    var GetConfigurationRequest = bm.GetConfigurationRequest
+    var GetConfigurationResponse = bm.GetConfigurationResponse
+
+    var blockRequest = req.blockMessage
+    var blockId = blockRequest.blockId
+
+    switch (blockRequest.code()) {
+      case PingRequest.code:
+        sendReadBlockMessageEvent(new PongResponse(blockId, blockRequest.payload))
+        break
+      case GetConfigurationRequest.code:
+        var res = new GetConfigurationResponse(blockId)
+        res.blockId = blockId
+        res.hardwareVersion = hardwareVersion
+        res.bootloaderVersion = bootloaderVersion
+        res.applicationVersion = applicationVersion
+        res.mode = mode
+        res.customApplication = customApplication
+        res.blockTypeId = Cubelet.BlockTypes.UNKNOWN
+        var block = __(allBlocks).find(function (block) {
+          return block.blockId === blockId
+        })
+        if (block) {
+          res.blockTypeId = block.blockType.typeId
+        }
+        sendReadBlockMessageEvent(res)
+        break
+    }
+
+    function sendReadBlockMessageEvent(blockResponse) {
+      send(new messages.ReadBlockMessageEvent(blockResponse))
+    }
   })
 
   reply(messages.UploadToMemoryRequest, function (req) {
@@ -146,7 +188,67 @@ function Demo(socket) {
 
   stream.addBlock = addBlock
   stream.removeBlock = removeBlock
-  stream.getBlocks = getBlocks
+  stream.getAllBlocks = getAllBlocks
+  stream.mutate = mutate
+
+  function mutate() {
+    allBlocks = []
+
+    function rand(n) {
+      return Math.floor(n * Math.random())
+    }
+
+    var maxHop = 3 + rand(4)
+
+    function blocksPerHop(hop) {
+      return hop * (1 + rand(hop / 2))
+    }
+
+    function choices(n) {
+      var map = {}
+
+      var stride = (n / 2)
+      var i = rand(n)
+      var max = 0
+      
+      this.choose = function () {
+        if (max === n) {
+          return -1
+        } else {
+          var x = i
+          while (map[x]) {
+            i = (i + rand(stride)) % n
+            x = i
+          }
+          map[x] = true
+          max++
+          return x
+        }
+      }
+    }
+
+    function any(A) {
+      return A[rand(A.length)]
+    }
+
+    var ids = new choices(10000)
+    var blockTypes = __(Cubelet.BlockTypes).values()
+
+    for (var hop = 1; hop < maxHop; ++hop) {
+      var numBlocks = blocksPerHop(hop)
+      var faces = new choices(6)
+      for (var i = 0; i < numBlocks; ++i) {
+        addBlock({
+          blockId: ids.choose(),
+          faceIndex: faces.choose(),
+          hopCount: hop,
+          blockType: any(blockTypes)
+        })
+      }
+    }
+  }
+
+  mutate()
 
   return stream
 }

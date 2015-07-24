@@ -36,4 +36,8 @@ ReadBlockMessageEvent.prototype.decodeBody = function (body) {
   return this.blockMessage.decodeBody(body)
 }
 
+ReadBlockMessageEvent.prototype.encodeBody = function () {
+  return this.blockMessage.encode()
+}
+
 module.exports = ReadBlockMessageEvent

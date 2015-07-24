@@ -100,8 +100,29 @@ function ImagoStrategy(protocol, client) {
     // TODO: start map updates
     async.series([
       client.fetchOriginBlock,
-      client.fetchAllBlocks
+      client.fetchAllBlocks,
+      client.fetchAllBlockConfigurations
     ], callback)
+  }
+
+  this.fetchAllBlockConfigurations = function (callback) {
+    var fetchTasks = []
+    var allBlocks = this.getAllBlocks()
+    var GetConfigurationRequest = protocol.Block.messages.GetConfigurationRequest
+    __(allBlocks).each(function (block) {
+      fetchTasks.push(function (callback) {
+        client.sendBlockRequest(new GetConfigurationRequest(block.blockId), function (err, response) {
+          if (err) {
+            // TODO: Retry block requests...
+            console.error(err)
+            callback(null)
+          } else {
+
+          }
+        })
+      })
+    })
+    async.series(fetchTasks, callback)
   }
 
   this.stopBlockDiscovery = function (callback) {
@@ -146,14 +167,14 @@ function ImagoStrategy(protocol, client) {
     var timer = setTimeout(function () {
       client.removeListener('event', waitForBlockResponse)
       if (callback) {
-        callback(new Error('Timed out waiting for block response to block request: ' + request.code()))
+        callback(new Error('Timed out waiting for block response to block request: ' + blockRequest.code()))
       }
     }, timeout)
 
     function waitForBlockResponse(e) {
       if (e.code() === messages.ReadBlockMessageEvent.code) {
         var blockResponse = e.blockMessage
-        if (blockResponse.code() === blockRequest.code() && blockResponse.blockId === blockRequest.blockId) {
+        if (protocol.Block.requestCodeForResponseCode(blockResponse.code()) === blockRequest.code() && blockResponse.blockId === blockRequest.blockId) {
           clearTimeout(timer)
           client.removeListener('event', waitForBlockResponse)
           if (callback) {

@@ -1,6 +1,70 @@
 var test = require('tape')
 var DemoClient = require('../client/demo')
+var __ = require('underscore')
 var cubelets = DemoClient
+
+test('mutate', function (t) {
+  t.plan(2)
+
+  var client = cubelets.connect({
+    name: 'Demo Cubelet',
+    deviceId: 1337
+  }, function (err) {
+    client.getConnection().getDemo().mutate()
+    t.pass('mutated')
+    client.disconnect(function (err) {
+      t.pass('disconnected')
+    })
+  })
+})
+
+test('ping pong', function (t) {
+  t.plan(4)
+
+  var GetAllBlocksRequest = cubelets.Protocol.messages.GetAllBlocksRequest
+  var PingRequest = cubelets.Protocol.Block.messages.PingRequest
+
+  var client = cubelets.connect({
+    name: 'Demo Cubelet',
+    deviceId: 1337
+  }, function (err) {
+    t.ifError(err, 'no connect err')
+    client.sendRequest(new GetAllBlocksRequest(), function (err, res) {
+      var block = __(res.blocks).first()
+      t.ok(block, 'block exists')
+      client.sendBlockRequest(new PingRequest(block.blockId), function (err, res) {
+        t.ifError(err, 'no block request err')
+        client.disconnect(function (err) {
+          t.ifError(err, 'no disconnect err')
+        })
+      })
+    })
+  })
+})
+
+test.only('get block configuration', function (t) {
+  t.plan(4)
+
+  var GetAllBlocksRequest = cubelets.Protocol.messages.GetAllBlocksRequest
+  var GetConfigurationRequest = cubelets.Protocol.Block.messages.GetConfigurationRequest
+
+  var client = cubelets.connect({
+    name: 'Demo Cubelet',
+    deviceId: 1337
+  }, function (err) {
+    t.ifError(err, 'no connect err')
+    client.sendRequest(new GetAllBlocksRequest(), function (err, res) {
+      var block = __(res.blocks).first()
+      t.ok(block, 'block exists')
+      client.sendBlockRequest(new GetConfigurationRequest(block.blockId), function (err, res) {
+        t.ifError(err, 'no block request err')
+        client.disconnect(function (err) {
+          t.ifError(err, 'no disconnect err')
+        })
+      })
+    })
+  })
+})
 
 test('demo client', function (t) {
   t.plan(6)
@@ -40,10 +104,8 @@ test('get neighbor blocks', function (t) {
     var demo = client.getConnection().getDemo()
     client.fetchConfiguration(function (err) {
       t.ok(client.getOriginBlock(), 'has origin block')
-      demo.addBlock({ blockId: 1, faceIndex: 1, hopCount: 1 })
-      demo.addBlock({ blockId: 2, faceIndex: 2, hopCount: 1 })
       client.sendRequest(new GetNeighborBlocksRequest(), function (err, response) {
-        t.equal(response.blocks.length, 2, 'responds with 2 blocks')
+        t.notEqual(response.blocks.length, 0, 'has neighbors')
         client.disconnect(function (err) {
           t.ifError(err, 'no disconnect err')
           t.pass('disconnected')
