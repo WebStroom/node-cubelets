@@ -1,19 +1,20 @@
 var util = require('util')
 var Message = require('../message')
+var __ = require('underscore')
 
-var GetNeighborBlocksResponse = function (blocks) {
+var GetNeighborBlocksResponse = function (neighbors) {
   Message.call(this)
-  this.blocks = blocks || []
+  this.neighbors = neighbors || {}
 }
 
 util.inherits(GetNeighborBlocksResponse, Message)
 
 GetNeighborBlocksResponse.prototype.encodeBody = function () {
   var body = new Buffer([])
-  this.blocks.forEach(function (block) {
+  __(this.neighbors).each(function (blockId, faceIndex) {
     body = Buffer.concat([ body,
-      Message.Encoder.encodeId(block.blockId),
-      new Buffer([ block.faceIndex ])
+      Message.Encoder.encodeId(blockId),
+      new Buffer([ faceIndex ])
     ])
   })
   return body
@@ -25,19 +26,15 @@ GetNeighborBlocksResponse.prototype.decodeBody = function (body) {
     return false
   }
 
-  var blocks = []
+  var neighbors = {}
   var count = body.length / 4
   for (var i = 0; i < count; ++i) {
     var p = i * 4
-    /* format: [ id2, id1, id0, face ] */
-    blocks.push({
-      blockId: Message.Decoder.decodeId(body.slice(p + 0, p + 3)),
-      faceIndex: body.readUInt8(p + 3),
-      hopCount: 1 // hop count is implied for neighbor blocks
-    })
+    var faceIndex = body.readUInt8(p + 3)
+    neighbors[faceIndex] = Message.Decoder.decodeId(body.slice(p + 0, p + 3))
   }
 
-  this.blocks = blocks
+  this.neighbors = neighbors
   return true
 }
 

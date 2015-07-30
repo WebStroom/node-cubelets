@@ -3,7 +3,7 @@ var Message = require('../message')
 
 var GetNeighborBlocksRequest = function (hopCount) {
   Message.call(this)
-  this.hopCount = (typeof hopCount === 'undefined') ? 1 : hopCount
+  this.hopCount = hopCount ? hopCount : 1
 }
 
 util.inherits(GetNeighborBlocksRequest, Message)

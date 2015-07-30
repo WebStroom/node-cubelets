@@ -30,6 +30,10 @@ function Factory(Scanner, Connection) {
       return con
     }
 
+    this.getDevice = function () {
+      return con.getDevice()
+    }
+
     this.disconnect = function (callback) {
       con.close(callback)
     }
@@ -90,7 +94,7 @@ function Factory(Scanner, Connection) {
       client.sendData(message.encode(), callback)
     }
 
-    //TODO: Determine correct commmand rate.
+    // TODO: Determine correct commmand rate.
     var commandQueue = new CommandQueue(client, (1000 / 20))
 
     this.sendCommand = function (command, callback) {

@@ -1,15 +1,15 @@
 var util = require('util')
 var Message = require('../message')
 
-var GetNeighborBlocksEvent = function (blocks) {
+var GetNeighborBlocksEvent = function (neighbors) {
   Message.call(this)
-  this.blocks = blocks
+  this.neighbors = neighbors
 }
 
 util.inherits(GetNeighborBlocksEvent, Message)
 
 GetNeighborBlocksEvent.prototype.decode = function (data) {
-  this.blocks = []
+  this.neighbors = []
 
   if (data.length === 0) {
     return true
@@ -22,14 +22,16 @@ GetNeighborBlocksEvent.prototype.decode = function (data) {
 
   var p = 0
   var count = data.length / 3
+  var neighbors = []
   for (var i = 0; i < count; ++i) {
-    blocks.push({
-      blockId: Message.Decoder.decodeId(data.slice(p + 0, p + 3)),
-      hopCount: 0
-    })
+    var blockId = Message.Decoder.decodeId(data.slice(p + 0, p + 3))
+    if (0 !== blockId) {
+      neighbors.push(blockId)
+    }
     p += 3
   }
 
+  this.neighbors = neighbors
   return true
 }
 

@@ -38,10 +38,15 @@ function ImagoStrategy(protocol, client) {
 
   function onFetchConfiguration(response, callback) {
     var blockId = response.blockId
+    configuration = response
     blocks.setOrigin(blockId, BlockTypes.BLUETOOTH)
     if (callback) {
-      callback(null, response)
+      callback(null, configuration)
     }
+  }
+
+  this.getOriginBlock = function () {
+    return blocks.getOrigin()
   }
 
   this.fetchOriginBlock = function (callback) {
@@ -50,10 +55,6 @@ function ImagoStrategy(protocol, client) {
         callback(err, client.getOriginBlock())
       }
     })
-  }
-
-  this.getOriginBlock = function () {
-    return blocks.getOrigin()
   }
 
   this.getNeighborBlocks = function () {
@@ -68,9 +69,14 @@ function ImagoStrategy(protocol, client) {
   }
 
   function onFetchNeighborBlocks(response, callback) {
-    response.blocks.forEach(function (block) {
-      blocks.upsert(block.blockId, 1, BlockTypes.UNKNOWN)
-    })
+    var origin = blocks.getOrigin()
+    if (origin) {
+      blocks.upsert({
+        blockId: origin.blockId,
+        hopCount: 1,
+        neighbors: response.neighbors
+      })
+    }
     if (callback) {
       callback(null, client.getNeighborBlocks())
     }
@@ -89,35 +95,62 @@ function ImagoStrategy(protocol, client) {
 
   function onFetchAllBlocks(response, callback) {
     response.blocks.forEach(function (block) {
-      blocks.upsert(block.blockId, block.hopCount, BlockTypes.UNKNOWN)
+      blocks.upsert({
+        blockId: block.blockId,
+        hopCount: block.hopCount,
+        blockType: BlockTypes.UNKNOWN
+      })
     })
     if (callback) {
       callback(null, client.getAllBlocks())
     }
   }
 
-  this.startBlockDiscovery = function (callback) {
+  this.getGraph = function () {
+    return blocks.getGraph()
+  }
+
+  this.fetchGraph = function (callback) {
     // TODO: start map updates
     async.series([
       client.fetchOriginBlock,
       client.fetchAllBlocks,
-      client.fetchAllBlockConfigurations
+      client.fetchAllBlockConfigurations,
+      client.fetchNeighborBlocks,
+      client.fetchAllBlockNeighbors
     ], callback)
   }
 
-  this.fetchAllBlockConfigurations = function (callback) {
-    var fetchTasks = []
-    var allBlocks = this.getAllBlocks()
-    var GetConfigurationRequest = protocol.Block.messages.GetConfigurationRequest
-    __(allBlocks).each(function (block) {
-      fetchTasks.push(function (callback) {
-        client.sendBlockRequest(new GetConfigurationRequest(block.blockId), function (err, response) {
-          if (err) {
-            // TODO: Retry block requests...
-            console.error(err)
-            callback(null)
-          } else {
+  function sortBlocksByHopCount(unsortedBlocks) {
+    return __(unsortedBlocks).sortBy(function (block) {
+      return typeof block.hopCount === 'number' ? block.hopCount : 255
+    })
+  }
 
+  this.fetchAllBlockConfigurations = function (callback) {
+    client.fetchBlockConfigurations(client.getAllBlocks(), callback)
+  }
+
+  this.fetchBlockConfigurations = function (unsortedBlocks, callback) {
+    var fetchTasks = []
+    __(sortBlocksByHopCount(unsortedBlocks)).each(function (block) {
+      fetchTasks.push(function (callback) {
+        var blockId = block.blockId
+        var GetConfigurationRequest = protocol.Block.messages.GetConfigurationRequest
+        client.sendBlockRequest(new GetConfigurationRequest(blockId), function (err, response) {
+          if (err) {
+            callback(err)
+          } else {
+            blocks.upsert({
+              blockId: blockId,
+              blockType: Cubelet.typeForTypeId(response.blockTypeId),
+              hardwareVersion: response.hardwareVersion,
+              bootloaderVersion: response.bootloaderVersion,
+              applicationVersion: response.applicationVersion,
+              customApplication: response.customApplication,
+              mode: response.mode
+            })
+            callback(null)
           }
         })
       })
@@ -125,8 +158,30 @@ function ImagoStrategy(protocol, client) {
     async.series(fetchTasks, callback)
   }
 
-  this.stopBlockDiscovery = function (callback) {
-    // TODO: stop map updates
+  this.fetchAllBlockNeighbors = function (callback) {
+    client.fetchBlockNeighbors(client.getAllBlocks(), callback)
+  }
+
+  this.fetchBlockNeighbors = function (unsortedBlocks, callback) {
+    var fetchTasks = []
+    __(sortBlocksByHopCount(unsortedBlocks)).each(function (block) {
+      fetchTasks.push(function (callback) {
+        var blockId = block.blockId
+        var GetNeighborsRequest = protocol.Block.messages.GetNeighborsRequest
+        client.sendBlockRequest(new GetNeighborsRequest(blockId), function (err, response) {
+          if (err) {
+            callback(err)
+          } else {
+            blocks.upsert({
+              blockId: blockId,
+              neighbors: response.neighbors
+            })
+            callback(null)
+          }
+        })
+      })
+    })
+    async.series(fetchTasks, callback)
   }
 
   this.findBlockById = function (blockId) {

@@ -27,6 +27,7 @@ module.exports = function RequestQueue(client) {
 
     client.on('response', waitForResponse)
     client.sendMessage(request)
+    client.emit('request', request)
   })
 
   this.push = function (request, callback, timeout) {

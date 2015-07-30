@@ -65,11 +65,11 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.startBlockDiscovery = function (callback) {
+  this.getGraph = function () {
     throw new Error('not implemented')
   }
 
-  this.stopBlockDiscovery = function (callback) {
+  this.fetchGraph = function () {
     throw new Error('not implemented')
   }
 

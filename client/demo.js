@@ -16,8 +16,11 @@ var DemoScanner = function () {
   this._getDevices = function (callback) {
     setTimeout(function () {
       callback([{
-        name: 'Demo Cubelet',
+        name: 'Demo Cubelet 1',
         deviceId: 1337
+      }, {
+        name: 'Demo Cubelet 2',
+        deviceId: 42
       }])
     }, delay())
   }
