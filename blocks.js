@@ -29,14 +29,22 @@ function Blocks() {
     var nodes = []
     var links = []
 
+    function addNode(block) {
+      nodes.push({
+        blockId: block.blockId,
+        blockType: block.blockType,
+        hopCount: block.hopCount
+      })
+    }
+
     var originBlock = self.getOrigin()
     if (originBlock) {
-      nodes.push(originBlock)
+      addNode(originBlock)
     }
 
     var allBlocks = self.getAll()
     __(allBlocks).each(function (block) {
-      nodes.push(block)
+      addNode(block)
     })
 
     function indexOf(blockId) {
@@ -50,14 +58,13 @@ function Blocks() {
       __(block.neighbors).each(function (neighborId, faceIndex) {
         links.push({
           source: indexOf(blockId),
-          target: indexOf(neighborId),
-          faceIndex: parseInt(faceIndex, 10)
+          target: indexOf(neighborId)
         })
       })
     }
 
-    if (origin) {
-      addLinks(origin)
+    if (originBlock) {
+      addLinks(originBlock)
     }
 
     __(allBlocks).each(function (block) {

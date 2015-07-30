@@ -71,8 +71,9 @@ function Demo(socket) {
     console.log('get neighbor blocks?', req)
     var neighborIds = getOriginBlock().neighborIds
     var neighbors = __(neighborIds).reduce(function (memo, blockId, faceIndex) {
-      faceIndex = parseInt(faceIndex, 10)
-      memo[faceIndex] = blockId
+      if (null !== blockId) {
+        memo[faceIndex] = blockId
+      }
       return memo
     }, {})
     send(new messages.GetNeighborBlocksResponse(neighbors))
@@ -118,7 +119,7 @@ function Demo(socket) {
         if (block) {
           res.blockTypeId = block.blockType.typeId
         }
-        sendReadBlockMessageEvent(res)
+        sendReadBlockMessageEvent(res, 500 * block.hopCount)
         break
       case GetNeighborsRequest.code:
         var res = new GetNeighborsResponse(blockId)
@@ -134,12 +135,14 @@ function Demo(socket) {
           })
           res.neighbors = neighbors
         }
-        sendReadBlockMessageEvent(res)
+        sendReadBlockMessageEvent(res, 1000 * block.hopCount)
         break
     }
 
-    function sendReadBlockMessageEvent(blockResponse) {
-      send(new messages.ReadBlockMessageEvent(blockResponse))
+    function sendReadBlockMessageEvent(blockResponse, delay) {
+      setTimeout(function () {
+        send(new messages.ReadBlockMessageEvent(blockResponse))
+      }, 0)
     }
   })
 
@@ -211,7 +214,6 @@ function Demo(socket) {
 
   function send(msg) {
     stream.write(msg.encode())
-    //console.log('!', msg)
   }
 
   stream.addBlock = addBlock

@@ -73,7 +73,6 @@ function ImagoStrategy(protocol, client) {
     if (origin) {
       blocks.upsert({
         blockId: origin.blockId,
-        hopCount: 1,
         neighbors: response.neighbors
       })
     }
