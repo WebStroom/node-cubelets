@@ -90,15 +90,15 @@ function Factory(Scanner, Connection) {
       con.write(data, callback)
     }
 
-    this.sendMessage = function (message, callback) {
-      client.sendData(message.encode(), callback)
+    this.sendMessage = function (message) {
+      client.sendData(message.encode())
     }
 
     // TODO: Determine correct commmand rate.
     var commandQueue = new CommandQueue(client, (1000 / 20))
 
-    this.sendCommand = function (command, callback) {
-      commandQueue.push(command, callback)
+    this.sendCommand = function (command) {
+      commandQueue.push(command)
     }
 
     var requestQueue = new RequestQueue(client)

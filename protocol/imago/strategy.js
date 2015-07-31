@@ -110,7 +110,6 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchGraph = function (callback) {
-    // TODO: start map updates
     async.series([
       client.fetchOriginBlock,
       client.fetchAllBlocks,
@@ -138,7 +137,9 @@ function ImagoStrategy(protocol, client) {
         var GetConfigurationRequest = protocol.Block.messages.GetConfigurationRequest
         client.sendBlockRequest(new GetConfigurationRequest(blockId), function (err, response) {
           if (err) {
-            callback(err)
+            if (callback) {
+              callback(err)
+            }
           } else {
             blocks.upsert({
               blockId: blockId,
@@ -149,7 +150,9 @@ function ImagoStrategy(protocol, client) {
               customApplication: response.customApplication,
               mode: response.mode
             })
-            callback(null)
+            if (callback) {
+              callback(null)
+            }
           }
         })
       })
@@ -169,13 +172,18 @@ function ImagoStrategy(protocol, client) {
         var GetNeighborsRequest = protocol.Block.messages.GetNeighborsRequest
         client.sendBlockRequest(new GetNeighborsRequest(blockId), function (err, response) {
           if (err) {
-            callback(err)
+            if (callback) {
+              callback(err)
+            }
           } else {
+            console.log('neighbors', response.neighbors)
             blocks.upsert({
               blockId: blockId,
               neighbors: response.neighbors
             })
-            callback(null)
+            if (callback) {
+              callback(null)
+            }
           }
         })
       })
@@ -309,11 +317,17 @@ function ImagoStrategy(protocol, client) {
     client.sendRequest(request, function (err, response) {
       if (callback) {
         if (err) {
-          callback(err)
+          if (callback) {
+            callback(err)
+          }
         } else if (response.result !== 0) {
-          callback(new Error('Flashing failed.'))
+          if (callback) {
+            callback(new Error('Flashing failed.'))
+          }
         } else {
-          callback(null)
+          if (callback) {
+            callback(null)
+          }
         }
       }
     })

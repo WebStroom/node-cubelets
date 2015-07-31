@@ -12,11 +12,20 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      test('commands', function (t) {
-        t.plan(3)
-        client.sendCommand(new Protocol.messages.SetBlockValueCommand(0, 0), t.ifError)
-        client.sendCommand(new Protocol.messages.SetLEDColorCommand(0), t.ifError)
-        client.sendCommand(new Protocol.messages.SetLEDRGBCommand(0, 0, 0), t.ifError)
+      test('config', function (t) {
+        t.plan(2)
+        client.sendRequest(new Protocol.messages.GetConfigurationRequest(), function (err, response) {
+          t.ifError(err, 'no config err')
+          t.ok(response, 'got config')
+        })
+      })
+
+      test.skip('commands', function (t) {
+        t.plan(1)
+        client.sendCommand(new Protocol.messages.SetBlockValueCommand([{ blockId: 0, value: 0 }]))
+        client.sendCommand(new Protocol.messages.SetLEDColorCommand(0))
+        client.sendCommand(new Protocol.messages.SetLEDRGBCommand(0, 0, 0))
+        t.pass('sent commands')
       })
 
       test('echo', function (t) {
@@ -39,7 +48,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('ping', function (t) {
+      test.skip('ping', function (t) {
         t.plan(5)
         var blockId = config.construction.type.passive
         var payload = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
@@ -58,6 +67,44 @@ var client = cubelets.connect(config.device, function (err) {
         client.sendRequest(new Protocol.messages.WriteBlockMessageRequest(pingRequest), function (err, response) {
           t.ifError(err, 'no response error')
           t.equal(0, response.result, 'wrote ping message')
+        })
+      })
+
+      test('block config', function (t) {
+        t.plan(3)
+        var blockId = config.construction.type.passive
+        var configRequest = new Protocol.Block.messages.GetConfigurationRequest(blockId)
+        client.on('event', function listener(e) {
+          if (e instanceof Protocol.messages.ReadBlockMessageEvent && e.blockMessage instanceof Protocol.Block.messages.GetConfigurationResponse) {
+            var configResponse = e.blockMessage
+            if (configResponse.blockId === blockId) {
+              t.pass('read config message')
+              client.removeListener('event', listener)
+            }
+          }
+        })
+        client.sendRequest(new Protocol.messages.WriteBlockMessageRequest(configRequest), function (err, response) {
+          t.ifError(err, 'no response error')
+          t.equal(0, response.result, 'wrote config message')
+        })
+      })
+
+      test('block neighbors', function (t) {
+        t.plan(3)
+        var blockId = config.construction.type.passive
+        var getNeighborsRequest = new Protocol.Block.messages.GetNeighborsRequest(blockId)
+        client.on('event', function listener(e) {
+          if (e instanceof Protocol.messages.ReadBlockMessageEvent && e.blockMessage instanceof Protocol.Block.messages.GetNeighborsResponse) {
+            var configResponse = e.blockMessage
+            if (configResponse.blockId === blockId) {
+              t.pass('read get neighbors message')
+              client.removeListener('event', listener)
+            }
+          }
+        })
+        client.sendRequest(new Protocol.messages.WriteBlockMessageRequest(getNeighborsRequest), function (err, response) {
+          t.ifError(err, 'no response error')
+          t.equal(0, response.result, 'wrote get neighbors message')
         })
       })
 
