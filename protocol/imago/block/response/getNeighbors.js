@@ -45,8 +45,6 @@ GetNeighborsResponse.prototype.decodeBody = function (body) {
     return false
   }
 
-  console.log('face mask', faceMask)
-
   var neighbors = {}
 
   for (var i = 0; i < 6; ++i) {

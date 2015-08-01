@@ -176,7 +176,6 @@ function ImagoStrategy(protocol, client) {
               callback(err)
             }
           } else {
-            console.log('neighbors', response.neighbors)
             blocks.upsert({
               blockId: blockId,
               neighbors: response.neighbors
