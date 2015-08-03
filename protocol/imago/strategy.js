@@ -36,6 +36,10 @@ function ImagoStrategy(protocol, client) {
 
   var blocks = new Blocks()
 
+  blocks.on('updateBlocks', function () {
+    client.emit('updateBlocks')
+  })
+
   function onFetchConfiguration(response, callback) {
     var blockId = response.blockId
     configuration = response

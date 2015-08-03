@@ -119,7 +119,7 @@ function Demo(socket) {
         if (block) {
           res.blockTypeId = block.blockType.typeId
         }
-        sendReadBlockMessageEvent(res, 500 * block.hopCount)
+        sendReadBlockMessageEvent(res, rand(500 * block.hopCount))
         break
       case GetNeighborsRequest.code:
         var res = new GetNeighborsResponse(blockId)
@@ -135,14 +135,14 @@ function Demo(socket) {
           })
           res.neighbors = neighbors
         }
-        sendReadBlockMessageEvent(res, 1000 * block.hopCount)
+        sendReadBlockMessageEvent(res, rand(1000 * block.hopCount))
         break
     }
 
     function sendReadBlockMessageEvent(blockResponse, delay) {
       setTimeout(function () {
         send(new messages.ReadBlockMessageEvent(blockResponse))
-      }, 0)
+      }, delay||0)
     }
   })
 
