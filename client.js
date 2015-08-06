@@ -34,15 +34,23 @@ function Factory(Scanner, Connection) {
       return con.getDevice()
     }
 
+    this.connect = function (callback) {
+      con.open(callback)
+    }
+
     this.disconnect = function (callback) {
       con.close(callback)
     }
+
+    con.on('open', function () {
+      client.emit('connect')
+    })
 
     con.on('data', function (data) {
       client.emit('data', data)
     })
 
-    con.on('close', function listener(err) {
+    con.on('close', function (err) {
       client.emit('disconnect', err)
     })
 
@@ -94,7 +102,6 @@ function Factory(Scanner, Connection) {
       client.sendData(message.encode())
     }
 
-    // TODO: Determine correct commmand rate.
     var commandQueue = new CommandQueue(client, (1000 / 20))
 
     this.sendCommand = function (command) {
@@ -118,19 +125,13 @@ function Factory(Scanner, Connection) {
   Client.Protocol = Protocols.Imago
   xtend(Client.Protocol, Protocols)
 
-  Client.connect = function (device, callback) {
-    callback = callback || Function()
-    var con = new Connection(device)
-    var client = new Client(con)
-    con.open(function (err) {
-      if (err) {
-        callback(err)
-      } else {
-        callback(null, con)
-        client.emit('connect', con)
-      }
-    })
+  Client.create = function (device) {
+    return new Client(new Connection(device))
+  }
 
+  Client.connect = function (device, callback) {
+    var client = Client.create(device)
+    client.connect(callback)
     return client
   }
 

@@ -10,8 +10,8 @@ function Blocks() {
 
   var origin = null
   var idMap = {}
-  var hopCountMap = { 0: [], 1: [], 2: [] }
-  var neighborsMap = {}
+  var nodes = []
+  var links = []
 
   self.getAll = function () {
     return __(idMap).chain()
@@ -26,51 +26,6 @@ function Blocks() {
   }
 
   self.getGraph = function () {
-    var nodes = []
-    var links = []
-
-    function addNode(block) {
-      nodes.push({
-        blockId: block.blockId,
-        blockType: block.blockType,
-        hopCount: block.hopCount
-      })
-    }
-
-    var originBlock = self.getOrigin()
-    if (originBlock) {
-      addNode(originBlock)
-    }
-
-    var allBlocks = self.getAll()
-    __(allBlocks).each(function (block) {
-      addNode(block)
-    })
-
-    function indexOf(blockId) {
-      return __(nodes).findIndex(function (node) {
-        return node.blockId === blockId
-      })
-    }
-
-    function addLinks(block) {
-      var blockId = block.blockId
-      __(block.neighbors).each(function (neighborId, faceIndex) {
-        links.push({
-          source: indexOf(blockId),
-          target: indexOf(neighborId)
-        })
-      })
-    }
-
-    if (originBlock) {
-      addLinks(originBlock)
-    }
-
-    __(allBlocks).each(function (block) {
-      addLinks(block)
-    })
-
     return {
       nodes: nodes,
       links: links
@@ -84,7 +39,9 @@ function Blocks() {
   }
 
   self.filterByHopCount = function (hopCount) {
-    return hopCountMap[hopCount] || []
+    return __(nodes).filter(function (block) {
+      return block.hopCount === hopCount
+    })
   }
 
   self.getOrigin = function () {
@@ -109,7 +66,7 @@ function Blocks() {
     var updated = false
 
     if (block) {
-      if (updateRank(block, hopCount)) {
+      if (updateHopCount(block, hopCount)) {
         updated = true
       }
       if (updateNeighbors(block, neighbors)) {
@@ -121,8 +78,7 @@ function Blocks() {
     } else {
       // Since block doesn't exist, add it to the block construction.
       block = new Cubelet(blockId, hopCount, blockType)
-      setBlock(blockId, block)
-      setRank(blockId, hopCount)
+      addBlock(blockId, block)
       self.emit('addBlock', block)
       updated = true
     }
@@ -138,72 +94,57 @@ function Blocks() {
     return idMap[blockId]
   }
 
-  function setBlock(blockId, block) {
+  function addBlock(blockId, block) {
     idMap[blockId] = block
+    nodes.push(block)
   }
 
-  function clearBlock(blockId) {
+  function removeBlock(blockId) {
     delete idMap[blockId]
-  }
-
-  function getRank(hopCount) {
-    var rank = hopCountMap[hopCount]
-    if (!__(rank).isArray()) {
-      rank = hopCountMap[hopCount] = []
-    }
-    return rank
-  }
-
-  function setRank(blockId, hopCount) {
-    getRank(hopCount).push(blockId)
-  }
-
-  function clearRank(blockId, hopCount) {
-    var rank = getRank(hopCount)
-    var i = __(rank).indexOf(blockId)
+    var block = getBlock(blockId)
+    var i = nodes.indexOf(block)
     if (i > -1) {
-      rank.splice(i, 1)
+      nodes.splice(i, 1)
     }
   }
 
-  function setNeighbors(blockId, neighbors) {
-    neighborsMap[blockId] = neighbors
+  function addLink(sourceId, targetId) {
+    links.push({
+      source: getBlock(sourceId),
+      target: getBlock(targetId)
+    })
   }
 
-  function clearNeighbors(blockId) {
-    delete neighborsMap[blockId]
-  }
-
-  function updateRank(block, hopCount) {
-    var updated = false
+  function updateHopCount(block, hopCount) {
     var blockId = block.blockId
     if (hopCount !== undefined && hopCount !== block.hopCount) {
-      clearRank(blockId, block.hopCount)
       block.hopCount = hopCount
-      setRank(blockId, block.hopCount)
-      updated = true
+      return true
+    } else {
+      return false
     }
-    return updated
   }
 
   function updateNeighbors(block, neighbors) {
-    var updated = false
     var blockId = block.blockId
     if (neighbors !== undefined && !__.isEqual(neighbors, block.neighbors)) {
       block.neighbors = neighbors
-      setNeighbors(blockId, neighbors)
-      updated = true
+      __(neighbors).each(function (neighborId, faceIndex) {
+        addLink(blockId, neighborId)
+      })
+      return true
+    } else {
+      return false
     }
-    return updated
   }
 
   function updateBlockType(block, blockType) {
-    var updated = false
     if (undefined !== blockType) {
       block.blockType = blockType
-      updated = true
+      return true
+    } else {
+      return false
     }
-    return updated
   }
 
   return self
