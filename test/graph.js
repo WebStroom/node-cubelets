@@ -60,9 +60,7 @@ var client = cubelets.connect(config.device, function (err) {
           })
         }
         async.series(tasks, function (err) {
-          if (err) {
-            t.fail('graph series failed')
-          }
+          t.end(err)
         })
       })
 
