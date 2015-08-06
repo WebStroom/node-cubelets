@@ -1,4 +1,5 @@
 var test = require('tape')
+var async = require('async')
 var config = require('./config')
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
@@ -11,32 +12,29 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      test('get configuration', function (t) {
+      test.skip('get configuration', function (t) {
         t.plan(2)
         client.fetchConfiguration(function (err, res) {
           t.ifError(err, 'no err')
           t.ok(res, 'response ok')
-          console.log('configuration', res)
         })
       })
 
-      test('get neighbors', function (t) {
+      test.skip('get neighbors', function (t) {
         t.plan(2)
         client.fetchAllBlocks(function (err, res) {
           t.ifError(err, 'no err')
           t.ok(res, 'response ok')
-          console.log('all blocks', res)
         })
       })
 
-      test('get block neighbors', function (t) {
+      test.skip('get block neighbors', function (t) {
         t.plan(2)
-        var blockId = config.construction.type.passive
+        var blockId = config.construction.type.drive
         var GetNeighborsRequest = Protocol.Block.messages.GetNeighborsRequest
         client.sendBlockRequest(new GetNeighborsRequest(blockId), function (err, res) {
           t.ifError(err, 'no get neighbors err')
           t.ok(res, 'response ok')
-          console.log('neighbors', res)
         })
       })
 
@@ -46,7 +44,25 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no fetch graph err')
           var graph = client.getGraph()
           t.ok(graph, 'graph ok')
-          console.log('graph', graph)
+        })
+      })
+
+      test('graph many times', function (t) {
+        var n = 1000
+        t.plan(n)
+        var tasks = []
+        for (var i = 0; i < n; ++i) {
+          tasks.push(function (callback) {
+            client.fetchGraph(function (err) {
+              t.ifError(err, 'no graph error')
+              callback(err)
+            })
+          })
+        }
+        async.series(tasks, function (err) {
+          if (err) {
+            t.fail('graph series failed')
+          }
         })
       })
 
