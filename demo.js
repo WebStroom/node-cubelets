@@ -6,7 +6,7 @@ var Protocol = require('./protocol/imago')
 var Message = Protocol.Message
 var __ = require('underscore')
 
-function Demo(socket) {
+function Demo(socket, opts) {
   var blockId = 1337
   var hardwareVersion = new Version(2, 0, 0)
   var bootloaderVersion = new Version(4, 0, 0)
@@ -89,13 +89,13 @@ function Demo(socket) {
     console.log('write block message?')
     send(new messages.WriteBlockMessageResponse(0))
 
-    var bm = Protocol.Block.messages
-    var PingRequest = bm.PingRequest
-    var PongResponse = bm.PongResponse
-    var GetConfigurationRequest = bm.GetConfigurationRequest
-    var GetConfigurationResponse = bm.GetConfigurationResponse
-    var GetNeighborsRequest = bm.GetNeighborsRequest
-    var GetNeighborsResponse = bm.GetNeighborsResponse
+    var b = Protocol.Block.messages
+    var PingRequest = b.PingRequest
+    var PongResponse = b.PongResponse
+    var GetConfigurationRequest = b.GetConfigurationRequest
+    var GetConfigurationResponse = b.GetConfigurationResponse
+    var GetNeighborsRequest = b.GetNeighborsRequest
+    var GetNeighborsResponse = b.GetNeighborsResponse
 
     var blockRequest = req.blockMessage
     var blockId = blockRequest.blockId
@@ -219,18 +219,16 @@ function Demo(socket) {
   stream.addBlock = addBlock
   stream.removeBlock = removeBlock
   stream.getAllBlocks = getAllBlocks
-  stream.mutate = mutate
 
   function mutation0() {
-    var ids = new choices(10000).without(blockId)
     var bluetooth = blockId
-    var drive1 = ids.choose()
-    var drive2 = ids.choose()
-    var distance1 = ids.choose()
-    var distance2 = ids.choose()
-    var inverse = ids.choose()
-    var threshold = ids.choose()
-    var rotate = ids.choose()
+    var drive1 = 10004
+    var drive2 = 10010
+    var distance1 = 10005
+    var distance2 = 10015
+    var inverse = 22496
+    var battery = 31852
+    var rotate = 48200
     return [{
       blockId: bluetooth,
       blockType: BlockTypes.BLUETOOTH,
@@ -260,17 +258,17 @@ function Demo(socket) {
       blockId: inverse,
       blockType: BlockTypes.INVERSE,
       hopCount: 1,
-      neighborIds: [ distance2, null, distance1, threshold, bluetooth, null ]
+      neighborIds: [ distance2, null, distance1, battery, bluetooth, null ]
     },{
-      blockId: threshold,
-      blockType: BlockTypes.THRESHOLD,
+      blockId: battery,
+      blockType: BlockTypes.BATTERY,
       hopCount: 2,
       neighborIds: [ null, inverse, null, null, rotate, null ]
     },{
       blockId: rotate,
       blockType: BlockTypes.ROTATE,
       hopCount: 1,
-      neighborIds: [ null, bluetooth, null, null, null, threshold ]
+      neighborIds: [ null, bluetooth, null, null, null, battery ]
     }]
   }
 
@@ -326,3 +324,12 @@ function Demo(socket) {
 }
 
 module.exports = Demo
+
+var Strategy = {
+  Classic: function (demo) {
+
+  },
+  Imago: function (demo) {
+
+  }
+}

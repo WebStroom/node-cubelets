@@ -5,17 +5,17 @@ var config = require('../config.json')
 var __ = require('underscore')
 
 var Info = function (data) {
-  this.typeId = parseInt(data['type_id'])
+  this.blockTypeId = parseInt(data['type_id'])
   this.mcuString = data['mcu']
   this.currentFirmwareVersion = data['current_firm_ver']
   this.latestFirmwareVersion = data['latest_firm_ver']
 }
 
-var InfoService = function() {
+var InfoService = function () {
   events.EventEmitter.call(this)
 
   var service = this
-  var baseUrl = config['urls']['appspot']
+  var baseUrl = config['urls']['proxy']
 
   function urlForBlocks(blocks) {
     return baseUrl + '/api/cubelet_info/?ids=' + __(blocks).pluck('blockId').join(',')

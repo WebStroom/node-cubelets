@@ -98,7 +98,8 @@
   },
   "urls": {
     "appspot": "http://cubelets-programming.appspot.com",
-    "compile": "http://compile.modrobotics.com"
+    "compile": "http://compile.modrobotics.com",
+    "proxy": "http://localhost:3033/proxy"
   },
   "databases": {
     "info": "info.db"

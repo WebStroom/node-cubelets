@@ -16,11 +16,12 @@ var DemoScanner = function () {
   this._getDevices = function (callback) {
     setTimeout(function () {
       callback([{
-        name: 'Demo Cubelet 1',
+        name: 'Imago Cubelet',
         deviceId: 1337
       }, {
-        name: 'Demo Cubelet 2',
-        deviceId: 42
+        name: 'Classic Cubelet',
+        deviceId: 42,
+        classic: true
       }])
     }, delay())
   }
@@ -60,7 +61,9 @@ var DemoConnection = function (device, opts) {
         next()
       })
 
-      demo = new Demo(transform)
+      demo = new Demo(transform, {
+        classic: device.classic
+      })
 
       demo.on('error', function (err) {
         stream.emit('error', err)

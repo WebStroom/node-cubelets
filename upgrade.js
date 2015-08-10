@@ -1,24 +1,14 @@
-var fs = require('fs')
-var path = require('path')
+var util = require('util')
+var events = require('events')
 var async = require('async')
 var xtend = require('xtend')
 var cubelets = require('./client/net')
 var Protocol = cubelets.Protocol
 var Cubelet = require('./cubelet')
-var Types = Cubelet.Types
+var BlockTypes = Cubelet.BlockTypes
 var Program = require('./program')
 var InfoService = require('./service/info')
-
-var bluetoothSerialDevice = {
-  WCC: { address: "00-04-3e-08-21-d1", channelID: 1 },
-  GPW: { address: "00-04-3e-08-21-db", channelID: 1 }
-}
-
-var netDevice = {
-  port: 9000
-}
-
-var device = netDevice
+var __ = require('underscore')
 
 var FirmwareType = {
   CLASSIC: 0,
@@ -27,32 +17,6 @@ var FirmwareType = {
 }
 
 var programs = {}
-
-function loadProgram(blockType) {
-  var typeId = blockType.typeId
-  //XXX: path to actual hex programs
-  // var file = path.join('./upgrade/programs/', blockType.name + '.hex')
-  var data = fs.readFileSync('./upgrade/program.hex')
-  programs[typeId] = new Program(data)
-}
-
-loadProgram(Types.BARGRAPH)
-loadProgram(Types.BATTERY)
-loadProgram(Types.BATTERY_LIPO)
-loadProgram(Types.BLOCKER)
-loadProgram(Types.BRIGHTNESS)
-loadProgram(Types.DISTANCE)
-loadProgram(Types.DRIVE)
-loadProgram(Types.FLASHLIGHT)
-loadProgram(Types.INVERSE)
-loadProgram(Types.KNOB)
-loadProgram(Types.MAXIMUM)
-loadProgram(Types.MINIMUM)
-loadProgram(Types.PASSIVE)
-loadProgram(Types.THRESHOLD)
-loadProgram(Types.ROTATE)
-loadProgram(Types.SPEAKER)
-loadProgram(Types.TEMPERATURE)
 
 // 1: detect bluetooth cubelet type:
 //     - imago
@@ -146,16 +110,16 @@ function queueBlocksUntilDone(client, callback) {
   function fetchBlockInfo(blocks, callback) {
     var service = new InfoService()
     service.on('info', function (info, block) {
-      var type = Cubelet.typeForTypeID(info.typeID)
-      if (type !== Types.UNKNOWN) {
-        block.type = type
+      var type = Cubelet.typeForTypeId(info.blockTypeId)
+      if (type !== BlockTypes.UNKNOWN) {
+        block.blockType = type
         if (!exists(waitingQueue, block) && !exists(doneQueue, block)) {
           enqueue(waitingQueue, block)
           console.log('waiting:', waitingQueue)
         }
       }
     })
-    service.fetchCubeletInfo(blocks, function (err) {
+    service.fetchBlockInfo(blocks, function (err) {
       service.removeAllListeners('info')
       callback(err)
     })
@@ -227,17 +191,179 @@ function update(client, callback) {
   }
 }
 
-var client = cubelets.connect(device, function (err) {
-  if (err) {
-    console.error(err)
-  } else {
-    update(client, function (err) {
-      client.disconnect()
+var Upgrade = function (client) {
+  events.EventEmitter.call(this)
+
+  var self = this
+
+  this.detectIfNeeded = function (callback) {
+    detectFirmwareType(client, function (err, firmwareType) {
       if (err) {
-        console.error(err)
+        callback(err)
       } else {
-        console.log('update successful')
+        callback(null, (FirmwareType.IMAGO !== firmwareType))
       }
     })
   }
-})
+
+  this.bootstrapBluetoothBlock = function (callback) {
+    var p = 0
+    var interval = setInterval(function () {
+      if (p > 100) {
+        clearInterval(interval)
+        callback(null)
+      } else {
+        self.emit('progress', ((p++) / 100.0))
+      }
+    }, 10)
+  }
+
+  var pendingBlocks = []
+  var completedBlocks = []
+  var activeBlock = null
+
+  function findPendingBlock(block) {
+    return __(pendingBlocks).find(function (pendingBlock) {
+      return block.blockId === pendingBlock.blockId
+    })
+  }
+
+  function findCompletedBlock(block) {
+    return __(completedBlocks).find(function (completedBlock) {
+      return block.blockId === completedBlock.blockId
+    })
+  }
+
+  function filterUnknownPendingBlocks() {
+    return __(pendingBlocks).filter(function (block) {
+      return block.blockType === BlockTypes.UNKNOWN
+    })
+  }
+
+  function fetchUnknownBlockTypes(callback) {
+    var unknownBlocks = filterUnknownPendingBlocks()
+    var service = new InfoService()
+    var changed = false
+    service.on('info', function (info, block) {
+      var type = Cubelet.typeForTypeId(info.blockTypeId)
+      if (type !== BlockTypes.UNKNOWN) {
+        block.blockType = type
+        changed = true
+      }
+    })
+    service.fetchBlockInfo(unknownBlocks, function (err) {
+      service.removeAllListeners('info')
+      callback(err)
+      if (changed) {
+        self.emit('changePendingBlocks')
+      }
+    })
+  }
+
+  function dequeueNextBlockToUpgrade() {
+    var index = __(pendingBlocks).findIndex(function (block) {
+      return block.blockType !== BlockTypes.UNKNOWN
+    })
+    if (index > -1) {
+      var nextBlock = pendingBlocks[index]
+      pendingBlocks.splice(index, 1)
+      self.emit('changePendingBlocks')
+      return nextBlock
+    } else {
+      console.log('found no blocks', pendingBlocks)
+    }
+  }
+
+  function findBlocksToUpgrade(callback) {
+    client.fetchAllBlocks(function (err) {
+      if (err) {
+        callback(err)
+      } else {
+        __(client.getAllBlocks()).each(function (block) {
+          if (!findPendingBlock(block) && !findCompletedBlock(block)) {
+            pendingBlocks.push(block)
+            self.emit('changePendingBlocks')
+          }
+        })
+        callback(null)
+      }
+    })
+  }
+
+  function waitForUserInput(t) {
+    return function (callback) {
+      setTimeout(callback, t)
+    }
+  }
+
+  var done = false
+
+  this.startBlockUpgrades = function (callback) {
+    async.until(function () {
+      return done
+    }, function (next) {
+      async.series([
+        findBlocksToUpgrade,
+        fetchUnknownBlockTypes,
+        upgradeNextBlock,
+        waitForUserInput(1000)
+      ], next)
+    }, callback)
+  }
+
+  function upgradeNextBlock (callback) {
+    var nextBlock = dequeueNextBlockToUpgrade()
+    if (nextBlock) {
+      activeBlock = nextBlock
+      self.emit('changeActiveBlock')
+      var p = 0
+      var interval = setInterval(function () {
+        if (p > 100) {
+          clearInterval(interval)
+          completedBlocks.push(activeBlock)
+          self.emit('changeCompletedBlocks')
+          callback(null)
+        } else {
+          self.emit('progress', ((p++) / 100.0))
+        }
+      }, 10)
+    } else {
+      activeBlock = null
+      self.emit('changeActiveBlock')
+      callback(null)
+    }
+  }
+
+  this.getPendingBlocks = function () {
+    return pendingBlocks
+  }
+
+  this.getActiveBlock = function () {
+    return activeBlock
+  }
+
+  this.getCompletedBlocks = function () {
+    return completedBlocks
+  }
+
+  this.stopBlockUpgrades = function () {
+    done = true
+  }
+
+  this.upgradeBluetoothBlock = function (callback) {
+    var p = 0
+    var interval = setInterval(function () {
+      if (p > 100) {
+        clearInterval(interval)
+        callback(null)
+      } else {
+        self.emit('progress', ((p++) / 100.0))
+      }
+    }, 10)
+  }
+
+}
+
+util.inherits(Upgrade, events.EventEmitter)
+
+module.exports = Upgrade
