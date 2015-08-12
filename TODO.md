@@ -1,0 +1,5 @@
+- eliminate callbacks on command writes?
+- re-implement read block message handler with streams and back pressure?
+- detect incompatible avr block types in upgrade.js
+- fix bug in tcp network cubelet client (when multiple clients running?)
+- command queue timer keeps running preventing clean shutdowns, so disable timer when no commands

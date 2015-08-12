@@ -1,24 +1,17 @@
-var Types = require('./config.json')['types'];
-var __ = require('underscore');
+var BlockTypes = require('./config.json')['blockTypes']
+var __ = require('underscore')
 
-var Cubelet = function(id, type, mcu) {
+var Cubelet = function (blockId, hopCount, blockType) {
+  this.blockId = blockId
+  this.hopCount = hopCount
+  this.blockType = blockType || BlockTypes.UNKNOWN
+}
 
-	this.id = id;
-	this.type = type || Types.UNKNOWN;
-	this.mcu = mcu || undefined;
-	this.currentFirmwareVersion = 0.0;
-	this.latestFirmwareVersion = 0.0;
+module.exports = Cubelet
+module.exports.BlockTypes = BlockTypes
 
-	this.hasFirmwareUpgrade = function() {
-		return this.latestFirmwareVersion > this.currentFirmwareVersion;
-	};
-
-};
-
-module.exports = Cubelet;
-
-module.exports.typeForTypeID = function(typeID) {
-	return __(Types).find(function(type) {
-		return type.id == typeID;
-	}) || Types.UNKNOWN;
-};
+module.exports.typeForTypeId = function (typeId) {
+  return __(BlockTypes).find(function (type) {
+    return type.typeId === typeId
+  }) || BlockTypes.UNKNOWN
+}

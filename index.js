@@ -1,22 +1,7 @@
-module.exports.Cubelet = require('./cubelet');
-module.exports.BluetoothScanner = require('./scanner/bluetooth');
-module.exports.MockScanner = require('./scanner/mock');
-module.exports.BluetoothConnection = require('./connection/bluetooth');
-module.exports.MockConnection = require('./connection/mock');
-module.exports.Construction = require('./construction');
-module.exports.Types = require('./config.json')['types'];
-module.exports.Responses = require('./config.json')['responses'];
-module.exports.BuildService = require('./service/build');
-module.exports.CompileService = require('./service/compile');
-module.exports.InfoService = require('./service/info');
-module.exports.FirmwareService = require('./service/firmware');
-module.exports.FlashProgram = require('./program');
-module.exports.FlashLoader = require('./loader');
-module.exports.BlinkLEDCommand = require('./command/blinkLED');
-module.exports.DiscoverMapNeighborsCommand = require('./command/discoverMapNeighbors');
-module.exports.RegisterBlockValueEventCommand = require('./command/registerBlockValueEvent');
-module.exports.UnregisterBlockValueEventCommand = require('./command/unregisterBlockValueEvent');
-module.exports.UnregisterAllBlockValueEventsCommand = require('./command/unregisterAllBlockValueEvents');
-module.exports.SetBlockValueCommand = require('./command/setBlockValue');
-module.exports.SetDefaultBlockValueCommand = require('./command/setDefaultBlockValue');
-module.exports.ResetBluetoothCubeletCommand = require('./command/resetBluetoothCubelet');
+var cubelets = require('./client/index')
+
+cubelets.Cubelet = require('./cubelet')
+cubelets.Version = require('./version')
+cubelets.Program = require('./program')
+
+module.exports = cubelets

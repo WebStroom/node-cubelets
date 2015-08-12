@@ -26,14 +26,15 @@ On Windows, go to the Properties of the device in the Device Manager, and find t
 Then, open a connection:
 
 ```
-var cubelets = require('cubelets');
-var connection = new cubelets.SerialConnection({ path: '/dev/cu.Cubelet-GPW-AMP-SPP' });
+var cubelets = require('cubelets')
 
-connection.on('open', function() {
-  console.log('Connection open')
-});
+var device = {
+  path: '/dev/cu.Cubelet-GPW-AMP-SPP'
+}
 
-connection.connect();
+var client = cubelets.connect(device, function (err) {
+  console.log('connected to', device)
+})
 
 ```
 
@@ -43,32 +44,38 @@ Discover
 Once connected, you can discover other Cubelets connected to the Bluetooth Cubelet.
 
 ```
-var construction = new cubelets.Construction(connection);
+client.on('blocksChanged', function () {
+  console.log('Origin block', construction.getOriginBlock())
+  console.log('Neighbor blocks', construction.getNeighborBlocks())
+  console.log('All blocks', construction.getAllBlocks())
+  console.log('By ID', construction.findById(1234))
+  console.log('By hop count', construction.filterByHopCount(2))
+  console.log('Edges', construction.getEdges())
+  console.log('Graph', construction.getGraph())
+})
 
-construction.on('change', function() {
-    console.log('Construction changed:');
-    console.log('The origin is', construction.origin());
-    console.log('The direct neighbors are near', construction.near());
-    console.log('The other cubelets are far', construction.far());
-    console.log('All together they are', construction.all());
-    console.log('And mapped by id', construction.map());
-});
+client.discoverBlocks()
 ```
 
-The change event will fire when you add or remove direct neighbors to the robot construction, but the full map is only fetched once.
+The change event will fire when the robot construction changes in any detectable way, included if a block is added, removed, or moved.
 
 Command
 =======
 
-Once Cubelets are discovered, you can send commands to them. For example, to blink the LED on a Cubelet with ID ```1234```:
+Once Cubelets are discovered, you can send commands to them. For example, to blink the LED on a Cubelet with ID `1234`:
 
 ```
-var LED = false; // Off
+var LED = false // Off
 setInterval(function() {
-  var command = new cubelets.BlinkLEDCommand(1234, LED);
-  connection.write(command.encode());
-  LED = !LED;
-}, 500);
+  client.sendBlockCommand(new cubelets.block.SetLED(1234, LED))
+  LED = !LED
+}, 500)
 ```
 
+Request
+=======
+
+
+Notification
+============
 
