@@ -100,8 +100,7 @@ function ImagoStrategy(protocol, client) {
     response.blocks.forEach(function (block) {
       blocks.upsert({
         blockId: block.blockId,
-        hopCount: block.hopCount,
-        blockType: BlockTypes.UNKNOWN
+        hopCount: block.hopCount
       })
     })
     if (callback) {
