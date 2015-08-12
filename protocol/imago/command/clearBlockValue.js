@@ -15,12 +15,4 @@ ClearBlockValueCommand.prototype.encodeBody = function () {
   }))
 }
 
-ClearBlockValueCommand.prototype.prioritize = function (otherCommand) {
-  if (otherCommand instanceof ClearBlockValueCommand) {
-    return 1
-  } else {
-    return 0
-  }
-}
-
 module.exports = ClearBlockValueCommand

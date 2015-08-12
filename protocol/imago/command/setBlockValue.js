@@ -20,7 +20,12 @@ SetBlockValueCommand.prototype.encodeBody = function () {
 
 SetBlockValueCommand.prototype.prioritize = function (otherCommand) {
   if (otherCommand instanceof SetBlockValueCommand) {
-    return 1
+    function blockIds(blocks) {
+      return __(blocks).map(function (block) {
+        return __(block).pick('blockId')
+      })
+    }
+    return __.isEqual(blockIds(this.blocks), blockIds(otherCommand.blocks))
   } else {
     return 0
   }
