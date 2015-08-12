@@ -139,7 +139,7 @@ function Blocks() {
   }
 
   function updateBlockType(block, blockType) {
-    if (undefined !== blockType) {
+    if (blockType !== undefined && blockType !== BlockTypes.UNKNOWN) {
       block.blockType = blockType
       return true
     } else {
