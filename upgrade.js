@@ -308,7 +308,11 @@ var Upgrade = function (client) {
         upgradeNextBlock,
         waitForUserInput(1000)
       ], next)
-    }, callback)
+    }, function (err) {
+      if (callback) {
+        callback(err)
+      }
+    })
   }
 
   function upgradeNextBlock (callback) {
@@ -322,7 +326,9 @@ var Upgrade = function (client) {
           clearInterval(interval)
           completedBlocks.push(activeBlock)
           self.emit('changeCompletedBlocks')
-          callback(null)
+          if (callback) {
+            callback(null)
+          }
         } else {
           self.emit('progress', ((p++) / 100.0))
         }
@@ -330,7 +336,9 @@ var Upgrade = function (client) {
     } else {
       activeBlock = null
       self.emit('changeActiveBlock')
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     }
   }
 
@@ -355,7 +363,9 @@ var Upgrade = function (client) {
     var interval = setInterval(function () {
       if (p > 100) {
         clearInterval(interval)
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       } else {
         self.emit('progress', ((p++) / 100.0))
       }

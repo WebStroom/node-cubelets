@@ -66,31 +66,39 @@ var BluetoothConnection = function (device, opts) {
   }
 
   this._open = function (callback) {
-    callback = callback || Function()
     if (isOpen) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       bluetooth.connect(device.deviceId, function () {
         isOpen = true
         addListeners()
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       })
     }
   }
 
   this._close = function (callback) {
-    callback = callback || Function()
     if (!isOpen) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       removeListeners()
       if (isOpen) {
         isOpen = false
         bluetooth.disconnect(device.deviceId, function () {
-          callback(null)
+          if (callback) {
+            callback(null)
+          }
         })
       } else {
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       }
     }
   }

@@ -22,20 +22,27 @@ var InfoService = function () {
   }
 
   this.fetchBlockInfo = function (blocks, callback) {
-    callback = callback || Function()
     if (blocks.length === 0) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       request.get({
         url: urlForBlocks(blocks),
         json: true
       }, function(err, res, body) {
         if (err) {
-          callback(err)
+          if (callback) {
+            callback(err)
+          }
         } else if (res.statusCode !== 200) {
-          callback(new Error('Bad response. Error status code.'))
+          if (callback) {
+            callback(new Error('Bad response. Error status code.'))
+          }
         } else if (!__(body).isArray()) {
-          callback(new Error('Invalid response.'))
+          if (callback) {
+            callback(new Error('Invalid response.'))
+          }
         } else {
           var infos = []
           __(blocks).each(function (block) {
@@ -49,7 +56,9 @@ var InfoService = function () {
               }
             })
           })
-          callback(null, infos)
+          if (callback) {
+            callback(null, infos)
+          }
         }
       })
     }

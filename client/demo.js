@@ -52,9 +52,10 @@ var DemoConnection = function (device, opts) {
   }
 
   this._open = function (callback) {
-    callback = callback || Function()
     if (demo) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       transform = through(function (chunk, enc, next) {
         stream.push(chunk)
@@ -75,15 +76,18 @@ var DemoConnection = function (device, opts) {
       })
 
       setTimeout(function () {
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       }, delay())
     }
   }
 
   this._close = function (callback) {
-    callback = callback || Function()
     if (!demo) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       var d = demo
       demo = null
@@ -96,7 +100,9 @@ var DemoConnection = function (device, opts) {
       isOpen = false
       d = null
       setTimeout(function () {
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       }, delay())
     }
   }

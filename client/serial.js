@@ -82,9 +82,10 @@ var SerialConnection = function (device, opts) {
   }
 
   this._open = function (callback) {
-    callback = callback || Function()
     if (serialPort) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       serialPort = new SerialPort(path, {}, false)
 
@@ -94,7 +95,9 @@ var SerialConnection = function (device, opts) {
 
       serialPort.open(function (err) {
         if (err) {
-          callback(err)
+          if (callback) {
+            callback(err)
+          }
         } else {
           isOpen = true
 
@@ -107,16 +110,19 @@ var SerialConnection = function (device, opts) {
             stream.close()
           })
 
-          callback(null)
+          if (callback) {
+            callback(null)
+          }
         }
       })
     }
   }
 
   this._close = function (callback) {
-    callback = callback || Function()
     if (!serialPort) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       var sp = serialPort
       serialPort = null
@@ -131,7 +137,9 @@ var SerialConnection = function (device, opts) {
       function cleanup(err) {
         isOpen = false
         sp = null
-        callback(err)
+        if (callback) {
+          callback(err)
+        }
       }
     }
   }

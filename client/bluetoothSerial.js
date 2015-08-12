@@ -55,9 +55,10 @@ var BluetoothSerialConnection = function (device, opts) {
   }
 
   this._open = function (callback) {
-    callback = callback || Function()
     if (serialPort) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       serialPort = new BluetoothSerialPort()
 
@@ -67,7 +68,9 @@ var BluetoothSerialConnection = function (device, opts) {
 
       serialPort.connect(address, channelID, function (err) {
         if (err) {
-          callback(err)
+          if (callback) {
+            callback(err)
+          }
         } else {
           isOpen = true
 
@@ -85,16 +88,19 @@ var BluetoothSerialConnection = function (device, opts) {
             stream.close()
           })
 
-          callback(null)
+          if (callback) {
+            callback(null)
+          }
         }
       })
     }
   }
 
   this._close = function (callback) {
-    callback = callback || Function()
     if (!serialPort) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       var sp = serialPort
       serialPort = null
@@ -111,7 +117,9 @@ var BluetoothSerialConnection = function (device, opts) {
       function cleanup() {
         isOpen = false
         sp = null
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       }
     }
   }

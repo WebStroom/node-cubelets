@@ -12,17 +12,22 @@ var Connection = function (device, opts) {
   }
 
   this.open = function (callback) {
-    callback = callback || Function()
     if (isOpen) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       self._open(function (err) {
         if (err) {
-          callback(err)
+          if (callback) {
+            callback(err)
+          }
           self.emit('error', err)
         } else {
           isOpen = true
-          callback(null)
+          if (callback) {
+            callback(null)
+          }
           self.emit('open')
         }
       })
@@ -34,17 +39,22 @@ var Connection = function (device, opts) {
   }
 
   this.close = function (callback) {
-    callback = callback || Function()
     if (!isOpen) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       isOpen = false
       self._close(function (err) {
         if (err) {
-          callback(err)
+          if (callback) {
+            callback(err)
+          }
           self.emit('error', err)
         } else {
-          callback(null)
+          if (callback) {
+            callback(null)
+          }
           self.emit('close')
         }
       })

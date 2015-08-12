@@ -82,9 +82,10 @@ var ChromeConnection = function (device, opts) {
   }
 
   this._open = function (callback) {
-    callback = callback || Function()
     if (socketStream) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       bluetoothClient.socket.connect(address, uuid, function (connectInfo) {
         var port = chrome.runtime.connect(appId, { name: connectInfo.port })
@@ -104,15 +105,18 @@ var ChromeConnection = function (device, opts) {
           stream.close()
         })
 
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       })
     }
   }
 
   this._close = function (callback) {
-    callback = callback || Function()
     if (!socketStream) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       var ss = socketStream
       socketStream = null
@@ -127,7 +131,9 @@ var ChromeConnection = function (device, opts) {
       function cleanup() {
         isOpen = false
         input = ss = output = null
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       }
     }
   }

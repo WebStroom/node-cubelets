@@ -49,9 +49,10 @@ var NetConnection = function (device, opts) {
   }
 
   this._open = function (callback) {
-    callback = callback || Function()
     if (socket) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       socket = net.connect(opts, function () {
         isOpen = true
@@ -69,15 +70,18 @@ var NetConnection = function (device, opts) {
           stream.close()
         })
 
-        callback(null)
+        if (callback) {
+          callback(null)
+        }
       })
     }
   }
 
   this._close = function (callback) {
-    callback = callback || Function()
     if (!socket) {
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     } else {
       var so = socket
       socket = null
@@ -90,7 +94,9 @@ var NetConnection = function (device, opts) {
       }
       isOpen = false
       so = null
-      callback(null)
+      if (callback) {
+        callback(null)
+      }
     }
   }
 }

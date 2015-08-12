@@ -125,12 +125,12 @@ function Factory(Scanner, Connection) {
   Client.Protocol = Protocols.Imago
   xtend(Client.Protocol, Protocols)
 
-  Client.create = function (device) {
+  Client.createClient = function (device) {
     return new Client(new Connection(device))
   }
 
   Client.connect = function (device, callback) {
-    var client = Client.create(device)
+    var client = Client.createClient(device)
     client.connect(callback)
     return client
   }
