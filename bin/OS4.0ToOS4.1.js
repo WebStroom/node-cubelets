@@ -8,7 +8,10 @@ var fs = require('fs')
 var async = require('async')
 var clc = require('cli-color')
 
+
+var __ = require('underscore')
 var cubelets = require('../index')
+var Protocol = cubelets.Protocol
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var MCUTypes = require('../mcuTypes')
@@ -160,13 +163,58 @@ function disableCrcs(callback)
 
 function waitForOs4Block(callback)
 {
-	//TODO
-	//Check if there is already an OS4 block
-		//if yes, callback(block)
-		//Make sure there is only a single block, warn user if not
-		//else
-			//Register for block added events
+	getAllBlocks(function(err, blocks) {
+		if (err) {
+			callback(err)
+			return
+		}
+		
+		if(blocks.length > 1)
+		{
+			callback(new Error("Please attach just one Cubelet to update"));
+			return
+		}
+		else if(blocks.length == 1)
+		{
+			callback(null, blocks[0])
+			return
+		}
+		else
+		{
+			client.once('event', function(message)
+			{
+				//TODO verify its a block added event
+				console.log(message);
+				waitForOs4Block(callback)
+				return
+			})
+		}		
+	})
 }
+
+function getAllBlocks(callback)
+{
+	client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
+		if(err)
+		{
+			callback(err)
+			return
+		}
+		if(response.blocks)
+		{
+			var blocks = []
+      __.each(response.blocks, function (block) {
+        blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType)))
+      })	
+      callback(null, blocks)
+		}
+		else
+		{
+			callback(null, [])
+		}		
+	})
+}
+
 
 function verifyTargetNeedsUpgrade(callback, block)
 {
@@ -175,21 +223,29 @@ function verifyTargetNeedsUpgrade(callback, block)
 		//If < 4.1.0 then continue
 		//Else
 			//Tell the user to remove the block, it's already been upgraded
+			
+	callback(new Error("Not yet implemented"))
 }
 
 function logIfBadId(callback, block)
 {
 		//if the ID matches the bad ID pattern, store the ID to compare to later
+		
+		callback(new Error("Not yet implemented"))
 }
 
 function flashUpgradeBootloader(callback, block)
 {
 	//Flash the deep memory bootloader
+	
+	callback(new Error("Not yet implemented"))
 }
 
 function flashOs4Application(callback, block)
 {
 	//Flash the usual application
+	
+	callback(new Error("Not yet implemented"))
 }
 
 function resetBT(callback)
@@ -208,17 +264,23 @@ function enableCrcs(callback)
 function verifyOS4(callback)
 {
 	//Make sure we see an OS4 block
+	
+	callback(new Error("Not yet implemented"))
 }
 
 function flashModifiedPicBootstrap(callback, block)
 {
 	//TODO: Flash the pic bootloader + verification app
 	
+	
+	callback(new Error("Not yet implemented"))
 }
 
 function checkForBadID(callback, block)
 {
 	//TODO: Check to see if the block could still have a bad ID, bail if so
+	
+	callback(new Error("Not yet implemented"))
 }
 
 function done(callback)
