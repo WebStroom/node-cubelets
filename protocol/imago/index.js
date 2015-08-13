@@ -44,6 +44,8 @@ var messages = {
 
   DebugEvent: require('./event/debug'),
   BlockValueEvent: require('./event/blockValue'),
+  BlockAddedEvent: require('./event/blockAdded'),
+  BlockRemovedEvent: require('./event/blockRemoved'),
   ReadBlockMessageEvent: require('./event/readBlockMessage'),
   UploadToMemoryCompleteEvent: require('./event/uploadToMemoryComplete'),
   FlashProgressEvent: require('./event/flashProgress'),
@@ -97,6 +99,8 @@ var ImagoProtocol = new Protocol({
     [0xE2, messages.ReadBlockMessageEvent],
     [0xE3, messages.UploadToMemoryCompleteEvent],
     [0xE4, messages.FlashProgressEvent],
+    [0xE5, messages.BlockAddedEvent],
+    [0xE6, messages.BlockRemovedEvent],
     [0xFF, messages.ErrorEvent],
   ]
 })
