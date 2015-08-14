@@ -6,9 +6,9 @@ function blockId(b2, b1, b0) {
 
 function device() {
   return process.browser ? {
-    "address": "00:04:3e:08:21:a9"
+    "address": "00:04:3e:08:21:db"
   } : {
-    "path": "/dev/cu.Cubelet-GPW-AMP-SPP",
+    "path": "COM3",
     "address": "00:04:3e:08:21:db",
     "channelID": 1
   }

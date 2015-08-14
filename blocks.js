@@ -1,6 +1,7 @@
 var util = require('util')
 var events = require('events')
 var Cubelet = require('./cubelet')
+var BlockTypes = Cubelet.BlockTypes
 var xtend = require('xtend/mutable')
 var __ = require('underscore')
 
