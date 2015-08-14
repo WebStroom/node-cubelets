@@ -17,10 +17,28 @@ test('connect', function (t) {
     } else {
       t.pass('connected')
 
+      test('configuration', function (t) {
+        t.plan(1)
+        client.fetchConfiguration(t.ifError)
+      })
+
       test('register block value events', function (t) {
-        t.plan(2)
+        t.plan(3)
         client.registerBlockValueEvent(blockIds.flashlight, t.ifError)
         client.registerBlockValueEvent(blockIds.bargraph, t.ifError)
+        var timer = setTimeout(function () {
+          client.removeListener('event', onEvent)
+          t.fail('register')
+        }, 2000)
+        function onEvent(e) {
+          if (e instanceof cubelets.Protocol.messages.BlockValueEvent) {
+            console.log('got event', e)
+            clearTimeout(timer)
+            client.removeListener('event', onEvent)
+            t.pass('register')
+          }            
+        }
+        client.on('event', onEvent)
       })
 
       test('unregister block value events', function (t) {
@@ -28,16 +46,19 @@ test('connect', function (t) {
         client.unregisterBlockValueEvent(blockIds.flashlight, t.ifError)
         client.unregisterBlockValueEvent(blockIds.bargraph, t.ifError)
         setTimeout(function () {
+          var timer = setTimeout(function () {
+            client.removeListener('event', onEvent)
+            t.pass('unregister')
+          }, 2000)
           function onEvent(e) {
             if (e instanceof cubelets.Protocol.messages.BlockValueEvent) {
+              console.log('got event', e)
+              clearTimeout(timer)
+              client.removeListener('event', onEvent)
               t.fail('unregister')
             }            
           }
           client.on('event', onEvent)
-          setTimeout(function () {
-            client.removeListener('event', onEvent)
-            t.pass('unregister')
-          }, 2000)
         }, 2000)
       })
 
