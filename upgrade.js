@@ -33,23 +33,35 @@ var done = false
 
 function detectFirmwareType(client, callback) {
   console.log('detect firmware type')
-  client.setProtocol(Protocol.Classic)
-  client.ping(function (err) {
-    if (!err) {
-      callback(null, FirmwareType.CLASSIC)
-    } else {
-      client.setProtocol(Protocol.Imago)
-      client.fetchConfiguration(function (err, config) {
-        if (!err) {
-          callback(null,
-            (config.customApplication === 2) ? 
-              FirmwareType.BOOTSTRAP : FirmwareType.IMAGO)
-        } else {
-          callback(err)
-        }
-      })
+  var con = client.getConnection()
+  var msg = new Buffer(0)
+  con.on('data', onData)
+  var timer = setTimeout(function () {
+    con.removeListener('data', onData)
+    callback(null, FirmwareType.IMAGO)
+  }, 500)
+  function detectCode(msg) {
+    if (msg.length >= 4) {
+      var code = String.fromCharCode(msg[1])
+      switch (code) {
+        case 'b':
+          clearTimeout(timer)
+          con.removeListener('data', onData)
+          callback(null, FirmwareType.BOOTSTRAP)
+          break
+        case 'l':
+          clearTimeout(timer)
+          con.removeListener('data', onData)
+          callback(null, FirmwareType.CLASSIC)
+          break
+      }
     }
-  }, 1000)
+  }
+  function onData(data) {
+    msg = Buffer.concat([msg, data])
+    detectCode(msg)
+  }
+  con.write(new Buffer([ 'a'.charCodeAt(0) ]))
 }
 
 function flashBootstrapIfNeeded(client, callback) {
@@ -201,7 +213,7 @@ var Upgrade = function (client) {
       if (err) {
         callback(err)
       } else {
-        callback(null, (FirmwareType.IMAGO !== firmwareType))
+        callback(null, (FirmwareType.IMAGO !== firmwareType), firmwareType)
       }
     })
   }

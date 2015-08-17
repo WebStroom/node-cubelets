@@ -6,10 +6,10 @@ function blockId(b2, b1, b0) {
 
 function device() {
   return process.browser ? {
-    "address": "00:04:3e:08:21:db"
+    "address": "00:04:3e:31:c7:3e"
   } : {
-    "path": "COM3",
-    "address": "00:04:3e:08:21:db",
+    "path": "/dev/cu.Cubelet-RYC-AMP-SPP",
+    "address": "00:04:3e:31:c7:3e",
     "channelID": 1
   }
 }
