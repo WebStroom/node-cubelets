@@ -32,7 +32,6 @@ var programs = {}
 var done = false
 
 function detectFirmwareType(client, callback) {
-  console.log('detect firmware type')
   var con = client.getConnection()
   var msg = new Buffer(0)
   con.on('data', onData)
@@ -67,24 +66,20 @@ function detectFirmwareType(client, callback) {
 function flashBootstrapIfNeeded(client, callback) {
   detectFirmwareType(client, function (err, firmwareType) {
     if (err) {
-      console.error('could not detect firmware')
+      callback(err)
     } else if (FirmwareType.BOOTSTRAP !== firmwareType) {
-      console.log('flashing bootstrap')
       flashBootstrap(client, callback)
     } else {
-      console.log('skipping bootstrap')
       callback(null, client)
     }
   })
 }
 
 function flashBootstrap(client, callback) {
-  console.log('(flash bootstrap not implemented)')
   callback(null, client)
 }
 
 function queueBlocksUntilDone(client, callback) {
-  console.log('queue blocks until done')
   var waitingQueue = []
   var doneQueue = []
 
@@ -109,7 +104,6 @@ function queueBlocksUntilDone(client, callback) {
   }
 
   function fetchNeighborBlocks(callback) {
-    console.log('fetch neighbor blocks')
     client.fetchNeighborBlocks(function (err, blocks) {
       if (err) {
         callback(err)
@@ -127,7 +121,6 @@ function queueBlocksUntilDone(client, callback) {
         block._blockType = type
         if (!exists(waitingQueue, block) && !exists(doneQueue, block)) {
           enqueue(waitingQueue, block)
-          console.log('waiting:', waitingQueue)
         }
       }
     })
@@ -144,13 +137,11 @@ function queueBlocksUntilDone(client, callback) {
     if (!program) {
       callback(new Error('No program found for block type: ' + typeId))
     } else {
-      console.log('flashing block', block.blockId)
       client.flashProgramToBlock(program, block, function (err) {
         if (err) {
           callback(err)
         } else {
           enqueue(doneQueue, dequeue(waitingQueue))
-          console.log('done:', doneQueue)
           callback(null)
         }
       })
@@ -159,7 +150,6 @@ function queueBlocksUntilDone(client, callback) {
 
   function wait(callback) {
     var delay = 7500
-    console.log('waiting', delay+'ms')
     setTimeout(function () {
       callback(null)
     }, 5000)
@@ -167,10 +157,8 @@ function queueBlocksUntilDone(client, callback) {
 
   function tryFlashNextBlock(callback) {
     if (empty(waitingQueue)) {
-      console.log('no blocks to flash')
       wait(callback)
     } else {
-      console.log('flashing next block')
       flashNextBlock(callback)
     }
   }
@@ -186,12 +174,10 @@ function queueBlocksUntilDone(client, callback) {
 }
 
 function flashImago(client, callback) {
-  console.log('flash imago')
   callback(null, client)
 }
 
 function update(client, callback) {
-  console.log('update')
   async.seq(
     flashBootstrapIfNeeded,
     queueBlocksUntilDone,
@@ -207,6 +193,10 @@ var Upgrade = function (client) {
   events.EventEmitter.call(this)
 
   var self = this
+
+  this.getClient() = function () {
+    return client
+  }
 
   this.detectIfNeeded = function (callback) {
     detectFirmwareType(client, function (err, firmwareType) {
@@ -281,8 +271,6 @@ var Upgrade = function (client) {
       pendingBlocks.splice(index, 1)
       self.emit('changePendingBlocks')
       return nextBlock
-    } else {
-      console.log('found no blocks', pendingBlocks)
     }
   }
 

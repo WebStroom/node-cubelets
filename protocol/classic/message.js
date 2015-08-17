@@ -9,7 +9,7 @@ Message.prototype.code = function () {
   return this.constructor.code
 }
 
-Message.prototype.decode = function (body) {
+Message.prototype.decodeBody = function (body) {
   return Buffer.isBuffer(body)
 }
 

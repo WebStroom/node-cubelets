@@ -124,7 +124,7 @@ var Parser = function () {
   // Emits a parsed response
   var emitMessage = function (body) {
     var message = new type(blockId)
-    message.decode(body)
+    message.decodeBody(body)
     emitter.emit('message', message)
   }
 

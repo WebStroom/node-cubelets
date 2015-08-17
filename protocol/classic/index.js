@@ -8,15 +8,18 @@ var messages = {
   SetBlockLEDCommand: require('./command/setBlockLED'),
   SetBlockValueCommand: require('./command/setBlockValue'),
   ClearBlockValueCommand: require('./command/clearBlockValue'),
-  GetNeighborBlocksCommand: require('./command/getNeighborBlocks'),
+  DiscoverAllBlocks: require('./command/discoverAllBlocks'),
   RegisterBlockValueEventCommand: require('./command/registerBlockValueEvent'),
   UnregisterBlockValueEventCommand: require('./command/unregisterBlockValueEvent'),
   UnregisterAllBlockValueEventsCommand: require('./command/unregisterAllBlockValueEvents'),
   ResetCommand: require('./command/reset'),
+
   KeepAliveRequest: require('./request/keepAlive'),
   KeepAliveResponse: require('./response/keepAlive'),
+  GetNeighborBlocksRequest: require('./request/getNeighborBlocks'),
+  GetNeighborBlocksResponse: require('./response/getNeighborBlocks'),
+
   BlockValueEvent: require('./event/blockValue'),
-  GetNeighborBlocksEvent: require('./event/getNeighborBlocks'),
   FlashProgressEvent: require('./event/flashProgress'),
   FlashCompleteEvent: require('./event/flashComplete')
 }
@@ -30,21 +33,24 @@ var ClassicProtocol = new Protocol({
     [code('e'), messages.SetBlockLEDCommand],
     [code('s'), messages.SetBlockValueCommand],
     [code('t'), messages.ClearBlockValueCommand],
-    [code('m'), messages.GetNeighborBlocksCommand],
+    [code('i'), messages.DiscoverAllBlocks],
     [code('b'), messages.RegisterBlockValueEventCommand],
     [code('u'), messages.UnregisterBlockValueEventCommand],
     [code('q'), messages.UnregisterAllBlockValueEventsCommand],
     [code('x'), messages.ResetCommand]
   ],
   requests: [
-    [code('a'), messages.KeepAliveRequest]
+    [code('a'), messages.KeepAliveRequest],
+    [code('m'), messages.GetNeighborBlocksRequest],
+    [code('k'), messages.GetAllBlocksRequest],
   ],
   responses: [
-    [code('l'), messages.KeepAliveResponse]
+    [code('l'), messages.KeepAliveResponse],
+    [code('n'), messages.GetNeighborBlocksResponse],
+    [code('j'), messages.GetAllBlocksRequest],
   ],
   events: [
     [code('b'), messages.BlockValueEvent],
-    [code('n'), messages.GetNeighborBlocksEvent],
     [code('U'), messages.FlashProgressEvent],
     [code('X'), messages.FlashCompleteEvent]
   ]

@@ -6,7 +6,7 @@ if (args.length !== 3) {
 
 var Demo = require('../demo')
 var DemoServer = require('../server/http')(Demo)
-var port = parseInt(process.argv[2])
+var port = parseInt(args[2])
 var connection
 
 var server = DemoServer.createServer(function (newConnection) {

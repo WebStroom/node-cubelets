@@ -7,7 +7,7 @@ var FlashCompleteEvent = function () {
 
 util.inherits(FlashCompleteEvent, Message)
 
-FlashCompleteEvent.prototype.decode = function (data) {
+FlashCompleteEvent.prototype.decodeBody = function (body) {
   this.error = new Error('not implemented')
   return false
 }

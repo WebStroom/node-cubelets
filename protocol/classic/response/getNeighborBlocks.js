@@ -3,28 +3,28 @@ var Message = require('../message')
 
 var GetNeighborBlocksEvent = function (neighbors) {
   Message.call(this)
-  this.neighbors = neighbors
+  this.neighbors = neighbors || []
 }
 
 util.inherits(GetNeighborBlocksEvent, Message)
 
-GetNeighborBlocksEvent.prototype.decode = function (data) {
+GetNeighborBlocksEvent.prototype.decodeBody = function (body) {
   this.neighbors = []
 
-  if (data.length === 0) {
+  if (body.length === 0) {
     return true
   }
 
-  if (data.length % 3 !== 0) {
-    this.error = new Error('Size should be divisible by 3 but is', data.length, 'bytes.')
+  if (body.length % 3 !== 0) {
+    this.error = new Error('Size should be divisible by 3 but is', body.length, 'bytes.')
     return false
   }
 
   var p = 0
-  var count = data.length / 3
+  var count = body.length / 3
   var neighbors = []
   for (var i = 0; i < count; ++i) {
-    var blockId = Message.Decoder.decodeId(data.slice(p + 0, p + 3))
+    var blockId = Message.Decoder.decodeId(body.slice(p + 0, p + 3))
     if (0 !== blockId) {
       neighbors.push(blockId)
     }

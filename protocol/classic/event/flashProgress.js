@@ -7,7 +7,7 @@ var FlashProgressEvent = function () {
 
 util.inherits(FlashProgressEvent, Message)
 
-FlashProgressEvent.prototype.decode = function (data) {
+FlashProgressEvent.prototype.decodeBody = function (body) {
   this.error = new Error('not implemented')
   return false
 }
