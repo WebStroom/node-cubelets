@@ -18,7 +18,9 @@ var InfoService = function () {
   var baseUrl = config['urls']['proxy']
 
   function urlForBlocks(blocks) {
-    return baseUrl + '/api/cubelet_info/?ids=' + __(blocks).pluck('blockId').join(',')
+    return baseUrl + '/api/cubelet_info/?ids=' + __(blocks).map(function (block) {
+      return block.getBlockId()
+    }).join(',')
   }
 
   this.fetchBlockInfo = function (blocks, callback) {
@@ -47,7 +49,7 @@ var InfoService = function () {
           var infos = []
           __(blocks).each(function (block) {
             __(body).each(function (item) {
-              if (item['id'] == block.blockId) {
+              if (item['id'] === block.getBlockId()) {
                 var info = new Info(item)
                 service.emit('info', info, block)
                 infos.push(info)

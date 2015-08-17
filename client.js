@@ -9,6 +9,9 @@ var Protocols = {
   Classic: require('./protocol/classic')
 }
 
+Protocols.OS4 = Protocols.Imago
+Protocols.OS3 = Protocols.Classic
+
 function Factory(Scanner, Connection) {
 
   function Client (con) {
@@ -122,6 +125,7 @@ function Factory(Scanner, Connection) {
   util.inherits(Client, events.EventEmitter)
 
   xtend(Client, Scanner)
+
   Client.Protocol = Protocols.Imago
   xtend(Client.Protocol, Protocols)
 

@@ -17,6 +17,7 @@ function Strategy(protocol, client) {
         if (err) {
           client.stopKeepAliveTimer()
           client.emit('error', new Error('Keep alive timer expired.'))
+          client.emit('die')
         }
       }, timeout)
     }, interval)
@@ -57,7 +58,15 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
+  this.getBlocks = function () {
+    throw new Error('not implemented')
+  }
+
   this.getAllBlocks = function () {
+    throw new Error('not implemented')
+  }
+
+  this.fetchBlocks = function (callback) {
     throw new Error('not implemented')
   }
 
@@ -113,10 +122,21 @@ function Strategy(protocol, client) {
     client.sendRequest(new messages.UnregisterAllBlockValueEventsRequest(), callback)
   }
 
-  this.flashProgramToBlock = function (program, block, callback) {
+  this.sendBlockRequest = function (blockRequest, callback, timeout) {
     throw new Error('not implemented')
   }
 
+  this.uploadProgramToMemory = function (program, slot, callback) {
+    throw new Error('not implemented')
+  }
+
+  this.flashMemoryToBlock = function (blockId, slotIndex, callback) {
+    throw new Error('not implemented')
+  }
+
+  this.flashProgramToBlock = function (program, block, callback) {
+    throw new Error('not implemented')
+  }
 }
 
 module.exports = Strategy

@@ -4,8 +4,8 @@ var async = require('async')
 var xtend = require('xtend')
 var cubelets = require('./client/net')
 var Protocol = cubelets.Protocol
-var Cubelet = require('./cubelet')
-var BlockTypes = Cubelet.BlockTypes
+var Block = require('./block')
+var BlockTypes = require('./blockTypes')
 var Program = require('./program')
 var InfoService = require('./service/info')
 var __ = require('underscore')
@@ -110,9 +110,9 @@ function queueBlocksUntilDone(client, callback) {
   function fetchBlockInfo(blocks, callback) {
     var service = new InfoService()
     service.on('info', function (info, block) {
-      var type = Cubelet.typeForTypeId(info.blockTypeId)
+      var type = Block.typeForTypeId(info.blockTypeId)
       if (type !== BlockTypes.UNKNOWN) {
-        block.blockType = type
+        block._blockType = type
         if (!exists(waitingQueue, block) && !exists(doneQueue, block)) {
           enqueue(waitingQueue, block)
           console.log('waiting:', waitingQueue)
@@ -224,19 +224,19 @@ var Upgrade = function (client) {
 
   function findPendingBlock(block) {
     return __(pendingBlocks).find(function (pendingBlock) {
-      return block.blockId === pendingBlock.blockId
+      return block.getBlockId() === pendingBlock.getBlockId()
     })
   }
 
   function findCompletedBlock(block) {
     return __(completedBlocks).find(function (completedBlock) {
-      return block.blockId === completedBlock.blockId
+      return block.getBlockId() === completedBlock.getBlockId()
     })
   }
 
   function filterUnknownPendingBlocks() {
     return __(pendingBlocks).filter(function (block) {
-      return block.blockType === BlockTypes.UNKNOWN
+      return block.getBlockType() === BlockTypes.UNKNOWN
     })
   }
 
@@ -245,9 +245,9 @@ var Upgrade = function (client) {
     var service = new InfoService()
     var changed = false
     service.on('info', function (info, block) {
-      var type = Cubelet.typeForTypeId(info.blockTypeId)
+      var type = Block.typeForTypeId(info.blockTypeId)
       if (type !== BlockTypes.UNKNOWN) {
-        block.blockType = type
+        block._blockType = type
         changed = true
       }
     })
@@ -262,7 +262,7 @@ var Upgrade = function (client) {
 
   function dequeueNextBlockToUpgrade() {
     var index = __(pendingBlocks).findIndex(function (block) {
-      return block.blockType !== BlockTypes.UNKNOWN
+      return block.getBlockType() !== BlockTypes.UNKNOWN
     })
     if (index > -1) {
       var nextBlock = pendingBlocks[index]
@@ -275,11 +275,11 @@ var Upgrade = function (client) {
   }
 
   function findBlocksToUpgrade(callback) {
-    client.fetchAllBlocks(function (err) {
+    client.fetchBlocks(function (err) {
       if (err) {
         callback(err)
       } else {
-        __(client.getAllBlocks()).each(function (block) {
+        __(client.getBlocks()).each(function (block) {
           if (!findPendingBlock(block) && !findCompletedBlock(block)) {
             pendingBlocks.push(block)
             self.emit('changePendingBlocks')
