@@ -18,7 +18,7 @@ test('algo', function (t) {
     var end = start + chunkSize
     var chunk = data.slice(start, end)
     if (chunk.length > 0) {
-      console.log('<<', chunk)
+      console.log('chunk', i, chunk)
       chunks.push(chunk)
       writeChunk(i + 1)
     }

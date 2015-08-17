@@ -177,12 +177,12 @@ var client = cubelets.connect(config.device, function (err) {
       //   })
       // })
 
-      // test('can flash a mini bargraph hex', function (t) {
+      // test('can flash a bargraph hex', function (t) {
       //   t.plan(9)
 
       //   // check the program is valid
       //   var blockId = config.construction.type.bargraph
-      //   var hex = fs.readFileSync(__dirname + '/mini-bargraph.hex')
+      //   var hex = fs.readFileSync(__dirname + '/hex/bargraph.hex')
       //   var program = new Program(hex)
       //   t.ok(program.valid, 'program valid')
 
@@ -243,7 +243,7 @@ var client = cubelets.connect(config.device, function (err) {
 
         // check the program is valid
         var blockId = config.construction.type.drive
-        var hex = fs.readFileSync(__dirname + '/drive.hex')
+        var hex = fs.readFileSync(__dirname + '/hex/drive.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
 
