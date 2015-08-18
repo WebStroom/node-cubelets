@@ -3,7 +3,9 @@ var events = require('events')
 var async = require('async')
 var xtend = require('xtend')
 var cubelets = require('./client/net')
-var Protocol = cubelets.Protocol
+var ClassicProtocol = require('./protocol/classic')
+var ImagoProtocol = require('./protocol/imago')
+var BootstrapProtocol = require('./protocol/bootstrap/upgrade')
 var Block = require('./block')
 var BlockTypes = require('./blockTypes')
 var Program = require('./program')
@@ -12,8 +14,8 @@ var __ = require('underscore')
 
 var FirmwareType = {
   CLASSIC: 0,
-  BOOTSTRAP: 1,
-  IMAGO: 2
+  IMAGO: 1,
+  BOOTSTRAP: 2
 }
 
 var programs = {}
@@ -32,35 +34,25 @@ var programs = {}
 var done = false
 
 function detectFirmwareType(client, callback) {
-  var con = client.getConnection()
-  var msg = new Buffer(0)
-  con.on('data', onData)
-  var timer = setTimeout(function () {
-    con.removeListener('data', onData)
-    callback(null, FirmwareType.IMAGO)
-  }, 500)
-  function detectCode(msg) {
-    if (msg.length >= 4) {
-      var code = String.fromCharCode(msg[1])
-      switch (code) {
-        case 'b':
-          clearTimeout(timer)
-          con.removeListener('data', onData)
-          callback(null, FirmwareType.BOOTSTRAP)
-          break
-        case 'l':
-          clearTimeout(timer)
-          con.removeListener('data', onData)
-          callback(null, FirmwareType.CLASSIC)
-          break
-      }
+  // Switch to the classic protocol
+  client.setProtocol(ClassicProtocol)
+  // Send a keep alive request to test how the cubelet responds
+  client.sendRequest(new ClassicProtocol.messages.KeepAliveRequest(), function (err, response) {
+    if (err) {
+      // The imago protocol will fail to respond.
+      client.setProtocol(ImagoProtocol)
+      callback(null, FirmwareType.IMAGO)
     }
-  }
-  function onData(data) {
-    msg = Buffer.concat([msg, data])
-    detectCode(msg)
-  }
-  con.write(new Buffer([ 'a'.charCodeAt(0) ]))
+    else if (response.payload.length > 0) {
+      // The bootstrap protocol will differentiate itself by
+      // sending an extra byte in the response.
+      client.setProtocol(BootstrapProtocol)
+      callback(null, FirmwareType.BOOTSTRAP)
+    } else {
+      // Otherwise, the cubelet has classic firmware.
+      callback(null, FirmwareType.CLASSIC)
+    }
+  })
 }
 
 function flashBootstrapIfNeeded(client, callback) {
@@ -218,6 +210,14 @@ var Upgrade = function (client) {
         self.emit('progress', ((p++) / 100.0))
       }
     }, 10)
+  }
+
+  this.waitForDisconnect = function (callback) {
+    callback(null)
+  }
+
+  this.waitForReconnect = function (callback) {
+    callback(null)
   }
 
   var pendingBlocks = []

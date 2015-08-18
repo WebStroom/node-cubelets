@@ -49,7 +49,7 @@ var ClassicProtocol = new Protocol({
   responses: [
     [code('l'), messages.KeepAliveResponse],
     [code('n'), messages.GetNeighborBlocksResponse],
-    [code('j'), messages.GetAllBlocksRequest],
+    [code('j'), messages.GetAllBlocksResponse],
   ],
   events: [
     [code('b'), messages.BlockValueEvent],

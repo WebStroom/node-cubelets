@@ -22,6 +22,7 @@ GetAllBlocksResponse.prototype.decodeBody = function (body) {
 
   var blocks = []
   var count = body.length / 7
+  console.log('GetAllBlocksResponse', body)
   for (var i = 0; i < count; ++i) {
     var p = i * 7
     /* format: [ id2, id1, id0, blockValue, hc, timeout, packetType ] */

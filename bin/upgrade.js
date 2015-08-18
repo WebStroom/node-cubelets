@@ -7,7 +7,11 @@ if (args.length !== 3) {
 var async = require('async')
 var prompt = require('cli-prompt')
 var cubelets = require('../index')
+var Block = require('../block')
+var BlockTypes = require('../blockTypes')
 var Upgrade = require('../upgrade')
+var InfoService = require('../service/info')
+var __ = require('underscore')
 
 var device = {
   path: args[2]
@@ -61,7 +65,7 @@ function startUpgrade(client) {
   })
 
   function promptRunCompatibilityCheck(callback) {
-    prompt('Run compatibility check? [Y/n]\n', function (val) {
+    prompt('Run compatibility check? [Y/n]', function (val) {
       if (val.toLowerCase() === 'y') {
         callback(true)
       } else {
@@ -71,15 +75,99 @@ function startUpgrade(client) {
   }
 
   function runCompatibilityCheck(callback) {
-    prompt('Attach all of your Cubelets. Then press enter.\n', function () {
-      client.fetchAllBlocks(function (err) {
+    var unknownBlocks = []
+    var compatibleBlocks = []
+    var notCompatibleBlocks = []
+
+    client.getBlockMap().on('addBlock', onAddBlock)
+
+    function onAddBlock(block) {
+      unknownBlocks.push(block)
+    }
+
+    prompt('Attach all of your Cubelets. Then press enter.', function () {
+      checkBlocks(callback)
+    })
+
+    function checkBlocks(callback) {
+      console.log('Finding blocks...')
+      client.fetchAllBlocks(function (err, blocks) {
+        console.log('Found', blocks.length, 'blocks. Checking compatibility...')
         if (err) {
           callback(err)
         } else {
-          
+          unknownBlocks = filterUnknownBlocks(blocks)
+          fetchUnknownBlockTypes(function (err) {
+            if (err) {
+              callback(err)
+            } else {
+              printCompatibilityResults()
+              promptCheckMoreBlocks(callback)
+            }
+          })
         }
       })
-    })
+    }
+
+    function filterUnknownBlocks(blocks) {
+      return __(blocks).filter(function (block) {
+        return block.getBlockType() === BlockTypes.UNKNOWN
+      })
+    }
+
+    function fetchUnknownBlockTypes(callback) {
+      var service = new InfoService()
+
+      service.on('info', function (info, block) {
+        var type = Block.typeForTypeId(info.blockTypeId)
+        if (type !== BlockTypes.UNKNOWN) {
+          block._blockType = type
+          unknownBlocks = __(unknownBlocks).without(block)
+          sortByCompatibility(block, info)
+        }
+      })
+
+      service.fetchBlockInfo(unknownBlocks, function (err) {
+        service.removeAllListeners('info')
+        callback(err)
+      })
+    }
+
+    function sortByCompatibility(block, info) {
+      if (info.mcuString === 'avr') {
+        notCompatibleBlocks.push(block)
+      } else {
+        compatibleBlocks.push(block)
+      }
+    }
+
+    function printBlock(isCompatible, block) {
+      console.log(isCompatible ? '✓':'𐄂', block.getBlockId(), block.getBlockType().name)
+    }
+
+    function printCompatibilityResults() {
+      if (notCompatibleBlocks.length > 0) {
+        console.log('Not compatible with OS4:')
+        __(notCompatibleBlocks).each(printBlock.bind(this, false))
+      }
+      if (compatibleBlocks.length > 0) {
+        console.log('Compatible with OS4:')
+        __(compatibleBlocks).each(printBlock.bind(this, true))
+      }
+    }
+
+    function promptCheckMoreBlocks(callback) {
+      prompt('Check more blocks? [Y/n]', function (val) {
+        if (val.toLowerCase() === 'y') {
+          process.nextTick(function () {
+            checkBlocks(callback)
+          })
+        } else {
+          client.getBlockMap().removeListener('addBlock', onAddBlock)
+          callback(null)
+        }
+      })
+    }
   }
 
   function bootstrapBluetoothBlock(callback) {

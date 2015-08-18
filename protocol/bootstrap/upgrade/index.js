@@ -1,7 +1,6 @@
-var Protocol = require('../../protocol')
+var Protocol = require('../../../protocol')
 var Message = require('../../imago/message')
 var Parser = require('../../parser')
-var Strategy = require('./strategy')
 var xtend = require('xtend/mutable')
 
 var messages = {
@@ -31,8 +30,7 @@ UpgradeProtocol.messages = messages
 
 xtend(UpgradeProtocol, {
   Message: Message,
-  Parser: Parser.bind(null, UpgradeProtocol),
-  Strategy: Strategy.bind(null, UpgradeProtocol)
+  Parser: Parser.bind(null, UpgradeProtocol)
 })
 
 module.exports = UpgradeProtocol

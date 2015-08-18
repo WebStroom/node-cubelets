@@ -65,21 +65,21 @@ function ClassicStrategy(protocol, client) {
   }
 
   var sentDiscoverCommand = false
-  var discoveryInterval = 2000
+  var discoveryInterval = 5000
 
   this.fetchAllBlocks = function (callback) {
     if (sentDiscoverCommand) {
       if (callback) {
-        callback(null)
+        callback(null, map.getAllBlocks())
       }
     } else {
-      client.sendCommand(new messages.DiscoverAllBlocksRequest())
-      sentDiscoverCommand = true
+      client.sendCommand(new messages.DiscoverAllBlocksCommand())
+      sentDiscoverCommand = false
       setTimeout(function () {
         // Wait for command to "diffuse" through the construction,
         // which causes blocks to report their id. Then, request
         // the blocks.
-        client.sendRequest(new messages.GetAllBlocksCommand(), function (err, response) {
+        client.sendRequest(new messages.GetAllBlocksRequest(), function (err, response) {
           if (err) {
             if (callback) {
               callback(err)
