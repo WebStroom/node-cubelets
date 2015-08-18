@@ -115,7 +115,7 @@ function startUpgrade(client) {
       var service = new InfoService()
 
       service.on('info', function (info, block) {
-        var type = Block.typeForTypeId(info.blockTypeId)
+        var type = Block.blockTypeForId(info.blockTypeId)
         if (type !== BlockTypes.UNKNOWN) {
           block._blockType = type
           unknownBlocks = __(unknownBlocks).without(block)
