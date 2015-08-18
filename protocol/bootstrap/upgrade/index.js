@@ -2,6 +2,7 @@ var Protocol = require('../../../protocol')
 var Message = require('../../imago/message')
 var Parser = require('../../parser')
 var xtend = require('xtend/mutable')
+var Strategy = require('../../strategy')
 
 var messages = {
   SetBootstrapModeRequest: require('./request/setBootstrapMode'),
@@ -30,7 +31,8 @@ UpgradeProtocol.messages = messages
 
 xtend(UpgradeProtocol, {
   Message: Message,
-  Parser: Parser.bind(null, UpgradeProtocol)
+  Parser: Parser.bind(null, UpgradeProtocol),
+  Strategy: Strategy.bind(null, UpgradeProtocol)
 })
 
 module.exports = UpgradeProtocol
