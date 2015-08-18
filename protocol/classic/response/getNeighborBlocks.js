@@ -1,15 +1,17 @@
 var util = require('util')
 var Message = require('../message')
 
-var GetNeighborBlocksEvent = function (neighbors) {
+var GetNeighborBlocksResponse = function (neighbors, originBlockId) {
   Message.call(this)
-  this.neighbors = neighbors || []
+  this.neighbors = neighbors || {}
+  this.originBlockId = originBlockId
 }
 
-util.inherits(GetNeighborBlocksEvent, Message)
+util.inherits(GetNeighborBlocksResponse, Message)
 
-GetNeighborBlocksEvent.prototype.decodeBody = function (body) {
-  this.neighbors = []
+GetNeighborBlocksResponse.prototype.decodeBody = function (body) {
+  this.neighbors = {}
+  this.originBlockId = undefined
 
   if (body.length === 0) {
     return true
@@ -20,19 +22,25 @@ GetNeighborBlocksEvent.prototype.decodeBody = function (body) {
     return false
   }
 
-  var p = 0
+  var neighbors = {}
+  var originBlockId
   var count = body.length / 3
-  var neighbors = []
   for (var i = 0; i < count; ++i) {
+    var p = i * 3
     var blockId = Message.Decoder.decodeId(body.slice(p + 0, p + 3))
-    if (0 !== blockId) {
-      neighbors.push(blockId)
+    if (i === 0) {
+      originBlockId = blockId
+    } else {
+      var faceIndex = i - 1
+      if (0 !== blockId) {
+        neighbors[faceIndex] = blockId
+      }
     }
-    p += 3
   }
 
   this.neighbors = neighbors
+  this.originBlockId = originBlockId
   return true
 }
 
-module.exports = GetNeighborBlocksEvent
+module.exports = GetNeighborBlocksResponse

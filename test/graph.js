@@ -22,7 +22,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       test.skip('get neighbors', function (t) {
         t.plan(2)
-        client.fetchAllBlocks(function (err, res) {
+        client.fetchNeighborBlocks(function (err, res) {
           t.ifError(err, 'no err')
           t.ok(res, 'response ok')
         })

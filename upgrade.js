@@ -194,7 +194,7 @@ var Upgrade = function (client) {
 
   var self = this
 
-  this.getClient() = function () {
+  this.getClient = function () {
     return client
   }
 
@@ -275,11 +275,11 @@ var Upgrade = function (client) {
   }
 
   function findBlocksToUpgrade(callback) {
-    client.fetchBlocks(function (err) {
+    client.fetchAllBlocks(function (err) {
       if (err) {
         callback(err)
       } else {
-        __(client.getBlocks()).each(function (block) {
+        __(client.getAllBlocks()).each(function (block) {
           if (!findPendingBlock(block) && !findCompletedBlock(block)) {
             pendingBlocks.push(block)
             self.emit('changePendingBlocks')

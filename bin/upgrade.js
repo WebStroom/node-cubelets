@@ -72,7 +72,7 @@ function startUpgrade(client) {
 
   function runCompatibilityCheck(callback) {
     prompt('Attach all of your Cubelets. Then press enter.\n', function () {
-      client.fetchBlocks(function (err) {
+      client.fetchAllBlocks(function (err) {
         if (err) {
           callback(err)
         } else {

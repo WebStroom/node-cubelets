@@ -10,6 +10,7 @@ var messages = {
   ClearBlockValueCommand: require('./command/clearBlockValue'),
   SetLEDColorCommand: require('./command/setLEDColor'),
   SetLEDRGBCommand: require('./command/setLEDRGB'),
+  ResetCommand: require('./command/reset'),
 
   GetConfigurationRequest: require('./request/getConfiguration'),
   GetConfigurationResponse: require('./response/getConfiguration'),
@@ -58,6 +59,7 @@ var ImagoProtocol = new Protocol({
     [0x42, messages.ClearBlockValueCommand],
     [0x43, messages.SetLEDColorCommand],
     [0x44, messages.SetLEDRGBCommand],
+    [0x80, messages.ResetCommand],
   ],
   requests: [
     [0x01, messages.GetConfigurationRequest],

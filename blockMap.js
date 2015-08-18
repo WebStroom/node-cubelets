@@ -33,21 +33,22 @@ function BlockMap() {
     })
   }
 
-  // Returns an array of known blocks in the map,
-  // except for the origin block, sorted by hop count.
-  self.getBlocks = function () {
-    return self.getAllBlocks().filter(function (block) {
-      return block.getHopCount() > 0
-    })
+  // Returns an array of all known neighbor blocks in
+  // the map, sorted by hop count.
+  self.getNeighborBlocks = function () {
+    return self.filterByHopCount(1)
   }
 
   // Returns an array of all known blocks in the map,
-  // including the origin block, sorted by hop count.
+  // except for the origin block, sorted by hop count.
   self.getAllBlocks = function () {
     return __(idMap).chain()
       .values()
       .sortBy(function (block) {
         return block.getHopCount()
+      })
+      .filter(function (block) {
+        return block.getHopCount() > 0
       })
       .value()
   }

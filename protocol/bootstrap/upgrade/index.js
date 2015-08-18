@@ -8,7 +8,8 @@ var messages = {
   SetBootstrapModeRequest: require('./request/setBootstrapMode'),
   SetBootstrapModeResponse: require('./response/setBootstrapMode'),
 
-  BlockFoundEvent: require('./event/blockFound')
+  BlockFoundEvent: require('./event/blockFound'),
+  DisconnectFailedEvent: require('./event/disconnectFailed'),
 }
 
 var UpgradeProtocol = new Protocol({
@@ -22,6 +23,7 @@ var UpgradeProtocol = new Protocol({
   ],
   events: [
     [0xB0, messages.BlockFoundEvent],
+    [0xB2, messages.DisconnectFailedEvent]
   ]
 })
 

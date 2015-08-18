@@ -4,7 +4,6 @@ var Version = require('../../version')
 var Block = require('../../block')
 var BlockMap = require('../../blockMap')
 var BlockTypes = require('../../blockTypes')
-var xtend = require('xtend/mutable')
 var async = require('async')
 var __ = require('underscore')
 
@@ -53,20 +52,12 @@ function ImagoStrategy(protocol, client) {
     }
   }
 
-  this.getOriginBlock = function () {
-    return map.getOriginBlock()
-  }
-
   this.fetchOriginBlock = function (callback) {
     client.fetchConfiguration(function (err) {
       if (callback) {
-        callback(err, client.getOriginBlock())
+        callback(err, map.getOriginBlock())
       }
     })
-  }
-
-  this.getNeighborBlocks = function () {
-    return map.filterByHopCount(1)
   }
 
   this.fetchNeighborBlocks = function (callback) {
@@ -84,27 +75,25 @@ function ImagoStrategy(protocol, client) {
         neighbors: response.neighbors
       })
     }
+    __(response.neighbors).each(function (blockId, faceIndex) {
+      map.upsert({
+        blockId: blockId,
+        hopCount: 1
+      })
+    })
     if (callback) {
-      callback(null, client.getNeighborBlocks())
+      callback(null, map.getNeighborBlocks())
     }
   }
 
-  this.getBlocks = function () {
-    return map.getBlocks()
-  }
-
-  this.getAllBlocks = function () {
-    return map.getAllBlocks()
-  }
-
-  this.fetchBlocks = function (callback) {
+  this.fetchAllBlocks = function (callback) {
     async.seq(
       client.sendRequest,
-      onFetchBlocks
+      onFetchAllBlocks
     )(new messages.GetAllBlocksRequest(), callback)
   }
 
-  function onFetchBlocks(response, callback) {
+  function onFetchAllBlocks(response, callback) {
     response.blocks.forEach(function (block) {
       map.upsert({
         blockId: block.blockId,
@@ -112,28 +101,26 @@ function ImagoStrategy(protocol, client) {
       })
     })
     if (callback) {
-      callback(null, client.getAllBlocks())
+      callback(null, map.getAllBlocks())
     }
-  }
-
-  this.fetchAllBlocks = function (callback) {
-    async.series([
-      client.fetchOriginBlock,
-      client.fetchBlocks
-    ], callback)
-  }
-
-  this.getGraph = function () {
-    return map.getGraph()
   }
 
   this.fetchGraph = function (callback) {
     async.series([
       client.fetchOriginBlock,
-      client.fetchBlocks,
+      client.fetchAllBlocks,
+      client.fetchNeighborBlocks,
       fetchBlockConfigurations,
       fetchBlockNeighbors
-    ], callback)
+    ], function (err) {
+      if (callback) {
+        if (err) {
+          callback(err)
+        } else {
+          callback(null, map.getGraph())
+        }
+      }
+    })
   }
 
   function sortBlocksByHopCount(unsortedBlocks) {
@@ -143,7 +130,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   function fetchBlockConfigurations(callback) {
-    queueGetConfigurationBlockRequests(client.getAllBlocks(), callback)
+    queueGetConfigurationBlockRequests(map.getAllBlocks(), callback)
   }
 
   function queueGetConfigurationBlockRequests(unsortedBlocks, callback) {
@@ -178,7 +165,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   function fetchBlockNeighbors(callback) {
-    queueGetNeighborsBlockRequests(client.getAllBlocks(), callback)
+    queueGetNeighborsBlockRequests(map.getAllBlocks(), callback)
   }
 
   function queueGetNeighborsBlockRequests(unsortedBlocks, callback) {
@@ -207,18 +194,11 @@ function ImagoStrategy(protocol, client) {
     async.series(fetchTasks, callback)
   }
 
-  this.findBlockById = function (blockId) {
-    return map.findById(blockId)
-  }
-
-  this.filterBlocksByHopCount = function (hopCount) {
-    return map.filterByHopCount(hopCount)
-  }
-
   this.setBlockValue = function (blockId, value) {
-    var block = client.findBlockById(blockId)
+    var block = map.findById(blockId)
     if (block) {
       block._value = value
+      block._valueOverridden = true
       client.sendCommand(new messages.SetBlockValueCommand([{
         blockId: blockId,
         value: value
@@ -230,7 +210,7 @@ function ImagoStrategy(protocol, client) {
 
   this.setManyBlockValues = function (blockValueMap) {
     var blocks = __(blockValueMap).reduce(function (blocks, blockId, value) {
-      var block = client.findBlockById(blockId)
+      var block = map.findById(blockId)
       if (block) {
         block._value = value
         blocks.push({
@@ -247,7 +227,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.clearBlockValue = function (blockId) {
-    var block = client.findBlockById(blockId)
+    var block = map.findById(blockId)
     if (block) {
       block._valueOverridden = false
       client.sendCommand(new messages.ClearBlockValueCommand([{
@@ -260,7 +240,7 @@ function ImagoStrategy(protocol, client) {
 
   this.clearManyBlockValues = function (blocks, callback) {
     var blocks = __(blockValueMap).reduce(function (blocks, blockId, value) {
-      var block = client.findBlockById(blockId)
+      var block = map.findById(blockId)
       if (block) {
         block._valueOverridden = value
         blocks.push({
@@ -282,6 +262,18 @@ function ImagoStrategy(protocol, client) {
     if (blocks.length > 0) {
       client.clearManyBlockValues(blocks, callback)
     }
+  }
+
+  this.registerBlockValueEvent = function (blockId, callback) {
+    client.sendRequest(new messages.RegisterBlockValueEventRequest(blockId), callback)
+  }
+
+  this.unregisterBlockValueEvent = function (blockId, callback) {
+    client.sendRequest(new messages.UnregisterBlockValueEventRequest(blockId), callback)
+  }
+
+  this.unregisterAllBlockValueEvents = function (callback) {
+    client.sendRequest(new messages.UnregisterAllBlockValueEventsRequest(), callback)
   }
 
   this.sendBlockRequest = function (blockRequest, callback, timeout) {
