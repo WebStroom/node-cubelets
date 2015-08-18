@@ -33,30 +33,26 @@ function startUpgrade(client) {
       exitWithError(err)
     } else if (needsUpgrade) {
       console.log('An upgrade is required.')
-
       // First, ask the user if they want to run a compatibility check.
       promptRunCompatibilityCheck(function (yes) {
         if (yes) {
-          runCompatibilityCheck(function (err) {
+          runCompatibilityCheck(function (err, result) {
             if (err) {
               exitWithError(err)
             } else {
-              // TODO
-              exitWithSuccess('Ran compatibility check.')
+              if (result.notCompatibleBlocks.lenth === 0) {
+                prompt('All of your Cubelets are compatible. Proceed with upgrade? [Y/n]', function (val) {
+                  if (val.toLowerCase() === 'y') {
+                    enterBootstrapBluetoothBlock()
+                  } else {
+                    exitWithSuccess('Goodbye.')
+                  }
+                })
+              }
             }
           })
         } else {
-          exitWithSuccess('Did not run compatibility check.')
-          /*
-          bootstrapBluetoothBlock(function (err) {
-            if (err) {
-              exitWithError(err)
-            } else {
-              // TODO
-              exitWithError('Bootstrapped Bluetooth block.')
-            }
-          })
-          */
+          enterBootstrapBluetoothBlock()
         }
       })
     } else {
@@ -164,10 +160,20 @@ function startUpgrade(client) {
           })
         } else {
           client.getBlockMap().removeListener('addBlock', onAddBlock)
-          callback(null)
+          callback(null, {
+            compatibleBlocks: compatibleBlocks,
+            notCompatibleBlocks: notCompatibleBlocks
+          })
         }
       })
     }
+  }
+
+  function enterBootstrapBluetoothBlock() {
+    bootstrapBluetoothBlock(function (err) {
+        // HERE
+
+    })
   }
 
   function bootstrapBluetoothBlock(callback) {

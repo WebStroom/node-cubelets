@@ -1,4 +1,5 @@
 var BlockTypes = require('./blockTypes')
+var MCUTypes = require('./mcuTypes')
 var __ = require('underscore')
 
 var Block = function (blockId, hopCount, blockType) {
@@ -8,6 +9,7 @@ var Block = function (blockId, hopCount, blockType) {
   // receives more information about the block.
   this._hopCount = hopCount
   this._blockType = blockType || BlockTypes.UNKNOWN
+  this._mcuType = MCUTypes.UNKNOWN
   this._neighbors = {}
   this._value = 0
   this._valueOverridden = false
@@ -22,9 +24,14 @@ var Block = function (blockId, hopCount, blockType) {
     return this._hopCount
   }
 
-  // Returns the `BlockType` of the block.
+  // Returns the `BlockType` of the block, e.g. BATTERY, DRIVE, DISTANCE, etc.
   this.getBlockType = function () {
     return this._blockType
+  }
+
+  // Returns the `MCUType` of the block, e.g. AVR, PIC
+  this.getMCUType = function () {
+    return this._mcuType
   }
 
   // Returns a dictionary with the neighboring

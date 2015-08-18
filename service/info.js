@@ -6,7 +6,7 @@ var __ = require('underscore')
 
 var Info = function (data) {
   this.blockTypeId = parseInt(data['type_id'])
-  this.mcuString = data['mcu']
+  this.mcuTypeId = data['mcu']
   this.currentFirmwareVersion = data['current_firm_ver']
   this.latestFirmwareVersion = data['latest_firm_ver']
 }

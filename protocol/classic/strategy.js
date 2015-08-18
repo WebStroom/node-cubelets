@@ -64,40 +64,30 @@ function ClassicStrategy(protocol, client) {
     }
   }
 
-  var sentDiscoverCommand = false
-  var discoveryInterval = 5000
-
   this.fetchAllBlocks = function (callback) {
-    if (sentDiscoverCommand) {
-      if (callback) {
-        callback(null, map.getAllBlocks())
-      }
-    } else {
-      client.sendCommand(new messages.DiscoverAllBlocksCommand())
-      sentDiscoverCommand = false
-      setTimeout(function () {
-        // Wait for command to "diffuse" through the construction,
-        // which causes blocks to report their id. Then, request
-        // the blocks.
-        client.sendRequest(new messages.GetAllBlocksRequest(), function (err, response) {
-          if (err) {
-            if (callback) {
-              callback(err)
-            }
-          } else {
-            response.blocks.forEach(function (block) {
-              map.upsert({
-                blockId: block.blockId,
-                hopCount: block.hopCount
-              })
-            })
-            if (callback) {
-              callback(null, map.getAllBlocks())
-            }
+    client.sendCommand(new messages.DiscoverAllBlocksCommand())
+    setTimeout(function () {
+      // Wait for command to "diffuse" through the construction,
+      // which causes blocks to report their id. Then, request
+      // the blocks.
+      client.sendRequest(new messages.GetAllBlocksRequest(), function (err, response) {
+        if (err) {
+          if (callback) {
+            callback(err)
           }
-        })
-      }, discoveryInterval)
-    }
+        } else {
+          response.blocks.forEach(function (block) {
+            map.upsert({
+              blockId: block.blockId,
+              hopCount: block.hopCount
+            })
+          })
+          if (callback) {
+            callback(null, map.getAllBlocks())
+          }
+        }
+      })
+    }, 5000)
   }
 
   this.setBlockValue = function (blockId, value) {

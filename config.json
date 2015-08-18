@@ -96,13 +96,21 @@
       "category": "sense"
     }
   },
+  "mcuTypes": {
+    "UNKNOWN": {
+      "typeId": 0
+    },
+    "AVR": {
+      "typeId": "avr"
+    },
+    "PIC": {
+      "typeId": "pic"
+    }
+  },
   "urls": {
     "appspot": "http://cubelets-programming.appspot.com",
     "compile": "http://compile.modrobotics.com",
     "proxy": "http://localhost:3033/proxy"
-  },
-  "databases": {
-    "info": "info.db"
   },
   "chrome": {
     "appId": "fehdhddkknkaeimadppmacaoclnllcjm"

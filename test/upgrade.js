@@ -2,6 +2,7 @@ var test = require('tape')
 var config = require('./config')
 var cubelets = require('../index')
 var Upgrade = require('../upgrade')
+var UpgradeProtocol = require('../protocol/bootstrap/upgrade')
 var __ = require('underscore')
 
 var client = cubelets.connect(config.device, function (err) {
@@ -20,6 +21,14 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no err')
           t.ok(needsUpgrade, 'needs upgrade')
           t.equal(firmwareType, 0, 'has classic firmware')
+        })
+      })
+
+      test('jump to os4', function (t) {
+        client.setProtocol(UpgradeProtocol)
+        client.setRequest(UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
+          t.ifError(err)
+          t.equals(response.mode, 1)
         })
       })
 
