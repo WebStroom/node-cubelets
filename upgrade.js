@@ -108,7 +108,7 @@ function queueBlocksUntilDone(client, callback) {
   function fetchBlockInfo(blocks, callback) {
     var service = new InfoService()
     service.on('info', function (info, block) {
-      var type = Block.typeForTypeId(info.blockTypeId)
+      var type = Block.blockTypeForId(info.blockTypeId)
       if (type !== BlockTypes.UNKNOWN) {
         block._blockType = type
         if (!exists(waitingQueue, block) && !exists(doneQueue, block)) {
@@ -247,7 +247,7 @@ var Upgrade = function (client) {
     var service = new InfoService()
     var changed = false
     service.on('info', function (info, block) {
-      var type = Block.typeForTypeId(info.blockTypeId)
+      var type = Block.blockTypeForId(info.blockTypeId)
       if (type !== BlockTypes.UNKNOWN) {
         block._blockType = type
         changed = true

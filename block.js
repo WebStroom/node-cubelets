@@ -59,8 +59,14 @@ var Block = function (blockId, hopCount, blockType) {
 
 module.exports = Block
 
-module.exports.typeForTypeId = function (typeId) {
+module.exports.blockTypeForId = function (typeId) {
   return __(BlockTypes).find(function (type) {
     return type.typeId === typeId
   }) || BlockTypes.UNKNOWN
+}
+
+module.exports.mcuTypeForId = function (typeId) {
+  return __(MCUTypes).find(function (type) {
+    return type.typeId === typeId
+  }) || MCUTypes.UNKNOWN
 }

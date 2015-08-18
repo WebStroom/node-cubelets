@@ -147,7 +147,7 @@ function ImagoStrategy(protocol, client) {
           } else {
             map.upsert({
               blockId: blockId,
-              blockType: Block.typeForTypeId(response.blockTypeId),
+              blockType: Block.blockTypeForId(response.blockTypeId),
               hardwareVersion: response.hardwareVersion,
               bootloaderVersion: response.bootloaderVersion,
               applicationVersion: response.applicationVersion,
