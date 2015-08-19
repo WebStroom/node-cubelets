@@ -24,7 +24,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       var upgrade = new Upgrade(client)
 
-      test('detect classic firmware', function (t) {
+      test('must detect classic firmware', function (t) {
         t.plan(3)
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'no err')
@@ -33,7 +33,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('must set protocol', function (t) {
+      test('set protocol', function (t) {
         t.plan(1)
         client.setProtocol(cubelets.Protocol.Classic)
         t.pass('set protocol')
