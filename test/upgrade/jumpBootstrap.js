@@ -32,12 +32,13 @@ var client = cubelets.connect(config.device, function (err) {
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'no err')
           t.ok(needsUpgrade, 'needs upgrade')
-          t.equal(firmwareType, 2, 'has bootstrap firmware')
+          t.equal(client.getProtocol(), UpgradeProtocol, 'has bootstrap firmware')
         })
       })
 
       test('discovery mode', function (t) {
         t.plan(1)
+        client.setProtocol(UpgradeProtocol)
         var timer = setTimeout(function () {
           client.removeListener('event', waitForBlockEvent)
           t.fail('no block found events')
@@ -50,6 +51,15 @@ var client = cubelets.connect(config.device, function (err) {
           }
         }
         client.on('event', waitForBlockEvent)
+      })
+
+      test('jump to os4', function (t) {
+        t.plan(2)
+        client.setProtocol(UpgradeProtocol)
+        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
+          t.ifError(err)
+          t.equals(response.mode, 1)
+        })
       })
 
       test('jump to os3 and back to discovery', function (t) {
@@ -75,15 +85,6 @@ var client = cubelets.connect(config.device, function (err) {
             }
             client.on('event', waitForBlockEvent)
           }, 500)
-        })
-      })
-
-      test.skip('jump to os4', function (t) {
-        t.plan(2)
-        client.setProtocol(UpgradeProtocol)
-        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
-          t.ifError(err)
-          t.equals(response.mode, 1)
         })
       })
 
