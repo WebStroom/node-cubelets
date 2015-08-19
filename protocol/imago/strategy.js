@@ -78,7 +78,8 @@ function ImagoStrategy(protocol, client) {
     __(response.neighbors).each(function (blockId, faceIndex) {
       map.upsert({
         blockId: blockId,
-        hopCount: 1
+        hopCount: 1,
+        faceIndex: parseInt(faceIndex, 10)
       })
     })
     if (callback) {

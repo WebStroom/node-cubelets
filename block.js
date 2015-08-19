@@ -12,6 +12,7 @@ var Block = function (blockId, hopCount, blockType) {
   this._blockType = blockType || BlockTypes.UNKNOWN
   this._mcuType = MCUTypes.UNKNOWN
   this._neighbors = {}
+  this._faceIndex = -1
   this._value = 0
   this._valueOverridden = false
   this._hardwareVersion = new Version()
@@ -42,6 +43,12 @@ var Block = function (blockId, hopCount, blockType) {
   // face numbers as keys, and blockIds as values.
   this.getNeighbors = function () {
     return this._neighbors
+  }
+
+  // Returns the face index of the block, if known,
+  // that routes back to the host block.
+  this.getFaceIndex = function () {
+    return this._faceIndex
   }
 
   // Returns the 8-bit value of the block, either

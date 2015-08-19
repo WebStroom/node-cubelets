@@ -252,7 +252,7 @@ function Firmware(program, client) {
                 waitForFlash(timeout)
               ], callback)
               break
-            case Targets.PIC:
+            case MCUTypes.PIC.typeId:
               var encodedId = Encoder.encodeId(block.getBlockId())
               async.series([
                 send(new Buffer([

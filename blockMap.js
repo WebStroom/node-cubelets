@@ -86,6 +86,7 @@ function BlockMap() {
     var hopCount = info.hopCount
     var blockType = info.blockType
     var neighbors = info.neighbors
+    var faceIndex = info.faceIndex
 
     var block = getBlock(blockId)
     var updated = false
@@ -94,16 +95,21 @@ function BlockMap() {
       if (updateHopCount(block, hopCount)) {
         updated = true
       }
+      if (updateBlockType(block, blockType)) {
+        updated = true
+      }
       if (updateNeighbors(block, neighbors)) {
         updated = true
       }
-      if (updateBlockType(block, blockType)) {
+      if (updateFaceIndex(block, faceIndex)) {
         updated = true
       }
     } else {
       // Since block doesn't exist, add it to the block construction.
       block = new Block(blockId, hopCount, blockType)
       addBlock(blockId, block)
+      updateNeighbors(block, neighbors)
+      updateFaceIndex(block, faceIndex)
       self.emit('addBlock', block)
       updated = true
     }
@@ -141,7 +147,6 @@ function BlockMap() {
   }
 
   function updateHopCount(block, hopCount) {
-    var blockId = block.getBlockId()
     if (hopCount !== undefined && hopCount !== block._hopCount) {
       block._hopCount = hopCount
       return true
@@ -157,6 +162,15 @@ function BlockMap() {
       __(neighbors).each(function (neighborId, faceIndex) {
         addLink(blockId, neighborId)
       })
+      return true
+    } else {
+      return false
+    }
+  }
+
+  function updateFaceIndex(block, faceIndex) {
+    if (faceIndex !== undefined && faceIndex !== block._faceIndex) {
+      block._faceIndex = faceIndex
       return true
     } else {
       return false
