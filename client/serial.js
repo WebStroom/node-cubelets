@@ -55,6 +55,7 @@ var SerialConnection = function (device, opts) {
 
     function write(data, callback) {
       if (serialPort) {
+        console.log('<<', data)
         serialPort.write(data, callback)
       } else {
         callback(new Error('disconnected'))
@@ -102,6 +103,7 @@ var SerialConnection = function (device, opts) {
           isOpen = true
 
           serialPort.on('data', function (chunk) {
+            console.log('>>', chunk)
             stream.push(chunk)
           })
 

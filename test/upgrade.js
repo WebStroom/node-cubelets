@@ -26,15 +26,6 @@ var client = cubelets.connect(config.device, function (err) {
 
       var upgrade = new Upgrade(client)
 
-      test.skip('detect firmware', function (t) {
-        t.plan(3)
-        upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
-          t.ifError(err, 'no err')
-          t.ok(needsUpgrade, 'needs upgrade')
-          t.equal(firmwareType, 0, 'has classic firmware')
-        })
-      })
-
       test.skip('jump to OS4 mode', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)

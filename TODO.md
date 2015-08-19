@@ -6,10 +6,10 @@ high
 [ ] flash target updater and bootloader hex
 [ ] jump to imago bootstrap mode
 [ ] jump to classic bootstrap mode
-[ ] receive block found events
+[X] receive block found events
 [ ] wait for reconnect
 [ ] wait for disconnect
-[ ] detect bootstrap vs classic bluetooth
+[X] detect bootstrap vs classic bluetooth
 [X] flash bootstrap to bluetooth block
 [X] flash bluetooth block in classic protocol
 [X] detect incompatible avr block types in upgrade.js

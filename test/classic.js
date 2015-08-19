@@ -47,7 +47,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('flash bluetooth firmware', function (t) {
+      test('flash bluetooth firmware', function (t) {
         t.plan(2)
         var hex = fs.readFileSync('./hex/bluetooth.hex')
         var program = new Program(hex)

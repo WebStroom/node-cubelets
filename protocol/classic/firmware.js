@@ -396,8 +396,10 @@ function Firmware(program, client) {
                 ])),
                 waitForCode('@', timeout)
               ]),
-              wait(1000),
-              sendDisableAutomapCommand,
+              wait(1000)
+            ]).concat(capabilities['disableAutoMapUpdates'] ? [
+              sendDisableAutomapCommand
+            ]:[]).concat([
               parallelize([
                 sendCode('#'),
                 waitForCode('%', timeout)
