@@ -10,7 +10,7 @@ var cubelets = require('../index')
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var Upgrade = require('../upgrade')
-var InfoService = require('../service/info')
+var InfoService = require('../services/info')
 var __ = require('underscore')
 
 var device = {

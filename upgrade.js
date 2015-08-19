@@ -9,7 +9,7 @@ var BootstrapProtocol = require('./protocol/bootstrap/upgrade')
 var Block = require('./block')
 var BlockTypes = require('./blockTypes')
 var Program = require('./program')
-var InfoService = require('./service/info')
+var InfoService = require('./services/info')
 var __ = require('underscore')
 
 var FirmwareType = {

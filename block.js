@@ -1,5 +1,6 @@
 var BlockTypes = require('./blockTypes')
 var MCUTypes = require('./mcuTypes')
+var Version = require('./version')
 var __ = require('underscore')
 
 var Block = function (blockId, hopCount, blockType) {
@@ -13,6 +14,9 @@ var Block = function (blockId, hopCount, blockType) {
   this._neighbors = {}
   this._value = 0
   this._valueOverridden = false
+  this._hardwareVersion = new Version()
+  this._bootloaderVersion = new Version()
+  this._applicationVersion = new Version()
 
   // Returns the ID of the block.
   this.getBlockId = function () {
@@ -52,6 +56,21 @@ var Block = function (blockId, hopCount, blockType) {
   // the client, or false otherwise.
   this.isValueOverridden = function () {
     return this._valueOverridden
+  }
+
+  // Returns the hardware version of the block.
+  this.getHardwareVersion = function () {
+    return this._hardwareVersion
+  }
+
+  // Returns the bootloader version of the block.
+  this.getBootloaderVersion = function () {
+    return this._bootloaderVersion
+  }
+
+  // Returns the application version of the block.
+  this.getApplicationVersion = function () {
+    return this._applicationVersion
   }
 
   return this

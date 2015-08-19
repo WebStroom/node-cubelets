@@ -145,7 +145,7 @@ var Program = function (hex, opts) {
 
   this.hasDataAvailable = function() {
     return this.valid && position < this.data.length
-  };
+  }
 
   this.pipeData = function (numBytes) {
     if (!this.hasDataAvailable()) {
@@ -161,7 +161,7 @@ var Program = function (hex, opts) {
     }
     position += bytesToRead
     return result
-  };
+  }
 
   this.getPages = function() {
     var pages = []

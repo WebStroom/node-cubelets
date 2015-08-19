@@ -1,7 +1,7 @@
 {
   "blockTypes": {
     "UNKNOWN": {
-      "typeId": 0,
+      "typeId": null,
       "name": "unknown",
       "category": "none"
     },
@@ -98,19 +98,22 @@
   },
   "mcuTypes": {
     "UNKNOWN": {
-      "typeId": 0
+      "typeId": null,
+      "name": "unknown"
     },
     "AVR": {
-      "typeId": "avr"
+      "typeId": "avr",
+      "supportedOS": [ 3 ]
     },
     "PIC": {
-      "typeId": "pic"
+      "typeId": "pic",
+      "supportedOS": [ 3, 4 ]
     }
   },
   "urls": {
-    "appspot": "http://cubelets-programming.appspot.com",
+    "info": "http://localhost:3033/proxy",
     "compile": "http://compile.modrobotics.com",
-    "proxy": "http://localhost:3033/proxy"
+    "firmware": "http://cubelets-programming.appspot.com"
   },
   "chrome": {
     "appId": "fehdhddkknkaeimadppmacaoclnllcjm"

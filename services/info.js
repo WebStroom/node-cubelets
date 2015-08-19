@@ -2,20 +2,21 @@ var util = require('util')
 var events = require('events')
 var request = require('request')
 var config = require('../config.json')
+var Version = require('../version')
 var __ = require('underscore')
 
 var Info = function (data) {
-  this.blockTypeId = parseInt(data['type_id'])
+  this.blockTypeId = parseInt(data['type_id'], 10)
   this.mcuTypeId = data['mcu']
-  this.currentFirmwareVersion = data['current_firm_ver']
-  this.latestFirmwareVersion = data['latest_firm_ver']
+  this.currentFirmwareVersion = parseVersion(data['current_firm_ver'])
+  this.latestFirmwareVersion = parseVersion(data['latest_firm_ver'])
 }
 
-var InfoService = function () {
+function InfoService() {
   events.EventEmitter.call(this)
 
   var service = this
-  var baseUrl = config['urls']['proxy']
+  var baseUrl = config['urls']['info']
 
   function urlForBlocks(blocks) {
     return baseUrl + '/api/cubelet_info/?ids=' + __(blocks).map(function (block) {
@@ -29,8 +30,10 @@ var InfoService = function () {
         callback(null)
       }
     } else {
+      var url = urlForBlocks(blocks)
+      console.log(url)
       request.get({
-        url: urlForBlocks(blocks),
+        url: url,
         json: true
       }, function(err, res, body) {
         if (err) {
@@ -65,9 +68,13 @@ var InfoService = function () {
       })
     }
   }
+}
 
+function parseVersion(floatValue) {
+  var major = Math.floor(floatValue)
+  var minor = Math.floor(10 * (floatValue - major))
+  return new Version(major, minor)
 }
 
 util.inherits(InfoService, events.EventEmitter)
-
 module.exports = InfoService

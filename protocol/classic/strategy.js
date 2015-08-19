@@ -1,8 +1,10 @@
+var async = require('async')
 var util = require('util')
 var Strategy = require('../strategy')
 var Block = require('../../block')
 var BlockMap = require('../../blockMap')
 var BlockTypes = require('../../blockTypes')
+var __ = require('underscore')
 
 function ClassicStrategy(protocol, client) {
   Strategy.call(this, protocol, client)
