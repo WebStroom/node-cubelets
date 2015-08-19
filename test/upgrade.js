@@ -26,7 +26,7 @@ var client = cubelets.connect(config.device, function (err) {
         });
       });*/
 
-      test('jump to os4 mode', function (t) {
+      test('jump to OS4 mode', function (t) {
       	t.plan(2);
         client.setProtocol(UpgradeProtocol);
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
@@ -37,16 +37,41 @@ var client = cubelets.connect(config.device, function (err) {
       
       test('jump to discovery mode from OS4', function (t) {
       	t.plan(1);
+      	
+      	var timeout;
+      	
         client.setProtocol(ImagoProtocol);
         client.sendCommand(new ImagoProtocol.messages.ResetCommand());
         setTimeout(function(){
-        	t.pass("Sent reset command");
+        	var listener = function(e)
+        	{
+        		if ( e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+		  			clearTimeout(timeout);
+		  			client.removeListener('event', listener);
+		  			clearTimeout(timeout);
+		  			t.pass("Jumped to discovery from OS4");
+		  		}
+        	};
+        	
+        	//Listen for BlockFoundEvents
+	      	client.on('event', listener);		  		
+		  	
+		  	//Change to to Upgrade/Discovery Protocol
+        	client.setProtocol(UpgradeProtocol);
+        	
+        	//Timeout of we don't receive a BlockFoundEvent in specified time
+        	timeout = setTimeout(function()
+        	{
+        		//Detach from even emitter
+        		client.removeListener('event', listener);
+        		t.fail("Failed to jump to discovery from OS4");
+        	}, 1000);
         }, 500);
       });
       
-      //TODO: make sure we are getting discovery mode packets
       
-      test('jump to os3 mode', function (t) {
+      
+      test('jump to OS3 mode', function (t) {
       	t.plan(2);
         client.setProtocol(UpgradeProtocol);
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
@@ -54,17 +79,56 @@ var client = cubelets.connect(config.device, function (err) {
           t.equals(response.mode, 0);
         });
       });
-      
+            
       test('jump to discovery mode from OS3', function (t) {
       	t.plan(1);
+      	
+      	var timeout;
+      	
         client.setProtocol(ClassicProtocol);
         client.sendCommand(new ClassicProtocol.messages.ResetCommand());
         setTimeout(function(){
-        	t.pass("Sent reset command");
+        	var listener = function(e)
+        	{
+        		if ( e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+		  			clearTimeout(timeout);
+		  			client.removeListener('event', listener);
+		  			clearTimeout(timeout);
+		  			t.pass("Jumped to discovery from OS4");
+		  		}
+        	};
+        	
+        	//Listen for BlockFoundEvents
+	      	client.on('event', listener);		  		
+		  	
+		  	//Change to to Upgrade/Discovery Protocol
+        	client.setProtocol(UpgradeProtocol);
+        	
+        	//Timeout of we don't receive a BlockFoundEvent in specified time
+        	timeout = setTimeout(function()
+        	{
+        		//Detach from even emitter
+        		client.removeListener('event', listener);
+        		t.fail("Failed to jump to discovery from OS3");
+        	}, 1000);
         }, 500);
       });
-      
-      //TODO: make sure we are getting discovery mode packets      
+            
+      //Tests:      
+      //Make user confirm that dev OS3 block is attached      
+      //Detect OS3 Cubelet
+      //Jump to OS3
+      //Request map
+      //Make sure dev OS3 block shows up
+      //Flash pic bootstrap+bootloader
+      //Confirm flash success
+      //Send reset (OS3)
+      //Wait
+      //Make sure imago block shows up on same face
+      //Jump to imago
+      //Flash imago application
+      //Verify success
+      //Send reset (OS4)
 
       test('disconnect', function (t) {
         t.plan(1);
