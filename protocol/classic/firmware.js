@@ -1,11 +1,13 @@
 var events = require('events')
 var util = require('util')
 var async = require('async')
-var Block = require('../block')
-var BlockTypes = require('../blockTypes')
-var MCUTypes = require('../mcuTypes')
-var Version = require('../version')
+var Block = require('../../block')
+var BlockTypes = require('../../blockTypes')
+var Encoder = require('../../protocol/encoder')
+var MCUTypes = require('../../mcuTypes')
+var Version = require('../../version')
 var emptyFunction = function () {}
+var __ = require('underscore')
 
 var ValidTargetMCUTypes = [
   MCUTypes.AVR,
@@ -16,13 +18,9 @@ function Firmware(program, client) {
   events.EventEmitter.call(this)
 
   var self = this
-  var con = client.getConnection()
-  var parser = client.getParser()
+  var stream = client.getConnection()
 
-  var capabilities = {
-    'reset': block.getApplicationVersion().isGreaterThanOrEqual(new Version(3, 1, 0)),
-    'disableAutoMapUpdates': block.getBlockType() !== BlockTypes.BLUETOOTH
-  }
+  var parser = client.getParser()
 
   this.flashToBlock = function (block, callback) {
     callback = callback || emptyFunction
@@ -40,6 +38,11 @@ function Firmware(program, client) {
     if (!hasValidTargetMCUType(block)) {
       callback(new Error('Invalid target MCU type: ' + block.getMCUType().typeId))
       return
+    }
+
+    var capabilities = {
+      'reset': block.getApplicationVersion().isGreaterThanOrEqual(new Version(3,1,0)),
+      'disableAutoMapUpdates': false // block.getBlockType() === BlockTypes.BLUETOOTH
     }
 
     if (!program.valid) {
@@ -63,20 +66,20 @@ function Firmware(program, client) {
       return function (callback) {
         // Listen to raw data from parser
         parser.setRawMode(true)
-        parser.on('raw', listen)
+        parser.on('raw', waitForRaw)
 
         // Set a timeout for receiving the data
         var timer = setTimeout(function () {
-          parser.removeListener('raw', listen)
+          parser.removeListener('raw', waitForRaw)
           callback(new Error([
             "Timed out waiting for '" + code + "'.",
               errorMessageForCode(code)].join(' ')))
         }, timeout)
 
-        function listen(data) {
+        function waitForRaw(data) {
           // Check first byte of raw data
           if (data.readUInt8(0) === code.charCodeAt(0)) {
-            parser.removeListener('raw', listen)
+            parser.removeListener('raw', waitForRaw)
             clearTimeout(timer)
             callback(null)
           }
@@ -106,7 +109,7 @@ function Firmware(program, client) {
 
     // Drains the buffer
     function drain(callback) {
-      if (stream.drain) {
+      if (typeof stream.drain === 'function') {
         stream.drain(callback)
       } else {
         callback(null)
@@ -160,11 +163,11 @@ function Firmware(program, client) {
       flashTargetBlock()
     }
 
-    // Flashes the origin, or "host" block, e.g. bluetooth
-    function flashHostBlock() {
+    // Flashes a target block, attached to a host block.
+    function flashTargetBlock() {
       function sendReadyCommandAndWait(timeout) {
         return function (callback) {
-          parallel([
+          parallelize([
             sendCode('3'),
             waitForCode('4', timeout)
           ])(callback)
@@ -172,7 +175,7 @@ function Firmware(program, client) {
       }
       function sendProgramChecksumAndWait(timeout) {
         return function (callback) {
-          parallel([
+          parallelize([
             send(new Buffer([
               '8'.charCodeAt(0),
               program.checksum.xor,
@@ -191,10 +194,12 @@ function Firmware(program, client) {
             var p = 0
             function progress(p) {
               return function (callback) {
-                emitProgress('upload', {
+                emitProgressEvent({
+                  step: [1,2],
                   progress: p,
-                  total: program.data.length
-                }, [1,2])
+                  total: program.data.length,
+                  name: 'upload'
+                })
                 callback(null)
               }
             }
@@ -207,7 +212,7 @@ function Firmware(program, client) {
                   series.push(wait(interval))
                 }
                 else {
-                  series.push(parallel([
+                  series.push(parallelize([
                     send(data),
                     waitForCode('Y', timeout)
                   ]))
@@ -284,18 +289,23 @@ function Firmware(program, client) {
             switch (e.code()) {
               case messages.FlashProgressEvent.code:
                 clearTimeout(timer)
-                emitProgress('flash', {
+                emitProgressEvent({
+                  step: [2,2],
                   progress: 20 * response.progress,
-                  total: program.lineCount
-                }, [2,2])
+                  total: program.lineCount,
+                  action: 'flash'
+                })
                 timer = setTimeout(onExpire, timeout)
                 break
               case messages.FlashCompleteEvent.code:
                 parser.removeListener('message', waitForEvent)
                 clearTimeout(timer)
-                emitProgress('flash', {
-                  total: program.lineCount
-                }, [2,2])
+                emitProgressEvent({
+                  step: [2,2],
+                  progress: program.lineCount,
+                  total: program.lineCount,
+                  action: 'flash'
+                })
                 callback(null)
                 break
             }
@@ -306,7 +316,7 @@ function Firmware(program, client) {
         return function (callback) {
           async.series([
             wait(1000),
-            parallel([
+            parallelize([
               sendCode('1'),
               waitForCode('Z', timeout)
             ])
@@ -332,11 +342,12 @@ function Firmware(program, client) {
         sendResetCommandAndWait(30000)
       ]:[]), function (error) {
         parser.setRawMode(false)
-        emitResult(error)
+        handleResult(error)
       })
     }
 
-    function flashTargetBlock() {
+    // Flashes the origin, or "host" block, e.g. bluetooth
+    function flashHostBlock() {
       function sendReadyCommandAndWait(timeout) {
         return function (callback) {
           var encodedId = Encoder.encodeId(block.getBlockId())
@@ -359,23 +370,24 @@ function Firmware(program, client) {
             var p = 0
             function progress(p) {
               return function (callback) {
-                emitProgress('flash', {
+                emitProgressEvent({
                   progress: p,
-                  total: pages.length
+                  total: pages.length,
+                  action: 'flash'
                 })
                 callback(null)
               }
             }
             series.push(progress(0))
             pages.forEach(function (page) {
-              series.push(parallel([
+              series.push(parallelize([
                 send(page),
                 waitForCode('G', timeout)
               ]))
               series.push(progress(p += 1))
             })
             series = series.concat([
-              parallel([
+              parallelize([
                 send(new Buffer([
                   0xFE,
                   0xFD
@@ -384,7 +396,7 @@ function Firmware(program, client) {
               ]),
               wait(1000),
               sendDisableAutomapCommand,
-              parallel([
+              parallelize([
                 sendCode('#'),
                 waitForCode('%', timeout)
               ])
@@ -404,23 +416,12 @@ function Firmware(program, client) {
         sendResetCommandAndWait(30000)
       ]:[]), function (error) {
         parser.setRawMode(false)
-        emitResult(error)
+        handleResult(error)
       })
     }
 
-    function emitProgress(status, e, step) {
-      step = step || [1,1]
-      var s = step[0]
-      var n = step[1]
-      var x = e.progress
-      var t = e.total
-      var p = 0.0
-      x = (x === undefined) ? t : x
-      p = (t > 0) ? (x / t) : p
-      p = (1 / n) * p + ((s - 1) / n)
-      e.progress = x
-      e.percent = 100.0 * p
-      self.emit(status, e)
+    function emitProgressEvent(e) {
+      self.emit('progress', e)
     }
 
     function handleResult(error) {
@@ -437,7 +438,7 @@ function Firmware(program, client) {
 
 function parallelize(tasks) {
   return function (callback) {
-    async.parallel(tasks, callback);
+    async.parallel(tasks, callback)
   }
 }
 
@@ -446,7 +447,7 @@ function hasValidTargetMCUType(block) {
 }
 
 function hasValidHopCount(block) {
-  return Number.isNumber(block.getHopCount())
+  return typeof block.getHopCount() === 'number'
 }
 
 function isBlockHost(block) {

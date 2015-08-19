@@ -8,7 +8,6 @@ var ImagoProtocol = require('./protocol/imago')
 var BootstrapProtocol = require('./protocol/bootstrap/upgrade')
 var Block = require('./block')
 var BlockTypes = require('./blockTypes')
-var Program = require('./program')
 var InfoService = require('./services/info')
 var __ = require('underscore')
 

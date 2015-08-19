@@ -33,7 +33,7 @@
     "chrome-bluetooth-client": "~0.0.1",
     "chrome-runtime-stream": "~0.0.1",
     "net-browserify": "^0.1.6",
-    "serialport": "1.6.3"
+    "serialport": "1.7.4"
   },
   "browser": {
     "./client/index.js": "./client/browser.js",

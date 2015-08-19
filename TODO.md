@@ -1,26 +1,33 @@
 high
 ----
-- detect incompatible avr block types in upgrade.js
+[ ] flash new target
+[ ] jump back to discovery bootstrap mode
+[ ] flash target application hex
+[ ] flash target updater and bootloader hex
+[ ] jump to imago bootstrap mode
+[ ] jump to classic bootstrap mode
+[ ] receive block found events
+[ ] wait for reconnect
+[ ] wait for disconnect
+[ ] detect bootstrap vs classic bluetooth
+[ ] flash bootstrap to bluetooth block
+[X] flash bluetooth block in classic protocol
+[X] detect incompatible avr block types in upgrade.js
+[X] detect classic vs imago bluetooth
 
 medium
 ------
-X move block getters into base strategy
-- re-implement read block message handler with streams and back pressure
-X add remaining virtual methods to base strategy
-X command queue timer keeps running preventing clean shutdowns, so disable timer when no commands
+[ ] add back pressure to block message streams with backoffs when buffers are full
+[X] move block getters into base strategy
+[X] add remaining virtual methods to base strategy
+[X] command queue timer keeps running preventing clean shutdowns, so disable timer when no commands
 
 low
 ---
-X eliminate callbacks on command writes
-- fix bug in tcp network cubelet client (when multiple clients running?)
-- think about how to set strategy in the middle of an async call chain
-  - ensure calls are calling correct strategy in correct scope
-X upsert neighbors immediately
-X consistency between getBlocks, getAllBlocks
-- break out getting block types into base strategy
-  - fetchBlockConfigurations
-    - imago: block req
-    - classic: data store
-  - fetchBlockNeighbors
-    - imago: block req
-    - classic: n/a
+[ ] merge classic and imago program.js into single usable object
+[ ] fix bug in tcp network cubelet client (when multiple clients running?)
+[ ] think about how to set strategy in the middle of an async call chain keeping scope
+[ ] break out getting block types into classic strategy
+[X] upsert neighbors immediately
+[X] consistency between getBlocks, getAllBlocks
+[X] eliminate callbacks on command writes

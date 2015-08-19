@@ -8,8 +8,7 @@ var FlashCompleteEvent = function () {
 util.inherits(FlashCompleteEvent, Message)
 
 FlashCompleteEvent.prototype.decodeBody = function (body) {
-  this.error = new Error('not implemented')
-  return false
+  return true
 }
 
 module.exports = FlashCompleteEvent

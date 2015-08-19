@@ -26,7 +26,7 @@ function construction() {
   }
   return {
     "type": type,
-    "hopcount": [[
+    "hopCount": [[
       type.bluetooth
     ],[
       type.passive,
