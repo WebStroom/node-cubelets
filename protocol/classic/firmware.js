@@ -19,7 +19,6 @@ function Firmware(program, client) {
 
   var self = this
   var stream = client.getConnection()
-
   var parser = client.getParser()
 
   this.flashToBlock = function (block, callback) {
@@ -42,7 +41,7 @@ function Firmware(program, client) {
 
     var capabilities = {
       'reset': block.getApplicationVersion().isGreaterThanOrEqual(new Version(3,1,0)),
-      'disableAutoMapUpdates': false // block.getBlockType() === BlockTypes.BLUETOOTH
+      'disableAutoMapUpdates': block.getBlockType() === BlockTypes.BLUETOOTH
     }
 
     if (!program.valid) {
