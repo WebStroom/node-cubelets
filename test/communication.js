@@ -42,7 +42,7 @@ var client = cubelets.connect(config.device, function (err) {
         client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
           t.ifError(err, 'no response error')
           var passive = __(response.blocks).find(function (block) {
-            return block.blockId === config.construction.type.passive
+            return block.blockId === config.map.type.passive
           })
           t.ok(passive, 'has a passive')
         })
@@ -50,7 +50,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       test.skip('ping', function (t) {
         t.plan(5)
-        var blockId = config.construction.type.passive
+        var blockId = config.map.type.passive
         var payload = new Buffer([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         var pingRequest = new Protocol.Block.messages.PingRequest(blockId, payload)
         client.on('event', function listener(e) {
@@ -72,7 +72,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('block config', function (t) {
         t.plan(3)
-        var blockId = config.construction.type.passive
+        var blockId = config.map.type.passive
         var configRequest = new Protocol.Block.messages.GetConfigurationRequest(blockId)
         client.on('event', function listener(e) {
           if (e instanceof Protocol.messages.ReadBlockMessageEvent && e.blockMessage instanceof Protocol.Block.messages.GetConfigurationResponse) {
@@ -91,7 +91,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('block neighbors', function (t) {
         t.plan(3)
-        var blockId = config.construction.type.passive
+        var blockId = config.map.type.passive
         var getNeighborsRequest = new Protocol.Block.messages.GetNeighborsRequest(blockId)
         client.on('event', function listener(e) {
           if (e instanceof Protocol.messages.ReadBlockMessageEvent && e.blockMessage instanceof Protocol.Block.messages.GetNeighborsResponse) {

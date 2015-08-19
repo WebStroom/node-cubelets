@@ -8,7 +8,7 @@ var cubelets = require('../../index')
 var Protocol = cubelets.Protocol
 var Cubelet = cubelets.Cubelet
 var Version = cubelets.Version
-var Program = cubelets.Program
+var Program = require('../protocol/imago/program')
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
@@ -170,7 +170,7 @@ var client = cubelets.connect(config.device, function (err) {
       //     t.ifError(err, 'no blocks response err')
       //     t.ok(response, 'blocks response ok')
       //     var bargraph = __(response.blocks).find(function (block) {
-      //       return block.blockId === config.construction.type.bargraph
+      //       return block.blockId === config.map.type.bargraph
       //     })
       //     t.ok(bargraph, 'has a bargraph')
       //     t.end()
@@ -181,7 +181,7 @@ var client = cubelets.connect(config.device, function (err) {
       //   t.plan(9)
 
       //   // check the program is valid
-      //   var blockId = config.construction.type.bargraph
+      //   var blockId = config.map.type.bargraph
       //   var hex = fs.readFileSync(__dirname + '/hex/bargraph.hex')
       //   var program = new Program(hex)
       //   t.ok(program.valid, 'program valid')
@@ -231,7 +231,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no blocks response err')
           t.ok(response, 'blocks response ok')
           var drive = __(response.blocks).find(function (block) {
-            return block.blockId === config.construction.type.drive
+            return block.blockId === config.map.type.drive
           })
           t.ok(drive, 'has a drive')
           t.end()
@@ -242,7 +242,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(9)
 
         // check the program is valid
-        var blockId = config.construction.type.drive
+        var blockId = config.map.type.drive
         var hex = fs.readFileSync(__dirname + '/hex/drive.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')

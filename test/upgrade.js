@@ -1,10 +1,20 @@
 var test = require('tape')
+var fs = require('fs')
 var config = require('./config')
 var cubelets = require('../index')
 var Upgrade = require('../upgrade')
+var Firmware = require('../protocol/classic/firmware')
+var Program = require('../protocol/classic/program')
+var Block = require('../block')
+var BlockTypes = require('../blockTypes')
+var MCUTypes = require('../mcuTypes')
 var UpgradeProtocol = require('../protocol/bootstrap/upgrade')
 var ImagoProtocol = require('../protocol/imago')
 var ClassicProtocol = require('../protocol/classic')
+
+var blockIds = {
+  bluetooth: config.map.type.bluetooth
+}
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
@@ -25,7 +35,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('jump to OS4 mode', function (t) {
+      test.skip('jump to OS4 mode', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
@@ -34,7 +44,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('jump to discovery mode from OS4', function (t) {
+      test.skip('jump to discovery mode from OS4', function (t) {
         t.plan(1)
 
         var timeout
@@ -66,7 +76,7 @@ var client = cubelets.connect(config.device, function (err) {
         }, 500)
       })
 
-      test('jump to OS3 mode', function (t) {
+      test.skip('jump to OS3 mode', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
@@ -75,7 +85,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('jump to discovery mode from OS3', function (t) {
+      test.skip('jump to discovery mode from OS3', function (t) {
         t.plan(1)
 
         var timeout
@@ -108,7 +118,7 @@ var client = cubelets.connect(config.device, function (err) {
       })
 
       var os3_face
-      test('Detect OS3 (or prior) Cubelet', function (t) {
+      test.skip('Detect OS3 (or prior) Cubelet', function (t) {
         t.plan(1)
         var listener = function (e) {
           if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
@@ -124,7 +134,7 @@ var client = cubelets.connect(config.device, function (err) {
         client.on('event', listener)
       })
 
-      test('jump to OS3 mode', function (t) {
+      test.skip('jump to OS3 mode', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
@@ -134,7 +144,7 @@ var client = cubelets.connect(config.device, function (err) {
       })
 
       var os3_id
-      test('request OS3 map', function (t) {
+      test.skip('request OS3 map', function (t) {
         t.plan(2)
         client.setProtocol(ClassicProtocol)
         setTimeout(function () {
@@ -150,6 +160,23 @@ var client = cubelets.connect(config.device, function (err) {
             }
           })
         }, 500)
+      })
+
+      test('flash bluetooth bootstrap firmware', function (t) {
+        t.plan(2)
+        var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
+        var program = new Program(hex)
+        t.ok(program.valid, 'firmware valid')
+        var firmware = new Firmware(program, client)
+        var block = new Block(blockIds.bluetooth, 0, BlockTypes.BLUETOOTH)
+        block._mcuType = MCUTypes.AVR
+        client.setProtocol(ClassicProtocol)
+        firmware.flashToBlock(block, function (err) {
+          t.ifError(err, 'flash err')
+        })
+        firmware.on('progress', function (e) {
+          console.log('progress', '(' + e.progress + '/' + e.total + ')')
+        })
       })
 
       // Additional Tests:

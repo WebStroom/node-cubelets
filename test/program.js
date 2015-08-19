@@ -1,13 +1,12 @@
 var fs = require('fs')
 var test = require('tape')
 var cubelets = require('../index')
-var Program = cubelets.Program
+var ImagoProgram = require('../protocol/imago/program')
+var ClassicProgram = require('../protocol/imago/classic')
 
-test('program', function (t) {
-  t.plan(2)
-  var hex = fs.readFileSync(__dirname + '/flash/mini-bargraph.hex')
+test('imago program', function (t) {
+  t.plan(1)
+  var hex = fs.readFileSync('./hex/drive.hex')
   var program = new Program(hex)
-  fs.writeFileSync(__dirname + '/flash/mini-bargraph.bin', program.data)
-  t.pass('wrote')
   t.equal(program.data.length / 18, program.lineCount)
 })

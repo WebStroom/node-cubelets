@@ -4,8 +4,8 @@ var config = require('./config')
 var cubelets = require('../index')
 
 var blockIds = {
-  flashlight: config.construction.type.flashlight,
-  bargraph: config.construction.type.bargraph
+  flashlight: config.map.type.flashlight,
+  bargraph: config.map.type.bargraph
 }
 
 test('connect', function (t) {

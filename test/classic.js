@@ -47,7 +47,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('flash bluetooth firmware', function (t) {
+      test.skip('flash bluetooth firmware', function (t) {
         t.plan(2)
         var hex = fs.readFileSync('./hex/bluetooth.hex')
         var program = new Program(hex)
@@ -55,11 +55,11 @@ var client = cubelets.connect(config.device, function (err) {
         var firmware = new Firmware(program, client)
         var block = new Block(167058, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
-        firmware.on('progress', function (e) {
-          console.log('progress', e.progress + '/' + e.total)
-        })
         firmware.flashToBlock(block, function (err) {
           t.ifError(err, 'flash err')
+        })
+        firmware.on('progress', function (e) {
+          console.log('progress', '(' + e.progress + '/' + e.total + ')')
         })
       })
 

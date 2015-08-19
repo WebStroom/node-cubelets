@@ -10,7 +10,7 @@ high
 [ ] wait for reconnect
 [ ] wait for disconnect
 [ ] detect bootstrap vs classic bluetooth
-[ ] flash bootstrap to bluetooth block
+[X] flash bootstrap to bluetooth block
 [X] flash bluetooth block in classic protocol
 [X] detect incompatible avr block types in upgrade.js
 [X] detect classic vs imago bluetooth

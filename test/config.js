@@ -14,9 +14,9 @@ function device() {
   }
 }
 
-function construction() {
+function map() {
   var type = {
-    bluetooth: blockId(22, 21, 20),
+    bluetooth: 167058,
     passive: blockId(3, 2, 1),
     knob: blockId(6, 5, 4),
     distance: blockId(7, 5, 4),
@@ -40,5 +40,5 @@ function construction() {
 
 module.exports = {
   "device": device(),
-  "construction": construction()
+  "map": map()
 }

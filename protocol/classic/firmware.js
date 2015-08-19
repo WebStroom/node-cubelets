@@ -6,6 +6,7 @@ var BlockTypes = require('../../blockTypes')
 var Encoder = require('../../protocol/encoder')
 var MCUTypes = require('../../mcuTypes')
 var Version = require('../../version')
+var ClassicProtocol = require('../../protocol/classic')
 var emptyFunction = function () {}
 var __ = require('underscore')
 
@@ -16,6 +17,8 @@ var ValidTargetMCUTypes = [
 
 function Firmware(program, client) {
   events.EventEmitter.call(this)
+
+  client.setProtocol(ClassicProtocol)
 
   var self = this
   var stream = client.getConnection()
@@ -41,7 +44,7 @@ function Firmware(program, client) {
 
     var capabilities = {
       'reset': block.getApplicationVersion().isGreaterThanOrEqual(new Version(3,1,0)),
-      'disableAutoMapUpdates': block.getBlockType() === BlockTypes.BLUETOOTH
+      'disableAutoMapUpdates': false // block.getBlockType() === BlockTypes.BLUETOOTH
     }
 
     if (!program.valid) {
@@ -425,6 +428,7 @@ function Firmware(program, client) {
 
     function handleResult(error) {
       if (error) {
+        console.error(error)
         self.emit('error', error)
         callback(error)
       } else {
