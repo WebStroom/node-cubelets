@@ -9,6 +9,9 @@ var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
 var Upgrade = require('../../upgrade')
 
+// Note: block should start this test with 
+// classic firwmare running. It will upgrade the block
+// to the bootstrap firmware.
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
     t.plan(1)
