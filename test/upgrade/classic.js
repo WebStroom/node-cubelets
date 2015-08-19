@@ -9,6 +9,8 @@ var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
 var Upgrade = require('../../upgrade')
 
+var bluetoothBlockId = config.map.type.bluetooth
+
 // Note: block should start this test with 
 // classic firwmare running. It will upgrade the block
 // to the bootstrap firmware.
@@ -43,7 +45,7 @@ var client = cubelets.connect(config.device, function (err) {
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
         var firmware = new Firmware(program, client)
-        var block = new Block(167058, 0, BlockTypes.BLUETOOTH)
+        var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
         firmware.flashToBlock(block, function (err) {
           t.ifError(err, 'flash err')

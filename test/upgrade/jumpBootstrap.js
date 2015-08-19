@@ -19,10 +19,12 @@ var client = cubelets.connect(config.device, function (err) {
 
       // Note: If you need to jump into bootstrap from bootloader
       // then run this test instead of skipping it.
-      test.skip('force into bootstrap from bootloader', function (t) {
+      test('force into bootstrap from bootloader', function (t) {
         t.plan(1)
         client.getConnection().write(new Buffer(['L'.charCodeAt(0)]))
-        t.pass('force')
+        setTimeout(function () {
+          t.pass('force')
+        }, 1000)
       })
 
       test('detect bootstrap', function (t) {
