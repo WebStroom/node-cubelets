@@ -69,8 +69,6 @@ var client = cubelets.connect(config.device, function (err) {
         }, 500);
       });
       
-      
-      
       test('jump to OS3 mode', function (t) {
       	t.plan(2);
         client.setProtocol(UpgradeProtocol);
@@ -113,22 +111,71 @@ var client = cubelets.connect(config.device, function (err) {
         	}, 1000);
         }, 500);
       });
-            
-      //Tests:      
-      //Make user confirm that dev OS3 block is attached      
-      //Detect OS3 Cubelet
-      //Jump to OS3
-      //Request map
-      //Make sure dev OS3 block shows up
-      //Flash pic bootstrap+bootloader
-      //Confirm flash success
-      //Send reset (OS3)
-      //Wait
-      //Make sure imago block shows up on same face
-      //Jump to imago
-      //Flash imago application
-      //Verify success
-      //Send reset (OS4)
+      
+      var os3_face;
+      test('Detect OS3 (or prior) Cubelet', function (t) {
+      	t.plan(1);
+      	var listener = function(e)
+    	{
+    		if ( e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+	  			if(e.firmwareType == 0)
+	  			{//If non-imago Cubelet was discovered
+	  				os3_face = e.faceIndex;
+	  				client.removeListener('event', listener);
+	  				t.pass("Detected OS3 Cubelet on face: " + os3_face);
+	  			}
+	  		}
+    	};
+    	
+    	//Listen for BlockFoundEvents
+        client.on('event', listener);
+      });
+      
+      test('jump to OS3 mode', function (t) {
+      	t.plan(2);
+        client.setProtocol(UpgradeProtocol);
+        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
+          t.ifError(err);
+          t.equals(response.mode, 0);
+        });
+      });
+      
+      var os3_id;
+      test('request OS3 map', function (t) {
+      	t.plan(2);
+        client.setProtocol(ClassicProtocol);
+        setTimeout(function(){
+	        client.sendRequest(new ClassicProtocol.messages.GetNeighborBlocksRequest(), function (err, response) {
+	          t.ifError(err);
+	          
+	          var neighbor_key = "" + os3_face;
+	          if(neighbor_key in response.neighbors)
+	          {
+	          	os3_id = response.neighbors[neighbor_key];
+	          	t.pass("Found OS3 Cubelet w/ ID: "+ os3_id + " on face: "+ neighbor_key);
+	          }
+	          else
+	          {
+	          	t.fail("Did not find an OS3 neighbor.");
+	          }
+	        });
+        }, 500);
+      });      
+                  
+      //Additional Tests:
+      	//Failed to disconnect message
+      
+      //Flash tests missing:
+	      //Fetch type and version from datastore
+	      //Flash pic bootstrap+bootloader
+	      //Confirm flash success
+	      //Send reset (OS3)
+	      //Wait
+	      //Make sure imago block shows up on same face
+	      //Jump to imago
+	      //Flash imago application
+	      //Verify success
+	      //Send reset (OS4)
 
       test('disconnect', function (t) {
         t.plan(1);
