@@ -2,12 +2,13 @@ var test = require('tape')
 var fs = require('fs')
 var config = require('../config')
 var cubelets = require('../../index')
-var Flash = require('../../protocol/classic/flash')
-var Program = require('../../protocol/classic/program')
 var Block = require('../../block')
 var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
 var Upgrade = require('../../upgrade')
+var ClassicProtocol = require('../../protocol/classic')
+var Flash = ClassicProtocol.Flash
+var Program = ClassicProtocol.Program
 
 var bluetoothBlockId = config.map.type.bluetooth
 
@@ -33,9 +34,9 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('set protocol', function (t) {
+      test('set classic protocol', function (t) {
         t.plan(1)
-        client.setProtocol(cubelets.Protocol.Classic)
+        client.setProtocol(ClassicProtocol)
         t.pass('set protocol')
       })
 
@@ -44,10 +45,10 @@ var client = cubelets.connect(config.device, function (err) {
         var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
-        var flash = new Flash(program, client)
+        var flash = new Flash(client)
         var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
-        flash.toBlock(block, function (err) {
+        flash.programToBlock(program, block, function (err) {
           t.ifError(err, 'flash err')
         })
         flash.on('progress', function (e) {

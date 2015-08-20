@@ -2,14 +2,15 @@ var test = require('tape')
 var fs = require('fs')
 var config = require('./config')
 var cubelets = require('../index')
-var Flash = require('../protocol/classic/flash')
-var Program = require('../protocol/classic/program')
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var MCUTypes = require('../mcuTypes')
 var InfoService = require('../services/info')
 var FirmwareService = require('../services/firmware')
 var Upgrade = require('../upgrade')
+var ClassicProtocol = require('../protocol/classic')
+var Flash = ClassicProtocol.Flash
+var Program = ClassicProtocol.Program
 var __ = require('underscore')
 
 var client = cubelets.connect(config.device, function (err) {
@@ -22,11 +23,11 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('must set protocol', function (t) {
         t.plan(1)
-        client.setProtocol(cubelets.Protocol.Classic)
+        client.setProtocol(ClassicProtocol)
         t.pass('set protocol')
       })
 
-      test.skip('get neighbors', function (t) {
+      test('get neighbor blocks', function (t) {
         t.plan(5)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'no error')
@@ -37,7 +38,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('get all neighbors', function (t) {
+      test('get all blocks', function (t) {
         t.plan(4)
         client.fetchAllBlocks(function (err, allBlocks) {
           t.ifError(err, 'no error')
@@ -49,13 +50,14 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('flash bluetooth firmware', function (t) {
         t.plan(2)
+        var bluetoothBlockId = client.getOriginBlock().getBlockId()
         var hex = fs.readFileSync('./downgrade/hex/bluetooth.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
-        var flash = new Flash(program, client)
-        var block = new Block(167058, 0, BlockTypes.BLUETOOTH)
+        var flash = new Flash(client)
+        var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
-        flash.toBlock(block, function (err) {
+        flash.programToBlock(program, block, function (err) {
           t.ifError(err, 'flash err')
         })
         flash.on('progress', function (e) {

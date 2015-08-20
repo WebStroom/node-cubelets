@@ -5,11 +5,11 @@ var cubelets = require('../../index')
 var Block = require('../../block')
 var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
-var Upgrade = require('../../upgrade')
 var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
+var Upgrade = require('../../upgrade')
 var ImagoProtocol = require('../../protocol/imago')
-var ImagoProgram = require('../../protocol/imago/program')
-var ImagoFlash = require('../../protocol/imago/flash')
+var Flash = ImagoProtocol.Flash
+var Program = ImagoProtocol.Program
 
 var bluetoothBlockId = config.map.type.bluetooth
 
@@ -44,12 +44,12 @@ var client = cubelets.connect(config.device, function (err) {
       test('flash bluetooth imago firmware', function (t) {
         t.plan(2)
         var hex = fs.readFileSync('./upgrade/hex/bluetooth_application.hex')
-        var program = new ImagoProgram(hex)
+        var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
-        var flash = new ImagoFlash(program, client)
+        var flash = new Flash(client)
         var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
-        flash.toBlock(block, function (err) {
+        flash.programToBlock(program, block, function (err) {
           t.ifError(err, 'flash err')
         })
         flash.on('progress', function (e) {

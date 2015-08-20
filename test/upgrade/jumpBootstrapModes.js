@@ -2,10 +2,10 @@ var test = require('tape')
 var fs = require('fs')
 var config = require('../config')
 var cubelets = require('../../index')
-var Upgrade = require('../../upgrade')
 var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
 var ClassicProtocol = require('../../protocol/classic')
 var ImagoProtocol = require('../../protocol/imago')
+var Upgrade = require('../../upgrade')
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {

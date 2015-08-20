@@ -2,14 +2,16 @@ var test = require('tape')
 var fs = require('fs')
 var config = require('../config')
 var cubelets = require('../../index')
-var Upgrade = require('../../upgrade')
 var Block = require('../../block')
 var MCUTypes = require('../../mcuTypes')
 var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
-var ClassicProtocol = require('../../protocol/classic')
-var ClassicProgram = require('../../protocol/classic/program')
-var ClassicFlash = require('../../protocol/classic/flash')
+var Upgrade = require('../../upgrade')
 var ImagoProtocol = require('../../protocol/imago')
+var ImagoProgram = ImagoProtocol.Program
+var ImagoFlash = ImagoProtocol.Flash
+var ClassicProtocol = require('../../protocol/classic')
+var ClassicProgram = ClassicProtocol.Program
+var ClassicFlash = ClassicProtocol.Flash
 var InfoService = require('../../services/info')
 var __ = require('underscore')
 
@@ -101,8 +103,8 @@ var client = cubelets.connect(config.device, function (err) {
         var hex = fs.readFileSync('./upgrade/hex/drive_bootstrap.hex')
         var program = new ClassicProgram(hex)
         t.ok(program.valid, 'program is valid')
-        var flash = new ClassicFlash(program, client)
-        flash.toBlock(targetBlock, function (err) {
+        var flash = new ClassicFlash(client)
+        flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err)
         })
         flash.on('progress', function (e) {
@@ -163,20 +165,17 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('bootstrap os4 target', function (t) {
+      test('flash os4 application to target', function (t) {
         t.plan(2)
         var hex = fs.readFileSync('./upgrade/hex/drive_application.hex')
         var program = new ImagoProgram(hex)
         t.ok(program.valid, 'program is valid')
-        client.on('event', onProgress)
-        function onProgress(e) {
-          if (e instanceof ImagoProtocol.messages.FlashProgressEvent) {
-            console.log('progress', e.progress + '/?')
-          }
-        }
-        console.log('flashing program to block...')
-        client.flashProgramToBlock(program, bootstrappedTargetBlock, function (err) {
+        var flash = new ImagoFlash(client)
+        flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err)
+        })
+        flash.on('progress', function (e) {
+          console.log('progress', Math.floor(100 * e.progress / e.total) + '%')
         })
       })
 
