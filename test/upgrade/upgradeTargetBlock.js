@@ -3,6 +3,7 @@ var fs = require('fs')
 var config = require('../config')
 var cubelets = require('../../index')
 var Block = require('../../block')
+var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
 var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
 var Upgrade = require('../../upgrade')
@@ -109,7 +110,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err)
         })
         flash.on('progress', function (e) {
-          console.log('progress', Math.floor(100 * e.progress / e.total) + '%')
+          console.log(e.action, 'progress', Math.floor(100 * e.progress / e.total) + '%')
         })
       })
 
@@ -140,6 +141,14 @@ var client = cubelets.connect(config.device, function (err) {
         }
       })
 
+      test.skip('checkpoint', function (t) {
+        t.plan(1)
+        targetBlock = new Block(162259, 1, BlockTypes.MAXIMUM)
+        targetBlock._mcuType = MCUTypes.AVR
+        faceIndex = 2
+        t.pass('checkpoint')
+      })
+
       test('jump to os4', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
@@ -158,6 +167,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(3)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'req ok')
+          console.log('neighbor blocks', JSON.stringify(neighborBlocks))
           bootstrappedTargetBlock = __(neighborBlocks).find(function (block) {
             return targetBlock.getBlockId() === block.getBlockId()
           })
