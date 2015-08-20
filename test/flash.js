@@ -11,6 +11,11 @@ var BlockTypes = cubelets.BlockTypes
 var Version = cubelets.Version
 var Program = Protocol.Program
 
+var blockIds = {
+  bargraph: config.map.type.bargraph,
+  drive: config.map.type.drive
+}
+
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
     t.plan(1)
@@ -165,32 +170,31 @@ var client = cubelets.connect(config.device, function (err) {
         }
       })
 
-      test.skip('target block exists', function (t) {
+      test('target bargraph block exists', function (t) {
         t.plan(3)
         client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
           t.ifError(err, 'no blocks response err')
           t.ok(response, 'blocks response ok')
           var bargraph = __(response.blocks).find(function (block) {
-            return block.blockId === config.map.type.bargraph
+            return block.blockId === blockIds.bargraph
           })
           t.ok(bargraph, 'has a bargraph')
-          t.end()
         })
       })
 
-      test.skip('can flash a bargraph hex', function (t) {
+      test('can flash a bargraph hex', function (t) {
         t.plan(9)
 
         // check the program is valid
-        var blockId = config.map.type.bargraph
-        var hex = fs.readFileSync(__dirname + '/hex/bargraph.hex')
+        var blockId = blockIds.bargraph
+        var hex = fs.readFileSync('./upgrade/hex/applications/bargraph.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
 
         var slotIndex = 2
         var slotData = program.data
         var slotSize = Math.ceil(slotData.length / lineLength)
-        var blockTypeId = Cubelet.Types.BARGRAPH.typeId
+        var blockTypeId = BlockTypes.BARGRAPH.typeId
         var version = new Version(4, 5, 6)
         var isCustom = false
         var crc = 0xcc
@@ -201,6 +205,10 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no upload response err')
           t.ok(response, 'upload response ok')
           t.equal(response.result, 0, 'upload result success')
+          // send the data
+          client.sendData(program.data, function (err) {
+            console.log('send data callback', err)
+          })
         })
         // wait for an upload complete event
         client.on('event', function listener (e) {
@@ -211,11 +219,7 @@ var client = cubelets.connect(config.device, function (err) {
             testFlash()
           }
         })
-        // send the data
-        client.sendData(program.data, function (err) {
-          console.log('send data callback', err)
-        })
-
+        // then test flashing
         function testFlash() {
           var request = new Protocol.messages.FlashMemoryToBlockRequest(blockId, slotIndex)
           client.sendRequest(request, function (err, response) {
@@ -226,16 +230,15 @@ var client = cubelets.connect(config.device, function (err) {
         }
       })
 
-      test.skip('target block exists', function (t) {
+      test.skip('target drive block exists', function (t) {
         t.plan(3)
         client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
           t.ifError(err, 'no blocks response err')
           t.ok(response, 'blocks response ok')
           var drive = __(response.blocks).find(function (block) {
-            return block.blockId === config.map.type.drive
+            return block.blockId === driveBlockId
           })
           t.ok(drive, 'has a drive')
-          t.end()
         })
       })
 
@@ -243,7 +246,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(9)
 
         // check the program is valid
-        var blockId = config.map.type.drive
+        var blockId = driveBlockId
         var hex = fs.readFileSync(__dirname + '/hex/drive.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
@@ -251,7 +254,7 @@ var client = cubelets.connect(config.device, function (err) {
         var slotIndex = 5
         var slotData = program.data
         var slotSize = Math.ceil(slotData.length / lineLength)
-        var blockTypeId = Cubelet.Types.DRIVE.typeId
+        var blockTypeId = BlockTypes.DRIVE.typeId
         var version = new Version(4, 5, 6)
         var isCustom = false
         var crc = 0xcc
@@ -262,6 +265,10 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no upload response err')
           t.ok(response, 'upload response ok')
           t.equal(response.result, 0, 'upload result success')
+          // send the data
+          client.sendData(program.data, function (err) {
+            console.log('send data callback', err)
+          })
         })
         // wait for an upload complete event
         client.on('event', function listener (e) {
@@ -272,11 +279,7 @@ var client = cubelets.connect(config.device, function (err) {
             testFlash()
           }
         })
-        // send the data
-        client.sendData(program.data, function (err) {
-          console.log('send data callback', err)
-        })
-
+        // then test flashing
         function testFlash() {
           var request = new Protocol.messages.FlashMemoryToBlockRequest(blockId, slotIndex)
           client.sendRequest(request, function (err, response) {
