@@ -29,7 +29,7 @@ GetMemoryTableResponse.prototype.decodeBody = function (body) {
     if (mask & (1 << i)) {
       /* format: [ t, sz1, sz0, v2, v1, v0, c ] */
       slots[i] = {
-        blockType: body.readUInt8(p + 0),
+        blockTypeId: body.readUInt8(p + 0),
         slotSize: body.readUInt16BE(p + 1),
         version: Message.Decoder.decodeVersion(body.slice(p + 3, p + 6)),
         isCustom: body.readUInt8(p + 6) ? true : false

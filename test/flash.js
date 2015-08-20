@@ -56,11 +56,11 @@ var client = cubelets.connect(config.device, function (err) {
         lineData3
       ])
 
-      test.skip('write to slot 31 should fail', function (t) {
+      test('write to slot 31 should fail', function (t) {
         t.plan(3)
         var slotIndex = 31
         var slotSize = smallSlotData.length / 18
-        var blockTypeId = Cubelet.Types.PASSIVE.typeId
+        var blockTypeId = BlockTypes.PASSIVE.typeId
         var version = new Version(1, 2, 3)
         var isCustom = false
         var crc = 0xcc
@@ -73,11 +73,11 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('write to slot 30 should succeed', function (t) {
+      test('write to slot 30 should succeed', function (t) {
         t.plan(6)
         var slotIndex = 30
         var slotSize = smallSlotData.length / 18
-        var blockTypeId = Cubelet.Types.PASSIVE.typeId
+        var blockTypeId = BlockTypes.PASSIVE.typeId
         var version = new Version(1, 2, 3)
         var isCustom = false
         var crc = 0xcc
@@ -87,6 +87,10 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no response err')
           t.ok(response, 'response ok')
           t.equal(response.result, 0, 'result success')
+          // send the data
+          client.sendData(smallSlotData, function (err) {
+            t.ifError(err, 'no err')
+          })
         })
         // wait for an upload complete event
         client.on('event', function listener (e) {
@@ -96,17 +100,13 @@ var client = cubelets.connect(config.device, function (err) {
             t.pass('sent data')
           }
         })
-        // send the data
-        client.sendData(smallSlotData, function (err) {
-          t.ifError(err, 'no err')
-        })
       })
 
-      test.skip('writing too much data should fail', function (t) {
+      test('writing too much data should fail', function (t) {
         t.plan(3)
         var slotIndex = 30
         var slotSize = 911 // 16k =~ 910 lines
-        var blockTypeId = Cubelet.Types.PASSIVE.typeId
+        var blockTypeId = BlockTypes.PASSIVE.typeId
         var version = new Version(1, 2, 3)
         var isCustom = false
         var crc = 0xcc
@@ -119,7 +119,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('write to memory slot', function (t) {
+      test('write to memory slot', function (t) {
         t.plan(15)
         var slotIndex = 22
         var slotSize = Math.ceil(smallSlotData.length / lineLength)
@@ -133,6 +133,10 @@ var client = cubelets.connect(config.device, function (err) {
           t.ifError(err, 'no upload response err')
           t.ok(response, 'upload response ok')
           t.equal(response.result, 0, 'upload result success')
+          // send the data
+          client.sendData(smallSlotData, function (err) {
+            t.ifError(err, 'no data err')
+          })
         })
         // wait for an upload complete event
         client.on('event', function listener (e) {
@@ -142,10 +146,6 @@ var client = cubelets.connect(config.device, function (err) {
             t.equal(e.result, 0, 'event result success')
             testMemoryTable()
           }
-        })
-        // send the data
-        client.sendData(smallSlotData, function (err) {
-          t.ifError(err, 'no data err')
         })
         // then test the table again once upload is complete
         function testMemoryTable() {
