@@ -26,7 +26,17 @@ var client = cubelets.connect(config.device, function (err) {
 
       var upgrade = new Upgrade(client)
 
-      test.skip('detect bootstrap', function (t) {
+      test.skip('checkpoint', function (t) {
+        t.plan(1)
+        targetFaceIndex = 2
+        targetBlock = new Block(591879, 1, BlockTypes.PASSIVE)
+        targetBlock._mcuType = MCUTypes.PIC
+        targetBlock._faceIndex = targetFaceIndex
+        client.setProtocol(UpgradeProtocol)
+        t.pass('checkpoint')
+      })
+
+      test('detect bootstrap', function (t) {
         t.plan(3)
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'no err')
@@ -38,7 +48,7 @@ var client = cubelets.connect(config.device, function (err) {
       var ignoreBatteryFaceIndex = 4
       var targetFaceIndex = -1
 
-      test.skip('discover an os3 target', function (t) {
+      test('discover an os3 target', function (t) {
         t.plan(1)
         client.on('event', waitForBlockEvent)
         var timer = setTimeout(function () {
@@ -57,7 +67,7 @@ var client = cubelets.connect(config.device, function (err) {
         }
       })
 
-      test.skip('jump to os3', function (t) {
+      test('jump to os3', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
@@ -71,7 +81,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       var targetBlock = null
 
-      test.skip('find os3 blocks', function (t) {
+      test('find os3 blocks', function (t) {
         t.plan(3)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'req ok')
@@ -83,7 +93,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('look up block info', function (t) {
+      test('look up block info', function (t) {
         t.plan(5)
         var info = new InfoService()
         info.fetchBlockInfo([targetBlock], function (err, infos) {
@@ -99,13 +109,15 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('bootstrap os3 target', function (t) {
+      test('bootstrap os3 target', function (t) {
         t.plan(2)
         var blockType = targetBlock.getBlockType()
         var hex = fs.readFileSync('./upgrade/hex/pic_bootstrap/' + blockType.name + '_bootstrap.hex')
         var program = new ClassicProgram(hex)
         t.ok(program.valid, 'program is valid')
-        var flash = new ClassicFlash(client)
+        var flash = new ClassicFlash(client, {
+          skipSafeCheck: true
+        })
         flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err)
         })
@@ -114,23 +126,13 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('jump to discovery', function (t) {
+      test('jump to discovery', function (t) {
         t.plan(1)
         client.sendCommand(new ClassicProtocol.messages.ResetCommand())
         setTimeout(function () {
           client.setProtocol(UpgradeProtocol)
           t.pass('upgrade mode')
         }, 500)
-      })
-
-      test('checkpoint', function (t) {
-        t.plan(1)
-        targetFaceIndex = 2
-        targetBlock = new Block(591879, 1, BlockTypes.PASSIVE)
-        targetBlock._mcuType = MCUTypes.PIC
-        targetBlock._faceIndex = targetFaceIndex
-        client.setProtocol(UpgradeProtocol)
-        t.pass('checkpoint')
       })
 
       test('discover an os4 target', function (t) {
@@ -183,7 +185,9 @@ var client = cubelets.connect(config.device, function (err) {
         var hex = fs.readFileSync('./upgrade/hex/applications/' + blockType.name + '.hex')
         var program = new ImagoProgram(hex)
         t.ok(program.valid, 'program is valid')
-        var flash = new ImagoFlash(client)
+        var flash = new ImagoFlash(client, {
+          skipSafeCheck: true
+        })
         flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err)
         })
