@@ -30,7 +30,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.equal(firmwareType, 2, 'has upgrade firmware')
           client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
             t.ifError(err, 'set mode ok')
-            t.equal(response.firmwareType, 0, 'jumped to os3')
+            t.equal(response.mode, 0, 'jumped to os3')
           })
         })
       })
@@ -41,7 +41,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.pass('set protocol')
       })
 
-      test('flash bluetooth classic firmware', function (t) {
+      skip('flash bluetooth classic firmware', function (t) {
         t.plan(2)
         var hex = fs.readFileSync('./downgrade/hex/bluetooth.hex')
         var program = new Program(hex)

@@ -30,7 +30,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.equal(firmwareType, 2, 'has upgrade firmware')
           client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
             t.ifError(err, 'set mode ok')
-            t.equal(response.firmwareType, 1, 'jumped to os4')
+            t.equal(response.mode, 1, 'jumped to os4')
           })
         })
       })

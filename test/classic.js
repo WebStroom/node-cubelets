@@ -13,6 +13,8 @@ var Flash = ClassicProtocol.Flash
 var Program = ClassicProtocol.Program
 var __ = require('underscore')
 
+var bluetoothBlockId = config.map.type.bluetooth
+
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
     t.plan(1)
@@ -27,7 +29,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.pass('set protocol')
       })
 
-      test('get neighbor blocks', function (t) {
+      test.skip('get neighbor blocks', function (t) {
         t.plan(5)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'no error')
@@ -38,7 +40,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('get all blocks', function (t) {
+      test.skip('get all blocks', function (t) {
         t.plan(4)
         client.fetchAllBlocks(function (err, allBlocks) {
           t.ifError(err, 'no error')
@@ -50,7 +52,6 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('flash bluetooth firmware', function (t) {
         t.plan(2)
-        var bluetoothBlockId = client.getOriginBlock().getBlockId()
         var hex = fs.readFileSync('./downgrade/hex/bluetooth.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
