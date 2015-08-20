@@ -290,7 +290,7 @@ function Flash(protocol, client) {
                 clearTimeout(timer)
                 emitProgressEvent({
                   step: [2,2],
-                  progress: 20 * response.progress,
+                  progress: 20 * e.progress,
                   total: program.lineCount,
                   action: 'flash'
                 })

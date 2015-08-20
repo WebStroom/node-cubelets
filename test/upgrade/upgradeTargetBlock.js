@@ -100,7 +100,8 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('bootstrap os3 target', function (t) {
         t.plan(2)
-        var hex = fs.readFileSync('./upgrade/hex/drive_bootstrap.hex')
+        var blockType = targetBlock.getBlockType()
+        var hex = fs.readFileSync('./upgrade/hex/pic_bootstrap/' + blockType.name + '_bootstrap.hex')
         var program = new ClassicProgram(hex)
         t.ok(program.valid, 'program is valid')
         var flash = new ClassicFlash(client)
@@ -154,7 +155,7 @@ var client = cubelets.connect(config.device, function (err) {
       var bootstrappedTargetBlock = null
 
       test('find os4 target block', function (t) {
-        t.plan(2)
+        t.plan(3)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'req ok')
           bootstrappedTargetBlock = __(neighborBlocks).find(function (block) {
@@ -167,16 +168,26 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('flash os4 application to target', function (t) {
         t.plan(2)
-        var hex = fs.readFileSync('./upgrade/hex/drive_application.hex')
+        var blockType = targetBlock.getBlockType()
+        var hex = fs.readFileSync('./upgrade/hex/applications/' + blockType.name + '.hex')
         var program = new ImagoProgram(hex)
         t.ok(program.valid, 'program is valid')
         var flash = new ImagoFlash(client)
-        flash.programToBlock(program, targetBlock, function (err) {
+        flash.programToBlock(program, bootstrappedTargetBlock, function (err) {
           t.ifError(err)
         })
         flash.on('progress', function (e) {
           console.log('progress', Math.floor(100 * e.progress / e.total) + '%')
         })
+      })
+
+      test('jump to discovery', function (t) {
+        t.plan(1)
+        client.sendCommand(new ImagoProtocol.messages.ResetCommand())
+        setTimeout(function () {
+          client.setProtocol(UpgradeProtocol)
+          t.pass('upgrade mode')
+        }, 500)
       })
 
       test('disconnect', function (t) {
