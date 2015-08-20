@@ -12,12 +12,13 @@ var firmwareService = new FirmwareService()
 
 test.skip('download bluetooth firmware', function (t) {
   t.plan(3)
+  var version = new Version(3, 3)
   var block = new Block(167058, 0, BlockTypes.BLUETOOTH)
   block._mcuType = MCUTypes.AVR
-  firmwareService.downloadVersion(block, new Version(3, 3), function (err, hex) {
+  firmwareService.downloadVersion(block, version, function (err, hex) {
     t.ifError(err)
     t.ok(hex)
-    fs.writeFile('./hex/bluetooth.hex', hex, t.ifError)
+    fs.writeFile('./.tmp/hex/' + version.toString() + '/bluetooth.hex', hex, t.ifError)
   })
 })
 
@@ -29,7 +30,7 @@ function testDownloadFirmware(BlockType, version) {
     firmwareService.downloadVersion(block, version, function (err, hex) {
       t.ifError(err)
       t.ok(hex)
-      fs.writeFile('./hex/' + BlockType.name + '.hex', hex, t.ifError)
+      fs.writeFile('./.tmp/hex/' + version.toString() + '/' + BlockType.name + '.hex', hex, t.ifError)
     })
   })
 }
@@ -57,7 +58,7 @@ function testDownloadLatestFirmware(blockId) {
         firmwareService.downloadVersion(block, version, function (err, hex) {
           t.ifError(err)
           t.ok(hex)
-          fs.writeFile('./hex/' + block.getBlockType().name + '.hex', hex, t.ifError)
+          fs.writeFile('./.tmp/hex/latest/' + block.getBlockType().name + '.hex', hex, t.ifError)
         })
       })
 

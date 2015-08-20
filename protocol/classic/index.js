@@ -2,6 +2,8 @@ var Protocol = require('../../protocol')
 var Message = require('./message')
 var Parser = require('../parser')
 var Strategy = require('./strategy')
+var Program = require('./program')
+var Flash = require('./flash')
 var xtend = require('xtend/mutable')
 
 var messages = {
@@ -63,7 +65,9 @@ ClassicProtocol.messages = messages
 xtend(ClassicProtocol, {
   Message: Message,
   Parser: Parser.bind(null, ClassicProtocol),
-  Strategy: Strategy.bind(null, ClassicProtocol)
+  Strategy: Strategy.bind(null, ClassicProtocol),
+  Flash: Flash.bind(null, ClassicProtocol),
+  Program: Program
 })
 
 module.exports = ClassicProtocol

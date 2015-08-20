@@ -3,6 +3,8 @@ var BlockProtocol = require('./block')
 var Message = require('./message')
 var Parser = require('../parser')
 var Strategy = require('./strategy')
+var Program = require('./program')
+var Flash = require('./flash')
 var xtend = require('xtend/mutable')
 
 var messages = {
@@ -113,7 +115,9 @@ xtend(ImagoProtocol, {
   Message: Message,
   Block: BlockProtocol,
   Parser: Parser.bind(null, ImagoProtocol),
-  Strategy: Strategy.bind(null, ImagoProtocol)
+  Strategy: Strategy.bind(null, ImagoProtocol),
+  Flash: Flash.bind(null, ImagoProtocol),
+  Program: Program
 })
 
 module.exports = ImagoProtocol

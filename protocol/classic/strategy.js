@@ -134,10 +134,6 @@ function ClassicStrategy(protocol, client) {
       callback(null)
     }
   }
-
-  this.flashProgramToBlock = function (program, block, callback) {
-    throw new Error('todo')
-  }
 }
 
 util.inherits(ClassicStrategy, Strategy)

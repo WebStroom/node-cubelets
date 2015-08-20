@@ -3,10 +3,8 @@ var util = require('util')
 var async = require('async')
 var Block = require('../../block')
 var BlockTypes = require('../../blockTypes')
-var Encoder = require('../../protocol/encoder')
 var MCUTypes = require('../../mcuTypes')
 var Version = require('../../version')
-var ClassicProtocol = require('../../protocol/classic')
 var emptyFunction = function () {}
 var __ = require('underscore')
 
@@ -15,16 +13,16 @@ var ValidTargetMCUTypes = [
   MCUTypes.PIC
 ]
 
-function Firmware(program, client) {
+function Flash(protocol, client) {
   events.EventEmitter.call(this)
 
-  client.setProtocol(ClassicProtocol)
-
   var self = this
+  var messages = protocol.messages
   var stream = client.getConnection()
   var parser = client.getParser()
+  var Encoder = protocol.Message.Encoder
 
-  this.flashToBlock = function (block, callback) {
+  this.programToBlock = function (program, block, callback) {
     callback = callback || emptyFunction
 
     if (!block) {
@@ -200,7 +198,7 @@ function Firmware(program, client) {
                   step: [1,2],
                   progress: p,
                   total: program.data.length,
-                  name: 'upload'
+                  action: 'upload'
                 })
                 callback(null)
               }
@@ -287,7 +285,6 @@ function Firmware(program, client) {
           var timer = setTimeout(onExpire, timeout)
 
           function waitForEvent(e) {
-            var messages = client.getProtocol().messages
             switch (e.code()) {
               case messages.FlashProgressEvent.code:
                 clearTimeout(timer)
@@ -459,6 +456,6 @@ function isBlockHost(block) {
   return block.getHopCount() === 0
 }
 
-util.inherits(Firmware, events.EventEmitter)
+util.inherits(Flash, events.EventEmitter)
 
-module.exports = Firmware
+module.exports = Flash

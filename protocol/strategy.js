@@ -122,16 +122,8 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.uploadProgramToMemory = function (program, slot, callback) {
-    throw new Error('not implemented')
-  }
-
-  this.flashMemoryToBlock = function (blockId, slotIndex, callback) {
-    throw new Error('not implemented')
-  }
-
-  this.flashProgramToBlock = function (program, block, callback) {
-    throw new Error('not implemented')
+  this.flash = function (program) {
+    return new protocol.Flash(client, program)
   }
 }
 

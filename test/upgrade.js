@@ -3,14 +3,14 @@ var fs = require('fs')
 var config = require('./config')
 var cubelets = require('../index')
 var Upgrade = require('../upgrade')
-var Firmware = require('../protocol/classic/firmware')
-var Program = require('../protocol/classic/program')
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var MCUTypes = require('../mcuTypes')
 var UpgradeProtocol = require('../protocol/bootstrap/upgrade')
 var ImagoProtocol = require('../protocol/imago')
 var ClassicProtocol = require('../protocol/classic')
+var Flash = require('../protocol/classic/flash')
+var Program = require('../protocol/classic/program')
 
 var blockIds = {
   bluetooth: config.map.type.bluetooth
@@ -158,14 +158,14 @@ var client = cubelets.connect(config.device, function (err) {
         var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
-        var firmware = new Firmware(program, client)
+        var flash = new Flash(program, client)
         var block = new Block(blockIds.bluetooth, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
         client.setProtocol(ClassicProtocol)
-        firmware.flashToBlock(block, function (err) {
+        flash.toBlock(block, function (err) {
           t.ifError(err, 'flash err')
         })
-        firmware.on('progress', function (e) {
+        flash.on('progress', function (e) {
           console.log('progress', '(' + e.progress + '/' + e.total + ')')
         })
       })
@@ -174,16 +174,16 @@ var client = cubelets.connect(config.device, function (err) {
       // Failed to disconnect message
 
       // Flash tests missing:
-      // Fetch type and version from datastore
-      // Flash pic bootstrap+bootloader
-      // Confirm flash success
-      // Send reset (OS3)
-      // Wait
-      // Make sure imago block shows up on same face
-      // Jump to imago
-      // Flash imago application
-      // Verify success
-      // Send reset (OS4)
+      // [x] Fetch type and version from datastore
+      // [x] Flash pic bootstrap+bootloader
+      // [x] Confirm flash success
+      // [x] Send reset (OS3)
+      // [x] Wait
+      // [x] Make sure imago block shows up on same face
+      // [ ] Jump to imago
+      // [ ] Flash imago application
+      // [ ] Verify success
+      // [ ] Send reset (OS4)
 
       test('disconnect', function (t) {
         t.plan(1)

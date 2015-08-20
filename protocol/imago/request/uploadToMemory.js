@@ -32,7 +32,7 @@ UploadToMemoryRequest.prototype.decodeBody = function (body) {
 
   this.slotIndex = body.readUInt8(0)
   this.slotSize = body.readUInt16BE(1)
-  this.blockType = body.readUInt8(3)
+  this.blockTypeId = body.readUInt8(3)
   this.version = Message.Decoder.decodeVersion(body.slice(body.slice(4, 7)))
   this.isCustom = body.readUInt8(7)
   this.crc = body.readUInt8(8)

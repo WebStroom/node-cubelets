@@ -1,6 +1,7 @@
 // Reads in a Buffer with Intel HEX data format
-var ImagoProgram = function (hex, opts) {
+var Program = function (hex, opts) {
   this.valid = false
+  this.checksum = { sum: 0, xor: 0 }
 
   var program = this
   opts = opts || {}
@@ -10,6 +11,11 @@ var ImagoProgram = function (hex, opts) {
   var formatAddress = opts.formatAddress || true
   var formatRecordType = opts.formatRecordType
   var formatData = opts.formatData || true
+  var formatEOF = opts.formatEOF
+  var formatExtendedSegmentAddress = opts.formatExtendedSegmentAddress
+  var formatStartSegmentAddress = opts.formatStartSegmentAddress
+  var formatStartLinearAddress = opts.formatStartLinearAddress
+  var formatChecksum = opts.formatChecksum
   var formatLineBreak = opts.formatLineBreak
 
   var useLittleEndian = opts.useLittleEndian || false
@@ -22,12 +28,23 @@ var ImagoProgram = function (hex, opts) {
     // Split on CR or CR+NL
     var lines = hex.toString('ascii').split(/\r?\n/)
 
+    // Set a line count
+    program.lineCount = 0
+
+    // Initialize program byte count
+    program.byteCount = 0
+
+    // Initialize program data byte count
+    program.dataByteCount = 0
+
     // Generously assume program is valid...
     program.valid = true
 
     // Reads a byte in the result, and updates the checksum
     function putByte(value) {
       result.push(value)
+      program.checksum.xor ^= value
+      program.checksum.sum += value
     }
 
     lines.forEach(function(line) {
@@ -67,6 +84,7 @@ var ImagoProgram = function (hex, opts) {
       if (useLineByteCount && byteCount !== useLineByteCount) {
         return
       }
+      program.byteCount += byteCount
       if (formatByteCount) {
         putByte(byteCount)
       }
@@ -79,9 +97,6 @@ var ImagoProgram = function (hex, opts) {
       }
 
       var recordType = readUInt8(3)
-      if (formatRecordType) {
-        putByte(recordType)
-      }
       switch (recordType) {
         // data record
         case 0x00:
@@ -92,6 +107,7 @@ var ImagoProgram = function (hex, opts) {
               console.log('program invalid: could not parse byte', hex)
               return
             }
+            program.dataByteCount += 1
             if (formatData) {
               putByte(dataByte)
             }
@@ -112,9 +128,11 @@ var ImagoProgram = function (hex, opts) {
         putByte(0x0D)
         putByte(0x0A)
       }
+
+      program.lineCount += 1
     })
     return new Buffer(result)
   })()
 }
 
-module.exports = ImagoProgram
+module.exports = Program

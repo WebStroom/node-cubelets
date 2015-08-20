@@ -67,10 +67,6 @@ function Factory(Scanner, Connection) {
       }
     }
 
-    this.getProtocol = function () {
-      return protocol
-    }
-
     function setParser(newParser) {
       if (parser) {
         con.removeListener('data', parser.parse)
@@ -88,13 +84,21 @@ function Factory(Scanner, Connection) {
       con.on('data', parser.parse)
     }
 
+    function setStrategy(newStrategy) {
+      strategy = newStrategy
+      xtend(client, strategy)
+    }
+
+    this.getProtocol = function () {
+      return protocol
+    }
+
     this.getParser = function () {
       return parser
     }
 
-    function setStrategy(newStrategy) {
-      strategy = newStrategy
-      xtend(client, strategy)
+    this.getStrategy = function () {
+      return strategy
     }
 
     this.sendData = function (data, callback) {

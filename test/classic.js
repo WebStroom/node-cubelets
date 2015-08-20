@@ -2,7 +2,7 @@ var test = require('tape')
 var fs = require('fs')
 var config = require('./config')
 var cubelets = require('../index')
-var Firmware = require('../protocol/classic/firmware')
+var Flash = require('../protocol/classic/flash')
 var Program = require('../protocol/classic/program')
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
@@ -49,16 +49,16 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('flash bluetooth firmware', function (t) {
         t.plan(2)
-        var hex = fs.readFileSync('./hex/bluetooth.hex')
+        var hex = fs.readFileSync('./downgrade/hex/bluetooth.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
-        var firmware = new Firmware(program, client)
+        var flash = new Flash(program, client)
         var block = new Block(167058, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
-        firmware.flashToBlock(block, function (err) {
+        flash.toBlock(block, function (err) {
           t.ifError(err, 'flash err')
         })
-        firmware.on('progress', function (e) {
+        flash.on('progress', function (e) {
           console.log('progress', '(' + e.progress + '/' + e.total + ')')
         })
       })
