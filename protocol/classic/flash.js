@@ -330,14 +330,14 @@ function Flash(protocol, client, opts) {
         sendProgramChecksumAndWait(10000),
         sendProgramDataAndWait(10000),
         wait(2000),
-        sendFlashCommandAndWait(10000),
-        wait(1000)
+        sendFlashCommandAndWait(10000)
       ]).concat(opts.skipSafeCheck ? []:[
-        sendSafeCheckAndWait(10000),
-        wait(1000)
-      ]).concat(capabilities['reset'] ? [
+        wait(1000),
+        sendSafeCheckAndWait(10000)
+      ].concat(capabilities['reset'] ? [
+        wait(1000),
         sendResetCommandAndWait(10000)
-      ]:[]), function (error) {
+      ]:[])), function (error) {
         parser.setRawMode(false)
         handleResult(error)
       })
@@ -383,37 +383,37 @@ function Flash(protocol, client, opts) {
               ]))
               series.push(progress(p += 1))
             })
-            series = series.concat([
-              parallelize([
-                send(new Buffer([
-                  0xFE,
-                  0xFD
-                ])),
-                waitForCode('@', timeout)
-              ]),
-              wait(1000)
-            ]).concat(opts.disableAutoMapUpdates ? [
-              sendDisableAutoMapUpdatesCommand
-            ]:[]).concat(opts.skipSafeCheck ? []:[
-              parallelize([
-                sendCode('#'),
-                waitForCode('%', timeout)
-              ])
-            ])
+            series.push(parallelize([
+              send(new Buffer([
+                0xFE,
+                0xFD
+              ])),
+              waitForCode('@', timeout)
+            ]))
             return series
           })(), callback)
         }
+      }
+      function sendSafeCheckAndWait(timeout) {
+        return parallelize([
+          sendCode('#'),
+          waitForCode('%', timeout)
+        ])
       }
       async.series([
         drain
       ].concat(opts.disableAutoMapUpdates ? [
         sendDisableAutoMapUpdatesCommand,
       ]:[]).concat([        
-        sendReadyCommandAndWait(30000),
-        sendProgramPagesAndWait(30000)
-      ]).concat(capabilities['reset'] ? [
-        sendResetCommandAndWait(30000)
-      ]:[]), function (error) {
+        sendReadyCommandAndWait(10000),
+        sendProgramPagesAndWait(10000)
+      ]).concat(opts.skipSafeCheck ? []:[
+        wait(1000),
+        sendSafeCheckAndWait(10000)
+      ].concat(capabilities['reset'] ? [
+        wait(1000),
+        sendResetCommandAndWait(10000)
+      ]:[])), function (error) {
         parser.setRawMode(false)
         handleResult(error)
       })
