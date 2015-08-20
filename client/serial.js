@@ -4,7 +4,7 @@ var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
 
-var debug = false
+var debug = true
 
 var SerialScanner = function () {
   Scanner.call(this)

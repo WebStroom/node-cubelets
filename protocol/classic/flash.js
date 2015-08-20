@@ -13,14 +13,15 @@ var ValidTargetMCUTypes = [
   MCUTypes.PIC
 ]
 
-function Flash(protocol, client) {
+function Flash(protocol, client, opts) {
   events.EventEmitter.call(this)
 
   var self = this
   var messages = protocol.messages
+  var Encoder = protocol.Message.Encoder
   var stream = client.getConnection()
   var parser = client.getParser()
-  var Encoder = protocol.Message.Encoder
+  opts = opts || {}
 
   this.programToBlock = function (program, block, callback) {
     callback = callback || emptyFunction
@@ -41,8 +42,7 @@ function Flash(protocol, client) {
     }
 
     var capabilities = {
-      'reset': block.getApplicationVersion().isGreaterThanOrEqual(new Version(3,1,0)),
-      'disableAutoMapUpdates': false // block.getBlockType() === BlockTypes.BLUETOOTH
+      'reset': block.getApplicationVersion().isGreaterThanOrEqual(new Version(3,1,0))
     }
 
     if (!program.valid) {
@@ -148,7 +148,7 @@ function Flash(protocol, client) {
       }
     }
 
-    function sendDisableAutomapCommand(callback) {
+    function sendDisableAutoMapUpdatesCommand(callback) {
       sendCode('5')(callback)
     }
 
@@ -309,36 +309,34 @@ function Flash(protocol, client) {
                 break
             }
           }
-        };
-      }
-      function waitForSafeCheck(timeout) {
-        return function (callback) {
-          async.series([
-            wait(1000),
-            parallelize([
-              sendCode('1'),
-              waitForCode('Z', timeout)
-            ])
-          ], callback)
         }
+      }
+      function sendSafeCheckAndWait(timeout) {
+        return parallelize([
+          sendCode('1'),
+          waitForCode('Z', timeout)
+        ])
       }
       async.series([
         drain
       ].concat(capabilities['reset'] ? [
-        sendResetCommandAndWait(30000),
+        sendResetCommandAndWait(10000),
         wait(1000),
         drain
+      ]:[]).concat(opts.disableAutoMapUpdates ? [
+        sendDisableAutoMapUpdatesCommand
       ]:[]).concat([
-        sendDisableAutomapCommand,
-        sendReadyCommandAndWait(30000),
-        sendProgramChecksumAndWait(30000),
-        sendProgramDataAndWait(30000),
+        sendReadyCommandAndWait(10000),
+        sendProgramChecksumAndWait(10000),
+        sendProgramDataAndWait(10000),
         wait(2000),
-        sendFlashCommandAndWait(30000),
-        waitForSafeCheck(30000)
+        sendFlashCommandAndWait(10000),
+        wait(1000)
+      ]).concat(opts.skipSafeCheck ? []:[
+        sendSafeCheckAndWait(10000),
+        wait(1000)
       ]).concat(capabilities['reset'] ? [
-        wait(1000),
-        sendResetCommandAndWait(30000)
+        sendResetCommandAndWait(10000)
       ]:[]), function (error) {
         parser.setRawMode(false)
         handleResult(error)
@@ -394,9 +392,9 @@ function Flash(protocol, client) {
                 waitForCode('@', timeout)
               ]),
               wait(1000)
-            ]).concat(capabilities['disableAutoMapUpdates'] ? [
-              sendDisableAutomapCommand
-            ]:[]).concat([
+            ]).concat(opts.disableAutoMapUpdates ? [
+              sendDisableAutoMapUpdatesCommand
+            ]:[]).concat(opts.skipSafeCheck ? []:[
               parallelize([
                 sendCode('#'),
                 waitForCode('%', timeout)
@@ -408,8 +406,8 @@ function Flash(protocol, client) {
       }
       async.series([
         drain
-      ].concat(capabilities['disableAutoMapUpdates'] ? [
-        sendDisableAutomapCommand,
+      ].concat(opts.disableAutoMapUpdates ? [
+        sendDisableAutoMapUpdatesCommand,
       ]:[]).concat([        
         sendReadyCommandAndWait(30000),
         sendProgramPagesAndWait(30000)

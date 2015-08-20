@@ -8,6 +8,7 @@ var MCUTypes = require('../../mcuTypes')
 var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
 var Upgrade = require('../../upgrade')
 var ClassicProtocol = require('../../protocol/classic')
+var ImagoProtocol = require('../../protocol/imago')
 var Program = ClassicProtocol.Program
 var Flash = ClassicProtocol.Flash
 
@@ -23,7 +24,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       var upgrade = new Upgrade(client)
 
-      test('detect upgrade firmware?', function (t) {
+      test.skip('detect upgrade firmware?', function (t) {
         t.plan(4)
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'detect ok')
@@ -31,6 +32,7 @@ var client = cubelets.connect(config.device, function (err) {
           client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
             t.ifError(err, 'set mode ok')
             t.equal(response.mode, 0, 'jumped to os3')
+            //TODO: jump to bootloader?
           })
         })
       })
@@ -41,7 +43,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.pass('set protocol')
       })
 
-      skip('flash bluetooth classic firmware', function (t) {
+      test('flash bluetooth classic firmware', function (t) {
         t.plan(2)
         var hex = fs.readFileSync('./downgrade/hex/bluetooth.hex')
         var program = new Program(hex)

@@ -49,7 +49,7 @@ function Flash(protocol, client) {
       crc: 0xcc
     }
 
-    self.programToSlot(slot, function (err) {
+    self.programToSlot(program, slot, function (err) {
       if (err) {
         callback(err)
       } else {
@@ -81,14 +81,6 @@ function Flash(protocol, client) {
       }
     }
 
-    function handleResult(err) {
-      clearTimeout(timer)
-      client.removeListener('event', waitForCompleteEvent)
-      if (callback) {
-        callback(err)
-      }
-    }
-
     client.sendRequest(request, function (err) {
       if (err) {
         handleResult(err)
@@ -98,7 +90,7 @@ function Flash(protocol, client) {
         function writeChunk(i) {
           var start = i * chunkSize
           var end = start + chunkSize
-          var chunk = data.slice(start, end)
+          var chunk = slotData.slice(start, end)
           if (chunk.length > 0) {
             client.sendData(chunk, function (err) {
               if (err) {
@@ -122,6 +114,18 @@ function Flash(protocol, client) {
         }
       }
     })
+
+    function handleResult(err) {
+      clearTimeout(timer)
+      client.removeListener('event', waitForCompleteEvent)
+      if (callback) {
+        callback(err)
+      }
+    }
+
+    function emitProgressEvent(e) {
+      self.emit('progress', e)
+    }
   }
 
   this.slotToBlock = function (slotIndex, blockId, callback) {

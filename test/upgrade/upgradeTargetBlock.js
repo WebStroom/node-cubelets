@@ -26,7 +26,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       var upgrade = new Upgrade(client)
 
-      test('detect bootstrap', function (t) {
+      test.skip('detect bootstrap', function (t) {
         t.plan(3)
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'no err')
@@ -38,7 +38,7 @@ var client = cubelets.connect(config.device, function (err) {
       var ignoreBatteryFaceIndex = 4
       var targetFaceIndex = -1
 
-      test('discover an os3 target', function (t) {
+      test.skip('discover an os3 target', function (t) {
         t.plan(1)
         client.on('event', waitForBlockEvent)
         var timer = setTimeout(function () {
@@ -57,7 +57,7 @@ var client = cubelets.connect(config.device, function (err) {
         }
       })
 
-      test('jump to os3', function (t) {
+      test.skip('jump to os3', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
@@ -71,7 +71,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       var targetBlock = null
 
-      test('find os3 blocks', function (t) {
+      test.skip('find os3 blocks', function (t) {
         t.plan(3)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'req ok')
@@ -83,7 +83,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('look up block info', function (t) {
+      test.skip('look up block info', function (t) {
         t.plan(5)
         var info = new InfoService()
         info.fetchBlockInfo([targetBlock], function (err, infos) {
@@ -99,7 +99,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('bootstrap os3 target', function (t) {
+      test.skip('bootstrap os3 target', function (t) {
         t.plan(2)
         var blockType = targetBlock.getBlockType()
         var hex = fs.readFileSync('./upgrade/hex/pic_bootstrap/' + blockType.name + '_bootstrap.hex')
@@ -114,7 +114,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('jump to discovery', function (t) {
+      test.skip('jump to discovery', function (t) {
         t.plan(1)
         client.sendCommand(new ClassicProtocol.messages.ResetCommand())
         setTimeout(function () {
@@ -123,13 +123,23 @@ var client = cubelets.connect(config.device, function (err) {
         }, 500)
       })
 
+      test('checkpoint', function (t) {
+        t.plan(1)
+        targetFaceIndex = 2
+        targetBlock = new Block(591879, 1, BlockTypes.PASSIVE)
+        targetBlock._mcuType = MCUTypes.PIC
+        targetBlock._faceIndex = targetFaceIndex
+        client.setProtocol(UpgradeProtocol)
+        t.pass('checkpoint')
+      })
+
       test('discover an os4 target', function (t) {
         t.plan(1)
         client.on('event', waitForBlockEvent)
         var timer = setTimeout(function () {
           client.removeListener('event', waitForBlockEvent)
           t.fail('no block found events')
-        }, 1000)
+        }, 2000)
         function waitForBlockEvent(e) {
           if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
             if (e.firmwareType === 1 && e.faceIndex === targetFaceIndex) {
@@ -139,14 +149,6 @@ var client = cubelets.connect(config.device, function (err) {
             }
           }
         }
-      })
-
-      test.skip('checkpoint', function (t) {
-        t.plan(1)
-        targetBlock = new Block(162259, 1, BlockTypes.MAXIMUM)
-        targetBlock._mcuType = MCUTypes.AVR
-        faceIndex = 2
-        t.pass('checkpoint')
       })
 
       test('jump to os4', function (t) {
@@ -161,18 +163,17 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      var bootstrappedTargetBlock = null
-
       test('find os4 target block', function (t) {
         t.plan(3)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'req ok')
           console.log('neighbor blocks', JSON.stringify(neighborBlocks))
-          bootstrappedTargetBlock = __(neighborBlocks).find(function (block) {
+          var bootstrappedBlock = __(neighborBlocks).find(function (block) {
+            console.log('neighbor blockId', block.getBlockId())
             return targetBlock.getBlockId() === block.getBlockId()
           })
-          t.equals(bootstrappedTargetBlock.getFaceIndex(), targetBlock.getFaceIndex(), 'should be same face index')
-          t.ok(bootstrappedTargetBlock, 'found bootstrapped target block')
+          t.ok(bootstrappedBlock, 'found bootstrapped target block')
+          t.equals(bootstrappedBlock.getFaceIndex(), targetBlock.getFaceIndex(), 'should be same face index')
         })
       })
 
@@ -183,7 +184,7 @@ var client = cubelets.connect(config.device, function (err) {
         var program = new ImagoProgram(hex)
         t.ok(program.valid, 'program is valid')
         var flash = new ImagoFlash(client)
-        flash.programToBlock(program, bootstrappedTargetBlock, function (err) {
+        flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err)
         })
         flash.on('progress', function (e) {

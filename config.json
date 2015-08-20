@@ -111,7 +111,7 @@
     }
   },
   "urls": {
-    "info": "http://localhost:3033/proxy",
+    "info": "http://cubelets-programming.appspot.com",
     "compile": "http://compile.modrobotics.com",
     "firmware": "http://cubelets-programming.appspot.com"
   },
