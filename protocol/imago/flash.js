@@ -143,13 +143,11 @@ function Flash(protocol, client) {
     }
 
     client.on('response', onCompleteResponse)
-    function onCompleteResponse(err, response) {
+    function onCompleteResponse(response) {
       if (messages.FlashMemoryToBlockRequest.code === response.code()) {
         clearTimeout(timer)
         client.removeListener('response', onCompleteResponse)
-        if (err) {
-          callback(err)
-        } else if (response.result !== 0) {
+        if (response.result !== 0) {
           callback(new Error('Flashing failed.'))
         } else {
           callback(null)
