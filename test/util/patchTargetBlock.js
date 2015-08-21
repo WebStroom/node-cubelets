@@ -24,7 +24,7 @@ var client = cubelets.connect(config.device, function (err) {
       testNeighborsSetMode(1)
 
       // Store block types on faces to use later
-      test.skip('get neighbor block types on each face', function (t) {
+      test('get neighbor block types on each face', function (t) {
         t.plan(2)
         client.sendRequest(new ImagoProtocol.messages.GetNeighborBlocksRequest(), function (err, response) {
           t.ifError(err)
@@ -35,8 +35,6 @@ var client = cubelets.connect(config.device, function (err) {
               client.sendBlockRequest(request, function (err, response) {
                 if (err) {
                   callback(err)
-                } else if (response.mode !== mode) {
-                  callback(new Error('Failed to get configuration.'))
                 } else {
                   blockTypes[faceIndex] = Block.blockTypeForId(response.blockTypeId)
                   console.log('face', faceIndex, 'is a', blockTypes[faceIndex].name)
@@ -52,7 +50,7 @@ var client = cubelets.connect(config.device, function (err) {
       })
 
       // Put neighbors into bootloader
-      //testNeighborsSetMode(0)
+      testNeighborsSetMode(0)
 
       test('find a neighbor and flash it', function (t) {
         t.plan(5)

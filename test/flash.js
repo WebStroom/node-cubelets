@@ -11,8 +11,8 @@ var BlockTypes = cubelets.BlockTypes
 var Version = cubelets.Version
 var Program = Protocol.Program
 
-var blockId = 172175
-var blockType = BlockTypes.BLOCKER
+var blockId = 162938
+var blockType = BlockTypes.BATTERY
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
@@ -60,7 +60,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.equal(response.result, 0, 'upload result success')
           // send the data
           client.sendData(program.data, function (err) {
-            console.log('send data callback', err)
+            console.log('sent data')
           })
         })
         // wait for an upload complete event
