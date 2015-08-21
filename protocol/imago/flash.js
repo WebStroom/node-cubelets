@@ -132,16 +132,42 @@ function Flash(protocol, client) {
     callback = callback || emptyFunction
 
     var request = new messages.FlashMemoryToBlockRequest(blockId, slotIndex)
+    var timeout = 5000
+    var timer = setTimeout(onExpire, timeout)
 
-    client.sendRequest(request, function (err, response) {
-      if (err) {
-        callback(err)
-      } else if (response.result !== 0) {
-        callback(new Error('Flashing failed.'))
-      } else {
-        callback(null)
+    client.on('event', onProgressEvent)
+    function onProgressEvent(e) {
+      // When receiving a progress event, start a new timer.
+      clearTimeout(timer)
+      timer = setTimeout(onExpire, timeout)
+    }
+
+    client.on('response', onCompleteResponse)
+    function onCompleteResponse(err, response) {
+      if (messages.FlashMemoryToBlockRequest.code === response.code()) {
+        clearTimeout(timer)
+        client.removeListener('response', onCompleteResponse)
+        if (err) {
+          callback(err)
+        } else if (response.result !== 0) {
+          callback(new Error('Flashing failed.'))
+        } else {
+          callback(null)
+        }
       }
-    })
+    }
+
+    function onExpire() {
+      client.removeListener('response', onCompleteResponse)
+      callback(new Error('Timed out waiting for flash to complete.'))
+    }
+
+    // Note: The request queue is bypassed in flashing, because
+    // more fine-grained control is needed over the timeout
+    // for the response. For flashing, the timeout gets reset
+    // each time a progress event is received.
+    client.sendMessage(request)
+    client.emit('request', request)
   }
 }
 
