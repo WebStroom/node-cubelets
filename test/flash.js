@@ -11,8 +11,8 @@ var BlockTypes = cubelets.BlockTypes
 var Version = cubelets.Version
 var Program = Protocol.Program
 
-var blockId = config.map.type.bargraph
-var blockType = BlockTypes.BARGRAPH
+var blockId = 172175
+var blockType = BlockTypes.BLOCKER
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
@@ -35,7 +35,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test.skip('can flash a ' + blockType.name + ' hex', function (t) {
+      test('can flash a ' + blockType.name + ' hex', function (t) {
         t.plan(9)
 
         // check the program is valid
@@ -79,7 +79,7 @@ var client = cubelets.connect(config.device, function (err) {
             t.ifError(err, 'no flash response err')
             t.ok(response, 'flash response ok')
             t.equal(response.result, 0, 'flash result success')
-          }, 1000 * 10)
+          }, 1000 * 30)
         }
       })
       

@@ -199,7 +199,7 @@ var Upgrade = function (client) {
     })
   }
 
-  this.bootstrapBluetoothBlock = function (callback) {
+  this.flashBootstrap = function (callback) {
     var p = 0
     var interval = setInterval(function () {
       if (p > 100) {

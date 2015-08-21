@@ -7,9 +7,9 @@ var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
 var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
 var Upgrade = require('../../upgrade')
-var ImagoProtocol = require('../../protocol/imago')
-var Flash = ImagoProtocol.Flash
-var Program = ImagoProtocol.Program
+var ClassicProtocol = require('../../protocol/classic')
+var Flash = ClassicProtocol.Flash
+var Program = ClassicProtocol.Program
 
 var bluetoothBlockId = config.map.type.bluetooth
 
@@ -23,21 +23,21 @@ var client = cubelets.connect(config.device, function (err) {
 
       var upgrade = new Upgrade(client)
 
-      test('detect upgrade firmware?', function (t) {
+      test.skip('detect upgrade firmware?', function (t) {
         t.plan(4)
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'detect ok')
           t.equal(firmwareType, 2, 'has upgrade firmware')
-          client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
+          client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
             t.ifError(err, 'set mode ok')
-            t.equal(response.mode, 1, 'jumped to os4')
+            t.equal(response.mode, 0, 'jumped to os3')
           })
         })
       })
 
-      test('set imago protocol', function (t) {
+      test('set classic protocol', function (t) {
         t.plan(1)
-        client.setProtocol(ImagoProtocol)
+        client.setProtocol(ClassicProtocol)
         t.pass('set protocol')
       })
 
@@ -46,9 +46,11 @@ var client = cubelets.connect(config.device, function (err) {
         var hex = fs.readFileSync('./upgrade/hex/bluetooth_application.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
-        var flash = new Flash(client)
         var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
+        var flash = new Flash(client, {
+          skipSafeCheck: true
+        })
         flash.programToBlock(program, block, function (err) {
           t.ifError(err, 'flash err')
         })
