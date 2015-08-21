@@ -21,11 +21,78 @@ var client = cubelets.connect(device, function (err) {
   if (err) {
     exitWithError(err)
   } else {
-    startUpgrade(client)
+    runUpgrade(client)
   }
 })
 
-function startUpgrade(client) {
+function askYesOrNo(text, yesCallback, noCallback) {
+  prompt(text + ' [Y/n] ', function (val) {
+    (val.toLowerCase() === 'y' ?
+      yesCallback : noCallback)()
+  })
+}
+
+// 1. Ask for compatibility check
+askYesOrNo('Run compatibility check?', function yes() {
+
+}, function no() {
+
+}})
+  // Yes: Run check
+    // Display results
+    // Ask if continue
+      // Yes: Goto 2.
+      // No: Exit
+  // No: Skip to flash bootstrap
+// 2. Flash bootstrap
+function flashBootstrap() {
+
+}
+// 3. Wait for disconnect
+  // Ok: Goto 5.
+  // Fail: Goto 4.
+// 4. Request disconnect
+  // Ask user to reset power
+  // Goto 3.
+// 5. Wait for reconnect
+  // Ok: Goto 7.
+  // Fail: Goto 6.
+// 6. Request reconnect
+  // Ask user to power on and connect
+  // Goto 5.
+// 7. Start Discovery
+  // Queue face->{OS, timestamp}
+  // Remove from queue if timestamp > now - 800ms
+  // If count OS3 blocks > 0 Goto 8.
+  // Else if OS4 blocks > 0 Goto X.
+  // Else
+    // Ask if done
+    // Wait 2s
+// 8. Jump to OS3
+  // Fetch neighbor blocks
+  // If count neighbor blocks > 0, Goto 9.
+  // Else Goto 7.
+// 9. Pick OS3 target
+// 10. Fetch target block info
+  // If not compatible, show error
+  // Else Goto 10.
+// 11. Flash target OS4 bootstrap
+  // Ok: Goto 11.
+  // Fail: 
+// 12. Jump to discovery
+// 13. Discover an OS4 target
+// 14. Jump to OS4
+// 15. Pick OS4 target
+// 16. Flash target OS4 application
+// 17. Jump to discovery
+// 18. Verify target in application mode
+// 19.  
+
+// X. Jump to OS4
+  // Fetch neighbor blocks
+  // ...
+
+function runUpgrade(client) {
   var upgrade = new Upgrade(client)
 
   upgrade.detectIfNeeded(function (err, needsUpgrade) {

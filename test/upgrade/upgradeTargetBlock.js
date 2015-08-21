@@ -86,7 +86,7 @@ var client = cubelets.connect(config.device, function (err) {
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'req ok')
           targetBlock = __(neighborBlocks).find(function (block) {
-            return block._faceIndex === targetFaceIndex
+            return block.getFaceIndex() === targetFaceIndex
           })
           t.ok(targetBlock, 'found target block')
           t.pass('target block id is ' + targetBlock.getBlockId())

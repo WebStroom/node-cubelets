@@ -125,8 +125,7 @@ function Flash(protocol, client, opts) {
       }
     }
 
-    // Sends a reset command and waits
-    function sendResetCommandAndWait(timeout) {
+    function sendResetCommand(timeout) {
       return function (callback) {
         async.series([
           parallelize([
@@ -152,7 +151,6 @@ function Flash(protocol, client, opts) {
       sendCode('5')(callback)
     }
 
-    // Set parser to raw mode
     parser.setRawMode(true)
 
     // Branch flashing sequence for host block,
@@ -165,7 +163,7 @@ function Flash(protocol, client, opts) {
 
     // Flashes a target block, attached to a host block.
     function flashTargetBlock() {
-      function sendReadyCommandAndWait(timeout) {
+      function sendReadyCommand(timeout) {
         return function (callback) {
           parallelize([
             sendCode('3'),
@@ -173,7 +171,7 @@ function Flash(protocol, client, opts) {
           ])(callback)
         }
       }
-      function sendProgramChecksumAndWait(timeout) {
+      function sendProgramChecksum(timeout) {
         return function (callback) {
           parallelize([
             send(new Buffer([
@@ -185,7 +183,7 @@ function Flash(protocol, client, opts) {
           ])(callback)
         }
       }
-      function sendProgramDataAndWait(timeout) {
+      function sendProgramData(timeout) {
         return function(callback) {
           async.series((function () {
             var series = []
@@ -224,7 +222,7 @@ function Flash(protocol, client, opts) {
           })(), callback)
         }
       }
-      function sendFlashCommandAndWait(timeout) {
+      function sendFlashCommand(timeout) {
         return function (callback) {
           switch (block.getMCUType().typeId) {
             case MCUTypes.AVR.typeId:
@@ -311,7 +309,7 @@ function Flash(protocol, client, opts) {
           }
         }
       }
-      function sendSafeCheckAndWait(timeout) {
+      function sendSafeCheck(timeout) {
         return parallelize([
           sendCode('1'),
           waitForCode('Z', timeout)
@@ -320,23 +318,23 @@ function Flash(protocol, client, opts) {
       async.series([
         drain
       ].concat(capabilities['reset'] ? [
-        sendResetCommandAndWait(10000),
+        sendResetCommand(10000),
         wait(1000),
         drain
       ]:[]).concat(opts.disableAutoMapUpdates ? [
         sendDisableAutoMapUpdatesCommand
       ]:[]).concat([
-        sendReadyCommandAndWait(10000),
-        sendProgramChecksumAndWait(10000),
-        sendProgramDataAndWait(10000),
+        sendReadyCommand(10000),
+        sendProgramChecksum(10000),
+        sendProgramData(10000),
         wait(2000),
-        sendFlashCommandAndWait(10000)
+        sendFlashCommand(10000)
       ]).concat(opts.skipSafeCheck ? []:[
         wait(1000),
-        sendSafeCheckAndWait(10000)
+        sendSafeCheck(10000)
       ].concat(capabilities['reset'] ? [
         wait(1000),
-        sendResetCommandAndWait(10000)
+        sendResetCommand(10000)
       ]:[])), function (error) {
         parser.setRawMode(false)
         handleResult(error)
@@ -345,7 +343,7 @@ function Flash(protocol, client, opts) {
 
     // Flashes the origin, or "host" block, e.g. bluetooth
     function flashHostBlock() {
-      function sendReadyCommandAndWait(timeout) {
+      function sendReadyCommand(timeout) {
         return function (callback) {
           var encodedId = Encoder.encodeId(block.getBlockId())
           parallelize([
@@ -359,7 +357,7 @@ function Flash(protocol, client, opts) {
           ])(callback)
         }
       }
-      function sendProgramPagesAndWait(timeout) {
+      function sendProgramPages(timeout) {
         return function (callback) {
           async.series((function() {
             var series = []
@@ -394,7 +392,7 @@ function Flash(protocol, client, opts) {
           })(), callback)
         }
       }
-      function sendSafeCheckAndWait(timeout) {
+      function sendSafeCheck(timeout) {
         return parallelize([
           sendCode('#'),
           waitForCode('%', timeout)
@@ -405,14 +403,14 @@ function Flash(protocol, client, opts) {
       ].concat(opts.disableAutoMapUpdates ? [
         sendDisableAutoMapUpdatesCommand,
       ]:[]).concat([        
-        sendReadyCommandAndWait(10000),
-        sendProgramPagesAndWait(10000)
+        sendReadyCommand(10000),
+        sendProgramPages(10000)
       ]).concat(opts.skipSafeCheck ? []:[
         wait(1000),
-        sendSafeCheckAndWait(10000)
+        sendSafeCheck(10000)
       ].concat(capabilities['reset'] ? [
         wait(1000),
-        sendResetCommandAndWait(10000)
+        sendResetCommand(10000)
       ]:[])), function (error) {
         parser.setRawMode(false)
         handleResult(error)
