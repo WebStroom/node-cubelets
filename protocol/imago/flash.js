@@ -144,7 +144,7 @@ function Flash(protocol, client) {
 
     client.on('response', onCompleteResponse)
     function onCompleteResponse(response) {
-      if (messages.FlashMemoryToBlockRequest.code === response.code()) {
+      if (messages.FlashMemoryToBlockResponse.code === response.code()) {
         clearTimeout(timer)
         client.removeListener('response', onCompleteResponse)
         if (response.result !== 0) {
