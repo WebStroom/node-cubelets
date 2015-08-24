@@ -2,12 +2,19 @@ function Strategy(protocol, client) {
 
   var messages = protocol.messages
 
+  // Sends a packet to the host block, and
+  // when a pong response is received,
+  // calls the callback with the response.
   this.ping = function (callback) {
     throw new Error('not implemented')
   }
 
   var keepAliveTimer = null
 
+  // Starts a keep alive timer that
+  // sends a ping packet at the given interval.
+  // If a pong is not received within the given timeout,
+  // then the client will emit an `error` and a `die` event.
   this.startKeepAliveTimer = function (interval, timeout) {
     client.stopKeepAliveTimer()
     timeout = timeout || client.getDefaultTimeout()
@@ -23,6 +30,9 @@ function Strategy(protocol, client) {
     }, interval)
   }
 
+  // Stops the keepalive timer above.
+  // Called automatically for critical priority
+  // operations like firmware flashing.
   this.stopKeepAliveTimer = function () {
     if (keepAliveTimer) {
       clearInterval(keepAliveTimer)
@@ -79,6 +89,14 @@ function Strategy(protocol, client) {
   }
 
   this.fetchAllBlocks = function (callback) {
+    throw new Error('not implemented')
+  }
+
+  this.fetchBlockConfigurations = function (blocks, callback) {
+   throw new Error('not implemented')
+  }
+
+  this.fetchBlockNeighbors = function (blocks, callback) {
     throw new Error('not implemented')
   }
 

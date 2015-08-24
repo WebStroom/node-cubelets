@@ -41,6 +41,10 @@ function Factory(Scanner, Connection) {
       con.open(callback)
     }
 
+    this.isConnected = function () {
+      return con.isOpen()
+    }
+
     this.disconnect = function (callback) {
       con.close(callback)
     }

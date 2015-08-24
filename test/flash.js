@@ -11,8 +11,8 @@ var BlockTypes = cubelets.BlockTypes
 var Version = cubelets.Version
 var Program = Protocol.Program
 
-var blockId = 162938
-var blockType = BlockTypes.BATTERY
+var blockId = 163500
+var blockType = BlockTypes.DISTANCE
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {

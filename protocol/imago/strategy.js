@@ -111,8 +111,8 @@ function ImagoStrategy(protocol, client) {
       client.fetchOriginBlock,
       client.fetchAllBlocks,
       client.fetchNeighborBlocks,
-      fetchBlockConfigurations,
-      fetchBlockNeighbors
+      fetchAllBlockConfigurations,
+      fetchAllBlockNeighbors
     ], function (err) {
       if (callback) {
         if (err) {
@@ -130,11 +130,11 @@ function ImagoStrategy(protocol, client) {
     })
   }
 
-  function fetchBlockConfigurations(callback) {
-    queueGetConfigurationBlockRequests(map.getAllBlocks(), callback)
+  function fetchAllBlockConfigurations(callback) {
+    client.fetchBlockConfigurations(map.getAllBlocks(), callback)
   }
 
-  function queueGetConfigurationBlockRequests(unsortedBlocks, callback) {
+  this.fetchBlockConfigurations = function (unsortedBlocks, callback) {
     var fetchTasks = []
     __(sortBlocksByHopCount(unsortedBlocks)).each(function (block) {
       fetchTasks.push(function (callback) {
@@ -156,7 +156,7 @@ function ImagoStrategy(protocol, client) {
               mode: response.mode
             })
             if (callback) {
-              callback(null)
+              callback(null, unsortedBlocks)
             }
           }
         })
@@ -165,11 +165,11 @@ function ImagoStrategy(protocol, client) {
     async.series(fetchTasks, callback)
   }
 
-  function fetchBlockNeighbors(callback) {
-    queueGetNeighborsBlockRequests(map.getAllBlocks(), callback)
+  function fetchAllBlockNeighbors(callback) {
+    client.getBlockNeighbors(map.getAllBlocks(), callback)
   }
 
-  function queueGetNeighborsBlockRequests(unsortedBlocks, callback) {
+  this.getBlockNeighbors = function (unsortedBlocks, callback) {
     var fetchTasks = []
     __(sortBlocksByHopCount(unsortedBlocks)).each(function (block) {
       fetchTasks.push(function (callback) {
@@ -186,7 +186,7 @@ function ImagoStrategy(protocol, client) {
               neighbors: response.neighbors
             })
             if (callback) {
-              callback(null)
+              callback(null, unsortedBlocks)
             }
           }
         })
