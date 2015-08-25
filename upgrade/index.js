@@ -1,6 +1,7 @@
 var assert = require('assert')
 var util = require('util')
 var events = require('events')
+var fs = require('fs')
 var async = require('async')
 var ClassicProtocol = require('../protocol/classic')
 var ClassicProgram = ClassicProtocol.Program
@@ -11,6 +12,7 @@ var ImagoFlash = ImagoProtocol.Flash
 var UpgradeProtocol = require('../protocol/bootstrap/upgrade')
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
+var MCUTypes = require('../mcuTypes')
 var InfoService = require('../services/info')
 var __ = require('underscore')
 
@@ -51,8 +53,7 @@ var Upgrade = function (client) {
         // The imago protocol will fail to respond.
         client.setProtocol(ImagoProtocol)
         callback(null, FirmwareTypes.IMAGO)
-      }
-      else if (response.payload.length > 0) {
+      } else if (response.payload.length > 0) {
         // The bootstrap protocol will differentiate itself by
         // sending an extra byte in the response.
         client.setProtocol(UpgradeProtocol)
