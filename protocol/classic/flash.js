@@ -436,9 +436,7 @@ function Flash(protocol, client, opts) {
 
 function parallelize(tasks) {
   return function (callback) {
-    process.nextTick(function () {
-      async.parallel(tasks, callback)
-    })
+    async.parallel(tasks, callback)
   }
 }
 

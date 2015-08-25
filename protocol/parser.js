@@ -2,7 +2,8 @@ var events = require('events')
 var util = require('util')
 
 var Parser = function (protocol) {
-  events.EventEmitter.call(this)
+  var self = this
+  events.EventEmitter.call(self)
 
   // Possible parser states
   var State = {
@@ -25,13 +26,15 @@ var Parser = function (protocol) {
   var extraBytes = []
 
   this.setRawMode = function (raw) {
-    state = raw ? State.RAW : State.READY
-    data = new Buffer(0)
-    code = -1
-    type = undefined
-    size = 0
-    index = 0
-    extraBytes = []
+    process.nextTick(function () {
+      state = raw ? State.RAW : State.READY
+      data = new Buffer(0)
+      code = -1
+      type = undefined
+      size = 0
+      index = 0
+      extraBytes = []
+    })
   }
 
   this.getRawMode = function () {
@@ -92,8 +95,7 @@ var Parser = function (protocol) {
       var c = nextChar()
       if (c == '<') {
         state = State.HEADER_BEGIN
-      }
-      else {
+      } else {
         parseExtra()
       }
     }
@@ -116,8 +118,7 @@ var Parser = function (protocol) {
       var c = nextChar()
       if (c == '>') {
         state = State.HEADER_END
-      }
-      else {
+      } else {
         parseExtra()
       }
     }
@@ -125,8 +126,7 @@ var Parser = function (protocol) {
     function parseHeaderEnd() {
       if (size === 0) {
         parseBody()
-      }
-      else {
+      } else {
         state = State.BODY
       }
     }
@@ -145,55 +145,61 @@ var Parser = function (protocol) {
       reset()
     }
 
-    while (shouldParse()) {
-      switch (state) {
-        case State.RAW:
-          parseRaw()
-          break
-        case State.READY:
-          parseReady()
-          break
-        case State.HEADER_BEGIN:
-          parseHeaderBegin()
-          break
-        case State.HEADER_TYPE:
-          parseHeaderType()
-          break
-        case State.HEADER_SIZE:
-          parseHeaderSize()
-          break
-        case State.HEADER_END:
-          parseHeaderEnd()
-          break
-        case State.BODY:
-          parseBody()
-          break
+    process.nextTick(function () {
+      while (shouldParse()) {
+        switch (state) {
+          case State.RAW:
+            parseRaw()
+            break
+          case State.READY:
+            parseReady()
+            break
+          case State.HEADER_BEGIN:
+            parseHeaderBegin()
+            break
+          case State.HEADER_TYPE:
+            parseHeaderType()
+            break
+          case State.HEADER_SIZE:
+            parseHeaderSize()
+            break
+          case State.HEADER_END:
+            parseHeaderEnd()
+            break
+          case State.BODY:
+            parseBody()
+            break
+        }
       }
-    }
 
-    if (extraBytes.length > 0) {
-      emitExtra(new Buffer(extraBytes))
-      extraBytes = []
-    }
+      if (extraBytes.length > 0) {
+        emitExtra(new Buffer(extraBytes))
+        extraBytes = []
+      }
+    })
   }
-
-  var emitter = this
 
   // Emits a parsed response
   var emitMessage = function (body) {
     var message = new type()
     message.decodeBody(body)
-    emitter.emit('message', message)
+    process.nextTick(function () {
+      self.emit('message', message)
+    })
   }
 
   // Emits extra data
   var emitExtra = function (data) {
-    emitter.emit('extra', data)
+    process.nextTick(function () {
+      self.emit('extra', data)
+    })
   }
 
   // Emits raw data
   var emitRaw = function (data) {
-    emitter.emit('raw', data)
+    process.nextTick(function () {
+      self.emit('raw', data)
+    })
   }
 }
 

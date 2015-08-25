@@ -150,6 +150,7 @@ var Upgrade = function (client) {
   }
 
   function detectSkipReset(callback) {
+    console.log('add skip reset event listener')
     client.on('event', onSkipDisconnectEvent)
     function onSkipDisconnectEvent(e) {
       console.log('event!', e.code())
@@ -366,6 +367,7 @@ var Upgrade = function (client) {
       var classicFaces = __(targetFaces).countBy(matchFaceByFirmwareType(0))
       var imagoFaces = __(targetFaces).countBy(matchFaceByFirmwareType(1))
       if (classicFaces.length > 0) {
+        console.log('classic faces > 0')
         async.series([
           jumpToClassic,
           enqueuePendingClassicBlocks,
@@ -373,6 +375,7 @@ var Upgrade = function (client) {
           upgradeNextPendingClassicBlock
         ], callback)
       } else if (imagoFaces.length > 0) {
+        console.log('imago faces > 0')
         async.series([
           jumpToImago,
           enqueuePendingImagoBlocks,
@@ -380,6 +383,7 @@ var Upgrade = function (client) {
           upgradeNextPendingImagoBlock
         ], callback)
       } else {
+        console.log('no faces')
         callback(null)
       }
     }, 2500)
@@ -642,8 +646,8 @@ var Upgrade = function (client) {
           callback(err)
         } else {
           async.series([
-            retry({ times: 5, interval: 5000 }, waitForDisconnect),
-            retry({ times: 5, interval: 5000 }, waitForReconnect)
+            retry({ times: 1, interval: 5000 }, waitForDisconnect),
+            retry({ times: 1, interval: 5000 }, waitForReconnect)
           ], callback)
         }
       })
@@ -658,6 +662,7 @@ var Upgrade = function (client) {
 
   function waitForFinish(timeout) {
     return function (callback) {
+      console.log('Waiting for blocks...')
       setTimeout(callback, timeout)
     }
   }
