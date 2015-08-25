@@ -462,6 +462,7 @@ var Upgrade = function (client) {
                   block._faceIndex = parseInt(faceIndex, 10)
                   enqueuePendingBlock(block)
                 }
+                callback(null)
               }
             })
           }
