@@ -10,6 +10,7 @@ var messages = {
 
   BlockFoundEvent: require('./event/blockFound'),
   DisconnectFailedEvent: require('./event/disconnectFailed'),
+  SkipDisconnectEvent: require('./event/skipDisconnect')
 }
 
 var UpgradeProtocol = new Protocol({
@@ -23,7 +24,8 @@ var UpgradeProtocol = new Protocol({
   ],
   events: [
     [0xB0, messages.BlockFoundEvent],
-    [0xB2, messages.DisconnectFailedEvent]
+    [0xB2, messages.DisconnectFailedEvent],
+    [0xB3, messages.SkipDisconnectEvent]
   ]
 })
 

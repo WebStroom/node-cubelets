@@ -1,6 +1,7 @@
+var util = require('util')
 var events = require('events')
-var BlockType = require('../blockType')
-var MCUType = require('../mcuType')
+var BlockTypes = require('../blockTypes')
+var MCUTypes = require('../mcuTypes')
 
 function CompatibilityCheck(client) {
   var self = this

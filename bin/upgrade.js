@@ -22,6 +22,7 @@ var client = cubelets.connect(device, function (err) {
   if (err) {
     exitWithError(err)
   } else {
+    console.log('Connected. Starting ugprade...')
     start(client)
   }
 })
@@ -49,8 +50,8 @@ function start(client) {
           'or press ENTER to finish the check.'
         ].join(), function enter() {
           check.finish()
-          var compatible = check.getCompatible().length
-          var notCompatible = check.getNotCompatible().length
+          var compatible = check.getCompatibleBlocks().length
+          var notCompatible = check.getNotCompatibleBlocks().length
           if (compatible === 0) {
             console.log([
               'It looks like none of your Cubelets are compatible with OS4.',
@@ -107,32 +108,39 @@ function start(client) {
         }
       })
     }
-    upgrade.on('flashBootstrapToBlock', function (block) {
+    upgrade.on('flashBootstrapToTargetBlock', function (block) {
       console.log('Flashing Cubelets OS4 bootstrap firmware to block', formatBlockName(block) + '...')
     })
-    upgrade.on('flashUpgradeToBlock', function (block) {
+    upgrade.on('flashUpgradeToTargetBlock', function (block) {
       console.log('Flashing Cubelets OS4 firmware to block', formatBlockName(block) + '...')
     })
-    upgrade.on('completedBlock', function (block) {
+    upgrade.on('completeBlock', function (block) {
       console.log('Successfully upgraded block', formatBlockName(block), 'to OS4.')
       var pending = upgrade.getPendingBlocks().count
-      if (pending === 0) {
+      if (0 === pending) {
         promptContinueOrFinish()
       } else {
         console.log('There are', formatNumber(pending), 'pending blocks to upgrade.')
       }
     })
-    upgrade.on('noPendingBlocks', function () {
-      console.log('No pending blocks found.')
-      promptContinueOrFinish()
+    upgrade.on('changeTargetBlock', function (targetBlock) {
+      if (null === targetBlock) {
+        promptContinueOrFinish()
+      }
     })
     function promptContinueOrFinish() {
-      prompt([
+      var text = [
         'Attach more Cubelets directly to the Bluetooth block,',
         'or press ENTER if you are done upgrading all of your Cubelets.'
-      ].join(), function () {
-        upgrade.finish()
-      })
+      ].join()
+      if (this.finished) {
+        console.log(text)
+      } else {
+        this.finished = true
+        prompt(text, function () {
+          upgrade.finish()
+        })
+      }
     }
     upgrade.on('flashUpgradeToHostBlock', function () {
       console.log('Flashing Cubelets OS4 firmware to the Bluetooth block...')
