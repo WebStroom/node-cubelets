@@ -22,21 +22,33 @@ var client = cubelets.connect(device, function (err) {
   if (err) {
     exitWithError(err)
   } else {
-    console.log('Connected. Starting ugprade...')
+    console.log('Connected. Starting upgrade...')
     start(client)
   }
 })
 
 function start(client) {
-  askYesOrNo('Run compatibility check?',
-    runCompatibilityCheck,
-    runUpgrade)
+  var upgrade = new Upgrade(client)
+
+  upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
+    if (err) {
+      exitWithError(err)
+    } else if (needsUpgrade) {
+      if (firmwareType === Upgrade.FirmwareTypes.CLASSIC) {
+        askYesOrNo('Run compatibility check?',
+          runCompatibilityCheck,
+          runUpgrade)
+      } else {
+        runUpgrade()
+      }
+    }
+  })
 
   function runCompatibilityCheck() {
     var check = new CompatibilityCheck(client)
     prompt('Attach all of your Cubelets. Then press ENTER.', function () {
       check.on('found', function (blocks) {
-        console.log('Found', formatNumber(blocks.length), 'blocks. Checking compatibility...')
+        console.log('Found', formatNumber(blocks.length), 'block(s). Checking compatibility...')
       })
       check.on('notCompatible', function (block) {
         console.log('𐄂', 'Block', formatBlockName(block), 'is NOT compatible.')
@@ -48,7 +60,7 @@ function start(client) {
         prompt([
           'Attach more Cubelets directly to the Bluetooth block,',
           'or press ENTER to finish the check.'
-        ].join(), function enter() {
+        ].join(' '), function enter() {
           check.finish()
           var compatible = check.getCompatibleBlocks().length
           var notCompatible = check.getNotCompatibleBlocks().length
@@ -57,13 +69,13 @@ function start(client) {
               'It looks like none of your Cubelets are compatible with OS4.',
               'Visit modrobotics.com/sustainability to learn about',
               'our Cubelet upgrade recycling program.'
-            ].join())
+            ].join(' '))
             exitWithSuccess('Upgrade canceled.')
           } else if (notCompatible > 0) {
             askYesOrNo([
               'It looks like ' + formatNumber(notCompatible) + ' of your Cubelets ',
               'are compatible with OS4. Do you want to continue the upgrade anyway?'
-            ].join(), function yes() {
+            ].join(' '), function yes() {
               runUpgrade()
             }, function no() {
               exitWithSuccess('Upgrade canceled. Goodbye.')
@@ -72,7 +84,7 @@ function start(client) {
             askYesOrNo([
               'All of your Cubelets are compatible with OS4?',
               'Ready to upgrade your Cubelets?'
-            ].join(), function yes() {
+            ].join(' '), function yes() {
               runUpgrade()
             }, function no() {
               exitWithSuccess('Upgrade canceled. Goodbye.')
@@ -84,7 +96,6 @@ function start(client) {
   }
 
   function runUpgrade() {
-    var upgrade = new Upgrade(client)
     upgrade.on('progress', function (e) {
       var pct = Math.floor(100.0 * e.progress / e.total)
       console.log(e.action ? e.action : '', pct + '%')
@@ -132,7 +143,7 @@ function start(client) {
       var text = [
         'Attach more Cubelets directly to the Bluetooth block,',
         'or press ENTER if you are done upgrading all of your Cubelets.'
-      ].join()
+      ].join(' ')
       if (this.finished) {
         console.log(text)
       } else {

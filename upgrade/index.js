@@ -14,7 +14,7 @@ var BlockTypes = require('../blockTypes')
 var InfoService = require('../services/info')
 var __ = require('underscore')
 
-var FirmwareType = {
+var FirmwareTypes = {
   CLASSIC: 0,
   IMAGO: 1,
   BOOTSTRAP: 2
@@ -37,7 +37,7 @@ var Upgrade = function (client) {
       if (err) {
         callback(err)
       } else {
-        callback(null, (FirmwareType.IMAGO !== firmwareType), firmwareType)
+        callback(null, (FirmwareTypes.IMAGO !== firmwareType), firmwareType)
       }
     })
   }
@@ -50,16 +50,16 @@ var Upgrade = function (client) {
       if (err) {
         // The imago protocol will fail to respond.
         client.setProtocol(ImagoProtocol)
-        callback(null, FirmwareType.IMAGO)
+        callback(null, FirmwareTypes.IMAGO)
       }
       else if (response.payload.length > 0) {
         // The bootstrap protocol will differentiate itself by
         // sending an extra byte in the response.
         client.setProtocol(UpgradeProtocol)
-        callback(null, FirmwareType.BOOTSTRAP)
+        callback(null, FirmwareTypes.BOOTSTRAP)
       } else {
         // Otherwise, the cubelet has classic firmware.
-        callback(null, FirmwareType.CLASSIC)
+        callback(null, FirmwareTypes.CLASSIC)
       }
     })
   }
@@ -102,7 +102,7 @@ var Upgrade = function (client) {
     detectFirmwareType(function (err, firmwareType) {
       if (err) {
         callback(err)
-      } else if (FirmwareType.CLASSIC === firmwareType) {
+      } else if (FirmwareTypes.CLASSIC === firmwareType) {
         flashBootstrapToHostBlock(callback)
       } else {
         callback(null)
@@ -668,3 +668,4 @@ function retry(options, fn) {
 util.inherits(Upgrade, events.EventEmitter)
 
 module.exports = Upgrade
+module.exports.FirmwareTypes = FirmwareTypes

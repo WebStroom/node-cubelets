@@ -23,28 +23,26 @@ module.exports = function Version(major, minor, patch) {
 
   this.isGreaterThan = function (v) {
     return (
-      v.isEqual(this) ? false : 
-      v.major > this.major ? false :
-      v.minor > this.minor ? false :
-      v.patch > this.patch ? false : true
+      this.major > v.major &&
+      this.minor > v.minor &&
+      this.patch > v.patch
     )
   }
 
   this.isGreaterThanOrEqual = function (v) {
-    return v.isEqual(this) || v.isGreaterThan(this)
+    return this.isEqual(v) || this.isGreaterThan(v)
   }
 
   this.isLessThan = function (v) {
     return (
-      v.isEqual(this) ? false :
-      v.major < this.major ? false :
-      v.minor < this.minor ? false :
-      v.patch < this.patch ? false : true
+      this.major < v.major &&
+      this.minor < v.minor &&
+      this.patch < v.patch
     )
   }
 
   this.isLessThanOrEqual = function (v) {
-    return v.isEqual(v) || v.isLessThan(this)
+    return this.isEqual(v) || this.isLessThan(v)
   }
 
   this.toString = function () {

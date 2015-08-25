@@ -35,7 +35,7 @@ function InfoService() {
       request.get({
         url: url,
         json: true
-      }, function(err, res, body) {
+      }, function (err, res, body) {
         if (err) {
           if (callback) {
             callback(err)
@@ -54,8 +54,8 @@ function InfoService() {
             __(body).each(function (item) {
               if (item['id'] === block.getBlockId()) {
                 var info = new Info(item)
-                service.emit('info', info, block)
                 infos.push(info)
+                service.emit('info', info, block)
               } else {
                 infos.push(null)
               }

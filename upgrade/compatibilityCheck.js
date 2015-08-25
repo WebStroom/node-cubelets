@@ -1,7 +1,10 @@
 var util = require('util')
 var events = require('events')
+var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var MCUTypes = require('../mcuTypes')
+var InfoService = require('../services/info')
+var __ = require('underscore')
 
 function CompatibilityCheck(client) {
   var self = this
@@ -30,13 +33,13 @@ function CompatibilityCheck(client) {
           callback(err)
         } else {
           unknownBlocks = filterUnknownBlocks(blocks)
-          fetchUnknownBlockTypes(unknownBlocks, function (err) {
+          fetchUnknownBlockTypes(function (err) {
             if (err) {
               callback(err)
               self.emit('error', err)
             } else {
               if (unknownBlocks.length > 0) {
-                self.emit('found', blocks)
+                self.emit('found', unknownBlocks)
                 checkUnknownBlocks()
               }
               callback(null)
@@ -58,11 +61,10 @@ function CompatibilityCheck(client) {
         if (err) {
           self.emit('error', err)
         } else {
-          if (blocks.length > 0) {
-            self.emit('found', blocks)
-            checkBlocks()
+          if (unknownBlocks.length > 0) {
+            self.emit('found', unknownBlocks)
+            checkUnknownBlocks()
           }
-          callback(null)
         }
       })
     })
@@ -76,9 +78,12 @@ function CompatibilityCheck(client) {
   }
 
   function filterUnknownBlocks(blocks) {
-    return __(blocks).filter(function (block) {
-      return block.getBlockType() === BlockTypes.UNKNOWN
-    })
+    return __(blocks).chain()
+      .filter(function (block) {
+        return block.getBlockType() === BlockTypes.UNKNOWN
+      })
+      .difference(compatibleBlocks.concat(notCompatibleBlocks))
+      .value()
   }
 
   function fetchUnknownBlockTypes(callback) {
@@ -89,7 +94,7 @@ function CompatibilityCheck(client) {
       if (blockType !== BlockTypes.UNKNOWN) {
         block._blockType = blockType
       }
-      var mcuType = Block.mcuTypeForId(info.mcuString)
+      var mcuType = Block.mcuTypeForId(info.mcuTypeId)
       if (mcuType !== MCUTypes.UNKNOWN) {
         block._mcuType = mcuType
       }
@@ -112,8 +117,7 @@ function CompatibilityCheck(client) {
         self.emit('compatible', block)
       }
     })
-    unknownBlocks = __(unknownBlocks)
-      .difference(compatibleBlocks.concat(notCompatible))
+    unknownBlocks = filterUnknownBlocks()
   }
 }
 

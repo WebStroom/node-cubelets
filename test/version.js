@@ -13,3 +13,8 @@ test('algo', function (t) {
   t.ok(parseVersion(2.6000000000000001).isEqual(new Version(2, 6, 0)))
   t.ok(parseVersion(2.1000000000000001).isEqual(new Version(2, 1, 0)))
 })
+
+test('greater than', function (t) {
+  t.plan(1)
+  t.notOk((new Version(0, 0, 0)).isGreaterThan(new Version(3, 1, 0)))
+})
