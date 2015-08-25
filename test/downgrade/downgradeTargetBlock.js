@@ -140,13 +140,13 @@ var client = cubelets.connect(config.device, function (err) {
         client.setProtocol(UpgradeProtocol)
         client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
           t.ifError(err)
-          t.equals(response.mode, 1, 'jumped to os4')
-          client.setProtocol(ImagoProtocol)
+          t.equals(response.mode, 1, 'jumped to os4')          
         })
       })
 
       test('find os4 target block and flash bootloader', function (t) {
         t.plan(4)
+        client.setProtocol(ImagoProtocol)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'req ok')
           t.ok(neighborBlocks.length > 0, 'found at least one neighbor')
@@ -173,7 +173,6 @@ var client = cubelets.connect(config.device, function (err) {
       // Switch to discovery mode
       test('jump to discovery mode', function (t) {
         t.plan(1)
-        client.setProtocol(ImagoProtocol)
         client.sendCommand(new ImagoProtocol.messages.ResetCommand())
         setTimeout(function () {
           client.setProtocol(UpgradeProtocol)
@@ -239,13 +238,7 @@ var client = cubelets.connect(config.device, function (err) {
         var flash = new ClassicFlash(client)
         //Hack to not send reset command
         targetBlock._applicationVersion = new Version(0, 0, 0);
-        
-        if(targetBlock.getApplicationVersion().isGreaterThanOrEqual(new Version(3,1,0)))
-        {
-        	console.log(targetBlock.getApplicationVersion())
-        	t.fail("This shit aint right yo")
-        }
-        
+                
         flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err, 'flashed block')
         })
