@@ -266,7 +266,7 @@ var Upgrade = function (client) {
 
   function startBlockUpgrades(callback) {
     async.until(function () {
-      return done
+      return finished
     }, function (next) {
       async.series([
         jumpToDiscovery,
