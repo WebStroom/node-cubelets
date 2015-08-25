@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:upgrade')
 var assert = require('assert')
 var util = require('util')
 var events = require('events')
@@ -14,6 +15,7 @@ var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var MCUTypes = require('../mcuTypes')
 var InfoService = require('../services/info')
+var emptyFunction = function () {}
 var __ = require('underscore')
 
 var FirmwareTypes = {
@@ -35,6 +37,7 @@ var Upgrade = function (client) {
   var targetBlock = null
 
   this.detectIfNeeded = function (callback) {
+    callback = callback || emptyFunction
     detectFirmwareType(function (err, firmwareType) {
       if (err) {
         callback(err)
@@ -45,7 +48,6 @@ var Upgrade = function (client) {
   }
 
   function detectFirmwareType(callback) {
-    console.log('detectFirmwareType')
     // Switch to the classic protocol
     client.setProtocol(ClassicProtocol)
     // Send a keep alive request to test how the cubelet responds
@@ -67,23 +69,50 @@ var Upgrade = function (client) {
   }
 
   this.start = function (callback) {
-    console.log('start')
+    callback = callback || emptyFunction
     if (running) {
       callback(new Error('Upgrade already started.'))
     } else {
       running = true
       finished = false
-      async.series([
-        jumpToClassic,
-        discoverHostBlock,
-        flashBootstrapToHostBlockIfNeeded,
-        startBlockUpgrades
-      ], callback)
+      detectFirmwareType(function (err, firmwareType) {
+        if (err) {
+          callback(err)
+        } else if (FirmwareTypes.CLASSIC === firmwareType) {
+          async.series([
+            jumpToClassic,
+            discoverHostBlock,
+            flashBootstrapToHostBlock,
+            startBlockUpgrades,
+            jumpToDiscovery,
+            jumpToImago,
+            flashUpgradeToHostBlock
+          ], function (err) {
+            finished = true
+            running = false
+            callback(err)
+          })
+        } else if (FirmwareTypes.BOOTSTRAP === firmwareType) {
+          async.series([
+            startBlockUpgrades,
+            jumpToDiscovery,
+            jumpToImago,
+            flashUpgradeToHostBlock
+          ], callback)
+        } else {
+          callback(new Error('Upgrade started with invalid firmware type.'))
+        }
+      })
+      function onFinish(err) {
+        finished = true
+        running = false
+        callback(err)
+      }
     }
   }
 
   function discoverHostBlock(callback) {
-    console.log('discoverHostBlock')
+    debug('discoverHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     var req = new ClassicProtocol.messages.GetNeighborBlocksRequest()
     client.sendRequest(req, function (err, res) {
@@ -102,20 +131,8 @@ var Upgrade = function (client) {
     })
   }
 
-  function flashBootstrapToHostBlockIfNeeded(callback) {
-    detectFirmwareType(function (err, firmwareType) {
-      if (err) {
-        callback(err)
-      } else if (FirmwareTypes.CLASSIC === firmwareType) {
-        flashBootstrapToHostBlock(callback)
-      } else {
-        callback(null)
-      }
-    })
-  }
-
   function flashBootstrapToHostBlock(callback) {
-    console.log('flashBootstrapToHostBlock')
+    debug('flashBootstrapToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
     var program = new ClassicProgram(hex)
@@ -222,7 +239,7 @@ var Upgrade = function (client) {
   }
 
   function enqueuePendingBlock(block) {
-    console.log('enqueuePendingBlock')
+    debug('enqueuePendingBlock')
     if (!findPendingBlockById(block.getBlockId())) {
       pendingBlocks.unshift(block)
       self.emit('changePendingBlocks', pendingBlocks)
@@ -233,7 +250,7 @@ var Upgrade = function (client) {
   }
 
   function dequeuePendingBlock() {
-    console.log('dequeuePendingBlock')
+    debug('dequeuePendingBlock')
     var index = __(pendingBlocks).findIndex(function (block) {
       return block.getBlockType() !== BlockTypes.UNKNOWN
     })
@@ -250,7 +267,7 @@ var Upgrade = function (client) {
   }
 
   function setTargetBlock(block) {
-    console.log('setTargetBlock')
+    debug('setTargetBlock')
     targetBlock = block
     self.emit('changeTargetBlock', targetBlock)
   }
@@ -260,7 +277,7 @@ var Upgrade = function (client) {
   }
 
   function enqueueCompletedBlock(block) {
-    console.log('enqueueCompletedBlock')
+    debug('enqueueCompletedBlock')
     if (!findCompletedBlockById(block.getBlockId())) {
       completedBlocks.unshift(block)
       self.emit('completeBlock', block)
@@ -272,7 +289,7 @@ var Upgrade = function (client) {
   }
 
   function startBlockUpgrades(callback) {
-    console.log('startBlockUpgrades')
+    debug('startBlockUpgrades')
     async.until(function () {
       return finished
     }, function (next) {
@@ -285,7 +302,7 @@ var Upgrade = function (client) {
   }
 
   function jumpToClassic(callback) {
-    console.log('jumpToClassic')
+    debug('jumpToClassic')
     var protocol = client.getProtocol()
     if (ClassicProtocol === protocol) {
       callback(null)
@@ -307,7 +324,7 @@ var Upgrade = function (client) {
   }
 
   function jumpToImago(callback) {
-    console.log('jumpToImago')
+    debug('jumpToImago')
     var protocol = client.getProtocol()
     if (ImagoProtocol === protocol) {
       callback(null)
@@ -329,7 +346,7 @@ var Upgrade = function (client) {
   }
 
   function jumpToDiscovery(callback) {
-    console.log('jumpToDiscovery')
+    debug('jumpToDiscovery')
     var protocol = client.getProtocol()
     if (UpgradeProtocol === protocol) {
       callback(null)
@@ -358,7 +375,7 @@ var Upgrade = function (client) {
   }
 
   function discoverTargetFaces(callback) {
-    console.log('discoverTargetFaces')
+    debug('discoverTargetFaces')
     assert.equal(client.getProtocol(), UpgradeProtocol, 'Must be in discovery mode.')
     targetFaces = {}
     client.on('event', onBlockFoundEvent)
@@ -376,11 +393,11 @@ var Upgrade = function (client) {
     pendingBlocks = []
     setTimeout(function () {
       client.removeListener('event', onBlockFoundEvent)
-      console.log('targetFaces', targetFaces)
+      debug('targetFaces', targetFaces)
       var classicFaces = __(targetFaces).where({ firmwareType: 0 })
       var imagoFaces = __(targetFaces).where({ firmwareType: 1 })
       if (classicFaces.length > 0) {
-        console.log('classic faces > 0')
+        debug('classic faces > 0')
         async.series([
           jumpToClassic,
           enqueuePendingClassicBlocks,
@@ -388,7 +405,7 @@ var Upgrade = function (client) {
           upgradeNextPendingClassicBlock
         ], callback)
       } else if (imagoFaces.length > 0) {
-        console.log('imago faces > 0')
+        debug('imago faces > 0')
         async.series([
           jumpToImago,
           enqueuePendingImagoBlocks,
@@ -396,14 +413,14 @@ var Upgrade = function (client) {
           upgradeNextPendingImagoBlock
         ], callback)
       } else {
-        console.log('no faces')
+        debug('no faces')
         callback(null)
       }
     }, 2500)
   }
 
   function enqueuePendingClassicBlocks(callback) {
-    console.log('enqueuePendingClassicBlocks')
+    debug('enqueuePendingClassicBlocks')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     var req = new ClassicProtocol.messages.GetNeighborBlocksRequest()
     client.sendRequest(req, function (err, res) {
@@ -421,7 +438,7 @@ var Upgrade = function (client) {
   }
 
   function upgradeNextPendingClassicBlock(callback) {
-    console.log('upgradeNextPendingClassicBlock')
+    debug('upgradeNextPendingClassicBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     var nextBlock = dequeuePendingBlock()
     if (nextBlock) {
@@ -441,7 +458,7 @@ var Upgrade = function (client) {
   }
 
   function enqueuePendingImagoBlocks(callback) {
-    console.log('enqueuePendingImagoBlocks')
+    debug('enqueuePendingImagoBlocks')
     var protocol = client.getProtocol()
     assert.equal(protocol, ImagoProtocol, 'Must be in OS4 mode.')
     var req = new ImagoProtocol.messages.GetNeighborBlocksRequest()
@@ -473,7 +490,7 @@ var Upgrade = function (client) {
   }
 
   function upgradeNextPendingImagoBlock(callback) {
-    console.log('upgradeNextPendingImagoBlock')
+    debug('upgradeNextPendingImagoBlock')
     assert.equal(client.getProtocol(), ImagoProtocol, 'Must be in OS4 mode.')
     var nextBlock = dequeuePendingBlock()
     if (nextBlock) {
@@ -491,7 +508,7 @@ var Upgrade = function (client) {
   }
 
   function fetchUnknownPendingBlockTypes(callback) {
-    console.log('fetchUnknownPendingBlockTypes')
+    debug('fetchUnknownPendingBlockTypes')
     var unknownBlocks = filterUnknownPendingBlocks()
     if (0 === unknownBlocks.length) {
       callback(null)
@@ -512,7 +529,7 @@ var Upgrade = function (client) {
   }
 
   function flashBootstrapToTargetBlock(callback) {
-    console.log('flashBootstrapToTargetBlock')
+    debug('flashBootstrapToTargetBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
@@ -537,7 +554,7 @@ var Upgrade = function (client) {
   }
 
   function discoverTargetImagoBlock(callback) {
-    console.log('discoverTargetImagoBlock')
+    debug('discoverTargetImagoBlock')
     assert.equal(client.getProtocol(), UpgradeProtocol, 'Must be in discovery mode.')
     assert(targetBlock, 'Target block must be set.')
     var timer = setTimeout(function () {
@@ -557,7 +574,7 @@ var Upgrade = function (client) {
   }
 
   function flashUpgradeToTargetBlock(callback) {
-    console.log('flashUpgradeToTargetBlock')
+    debug('flashUpgradeToTargetBlock')
     assert.equal(client.getProtocol(), ImagoProtocol, 'Must be in OS4 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
@@ -582,7 +599,7 @@ var Upgrade = function (client) {
   }
 
   function checkTargetBlockComplete(callback) {
-    console.log('checkTargetBlockComplete')
+    debug('checkTargetBlockComplete')
     assert(targetBlock, 'Target block must be set.')
     enqueueCompletedBlock(targetBlock)
     setTargetBlock(null)
@@ -607,31 +624,14 @@ var Upgrade = function (client) {
     })
   }
 
-  this.finish = function (callback) {
-    console.log('finish')
+  this.finish = function () {
     if (running) {
-      process.nextTick(function () {
-        finished = true
-      })
-      self.on('finishBlockUpgrades', onFinishBlockUpgrades)
-      function onFinishBlockUpgrades() {
-        self.removeListener('finishBlockUpgrades', onFinishBlockUpgrades)
-        async.series([
-          flashUpgradeToHostBlock
-        ], function (err) {
-          if (err) {
-            callback(err)
-          } else {
-            callback(null)
-            self.emit('finish')
-          }
-        })
-      }
+      finished = true
     }
   }
 
   function flashUpgradeToHostBlock(callback) {
-    console.log('flashUpgradeToHostBlock')
+    debug('flashUpgradeToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
     var program = new Program(hex)
@@ -662,7 +662,7 @@ var Upgrade = function (client) {
 
   function waitForFinish(timeout) {
     return function (callback) {
-      console.log('Waiting for blocks...')
+      debug('Waiting for blocks...')
       setTimeout(callback, timeout)
     }
   }
@@ -673,6 +673,5 @@ function retry(options, fn) {
 }
 
 util.inherits(Upgrade, events.EventEmitter)
-
 module.exports = Upgrade
 module.exports.FirmwareTypes = FirmwareTypes

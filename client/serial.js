@@ -1,10 +1,9 @@
+var debug = require('debug')('cubelets:serial')
 var util = require('util')
 var SerialPort = require('serialport').SerialPort
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
-
-var debug = true
 
 var SerialScanner = function () {
   Scanner.call(this)
@@ -71,10 +70,10 @@ var SerialConnection = function (device, opts) {
         next()
       }
     }
-    function write(data, callback) {
+    function write(chunk, callback) {
       if (serialPort) {
-        debug && console.log('<<', data)
-        serialPort.write(data, callback)
+        debug('<<', chunk)
+        serialPort.write(chunk, callback)
       } else {
         callback(new Error('disconnected'))
       }
@@ -102,7 +101,7 @@ var SerialConnection = function (device, opts) {
           isOpen = true
 
           serialPort.on('data', function (chunk) {
-            debug && console.log('>>', chunk)
+            debug('>>', chunk)
             stream.push(chunk)
           })
 

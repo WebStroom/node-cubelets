@@ -64,18 +64,9 @@ function Factory(Scanner, Connection) {
 
     var protocol, parser, strategy
 
-    function getProtocolId() {
-      return (
-        (protocol === Protocols.Imago) ? 'imago' :
-        (protocol === Protocols.Classic) ? 'classic' :
-          'upgrade'
-      )
-    }
-
     this.setProtocol = function (newProtocol) {
       if (newProtocol !== protocol) {
         protocol = newProtocol
-        console.log('setProtocol', getProtocolId())
         setParser(new protocol.Parser())
         setStrategy(new protocol.Strategy(client))
       }
@@ -86,7 +77,6 @@ function Factory(Scanner, Connection) {
         parser.removeAllListeners('message')
       }
       parser = newParser
-      parser.tag = getProtocolId()
       parser.on('message', function (message) {
         if (protocol.isEvent(message)) {
           client.emit('event', message)

@@ -144,10 +144,10 @@ function start(client) {
         'Attach more Cubelets directly to the Bluetooth block,',
         'or press ENTER if you are done upgrading all of your Cubelets.'
       ].join(' ')
-      if (this.finished) {
+      if (this.once) {
         console.log(text)
       } else {
-        this.finished = true
+        this.once = true
         prompt(text, function () {
           upgrade.finish()
         })
@@ -158,9 +158,6 @@ function start(client) {
     })
     upgrade.on('completedHostBlock', function () {
       console.log('Successfully upgraded Bluetooth block.')
-    })
-    upgrade.on('complete', function () {
-      exitWithSuccess('Cubelets OS4 updgrade complete.')
     })
     upgrade.on('error', function onError(err) {
       console.error('Upgrade failed:\n\t', err)
@@ -173,6 +170,8 @@ function start(client) {
     upgrade.start(function (err) {
       if (err) {
         exitWithError(err)
+      } else {
+        exitWithSuccess('Cubelets OS4 updgrade complete.')
       }
     })
   }
