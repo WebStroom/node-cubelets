@@ -7,9 +7,14 @@ var FlashProgressEvent = function () {
 
 util.inherits(FlashProgressEvent, Message)
 
-FlashProgressEvent.prototype.decode = function (data) {
-  this.error = new Error('not implemented')
-  return false
+FlashProgressEvent.prototype.decodeBody = function (body) {
+  if (body.length !== 1) {
+    this.error = new Error('Size should be 1 byte but is', body.length, 'bytes.')
+    return false
+  }
+
+  this.progress = body.readUInt8(0)
+  return true
 }
 
 module.exports = FlashProgressEvent

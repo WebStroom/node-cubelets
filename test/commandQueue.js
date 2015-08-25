@@ -3,13 +3,13 @@ var util = require('util')
 var events = require('events')
 var Client = require('../client/net')
 var Demo = require('../demo')
-var Server = require('../server/net')(Demo)
+var DemoServer = require('../server/net')(Demo)
 var CommandQueue = require('../commandQueue')
 
 var port = 9877
 var connection
 
-var server = Server.createServer(function (newConnection) {
+var server = DemoServer.createServer(function (newConnection) {
   connection = newConnection
 })
 

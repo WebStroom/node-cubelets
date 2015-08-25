@@ -3,6 +3,8 @@ var BlockProtocol = require('./block')
 var Message = require('./message')
 var Parser = require('../parser')
 var Strategy = require('./strategy')
+var Program = require('./program')
+var Flash = require('./flash')
 var xtend = require('xtend/mutable')
 
 var messages = {
@@ -10,6 +12,7 @@ var messages = {
   ClearBlockValueCommand: require('./command/clearBlockValue'),
   SetLEDColorCommand: require('./command/setLEDColor'),
   SetLEDRGBCommand: require('./command/setLEDRGB'),
+  ResetCommand: require('./command/reset'),
 
   GetConfigurationRequest: require('./request/getConfiguration'),
   GetConfigurationResponse: require('./response/getConfiguration'),
@@ -44,6 +47,8 @@ var messages = {
 
   DebugEvent: require('./event/debug'),
   BlockValueEvent: require('./event/blockValue'),
+  BlockAddedEvent: require('./event/blockAdded'),
+  BlockRemovedEvent: require('./event/blockRemoved'),
   ReadBlockMessageEvent: require('./event/readBlockMessage'),
   UploadToMemoryCompleteEvent: require('./event/uploadToMemoryComplete'),
   FlashProgressEvent: require('./event/flashProgress'),
@@ -56,6 +61,7 @@ var ImagoProtocol = new Protocol({
     [0x42, messages.ClearBlockValueCommand],
     [0x43, messages.SetLEDColorCommand],
     [0x44, messages.SetLEDRGBCommand],
+    [0x80, messages.ResetCommand],
   ],
   requests: [
     [0x01, messages.GetConfigurationRequest],
@@ -97,6 +103,8 @@ var ImagoProtocol = new Protocol({
     [0xE2, messages.ReadBlockMessageEvent],
     [0xE3, messages.UploadToMemoryCompleteEvent],
     [0xE4, messages.FlashProgressEvent],
+    [0xE5, messages.BlockAddedEvent],
+    [0xE6, messages.BlockRemovedEvent],
     [0xFF, messages.ErrorEvent],
   ]
 })
@@ -107,7 +115,9 @@ xtend(ImagoProtocol, {
   Message: Message,
   Block: BlockProtocol,
   Parser: Parser.bind(null, ImagoProtocol),
-  Strategy: Strategy.bind(null, ImagoProtocol)
+  Strategy: Strategy.bind(null, ImagoProtocol),
+  Flash: Flash.bind(null, ImagoProtocol),
+  Program: Program
 })
 
 module.exports = ImagoProtocol

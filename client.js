@@ -9,6 +9,9 @@ var Protocols = {
   Classic: require('./protocol/classic')
 }
 
+Protocols.OS4 = Protocols.Imago
+Protocols.OS3 = Protocols.Classic
+
 function Factory(Scanner, Connection) {
 
   function Client (con) {
@@ -64,10 +67,6 @@ function Factory(Scanner, Connection) {
       }
     }
 
-    this.getProtocol = function () {
-      return protocol
-    }
-
     function setParser(newParser) {
       if (parser) {
         con.removeListener('data', parser.parse)
@@ -85,13 +84,21 @@ function Factory(Scanner, Connection) {
       con.on('data', parser.parse)
     }
 
+    function setStrategy(newStrategy) {
+      strategy = newStrategy
+      xtend(client, strategy)
+    }
+
+    this.getProtocol = function () {
+      return protocol
+    }
+
     this.getParser = function () {
       return parser
     }
 
-    function setStrategy(newStrategy) {
-      strategy = newStrategy
-      xtend(client, strategy)
+    this.getStrategy = function () {
+      return strategy
     }
 
     this.sendData = function (data, callback) {
@@ -122,6 +129,7 @@ function Factory(Scanner, Connection) {
   util.inherits(Client, events.EventEmitter)
 
   xtend(Client, Scanner)
+
   Client.Protocol = Protocols.Imago
   xtend(Client.Protocol, Protocols)
 

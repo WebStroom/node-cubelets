@@ -23,8 +23,14 @@ GetAllBlocks.prototype.encodeBody = function () {
 }
 
 GetAllBlocks.prototype.decodeBody = function (body) {
+  this.blocks = []
+
+  if (body.length === 0) {
+    return true
+  }
+
   if (body.length % 5 !== 0) {
-    this.error = new Error('Size should be divisible by 5.')
+    this.error = new Error('Size should be divisible by 5 but is', body.length, 'bytes.')
     return false
   }
 

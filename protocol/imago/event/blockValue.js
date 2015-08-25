@@ -1,5 +1,6 @@
 var util = require('util')
 var Message = require('../message')
+var __ = require('underscore')
 
 var BlockValueEvent = function (blocks) {
   Message.call(this)
@@ -7,6 +8,17 @@ var BlockValueEvent = function (blocks) {
 }
 
 util.inherits(BlockValueEvent, Message)
+
+BlockValueEvent.prototype.encodeBody = function () {
+  var body = new Buffer([])
+  __(this.blocks).each(function (block) {
+    body = Buffer.concat([ body,
+      Message.Encoder.encodeId(block.blockId),
+      new Buffer([ block.value ])
+    ])
+  })
+  return body
+}
 
 BlockValueEvent.prototype.decodeBody = function (body) {
   if (body.length % 4 !== 0) {

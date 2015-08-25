@@ -22,7 +22,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       test.skip('get neighbors', function (t) {
         t.plan(2)
-        client.fetchAllBlocks(function (err, res) {
+        client.fetchNeighborBlocks(function (err, res) {
           t.ifError(err, 'no err')
           t.ok(res, 'response ok')
         })
@@ -30,7 +30,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       test.skip('get block neighbors', function (t) {
         t.plan(2)
-        var blockId = config.construction.type.drive
+        var blockId = config.map.type.drive
         var GetNeighborsRequest = Protocol.Block.messages.GetNeighborsRequest
         client.sendBlockRequest(new GetNeighborsRequest(blockId), function (err, res) {
           t.ifError(err, 'no get neighbors err')

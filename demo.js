@@ -1,7 +1,6 @@
 var through = require('through2')
 var Version = require('./version')
-var Cubelet = require('./cubelet')
-var BlockTypes = Cubelet.BlockTypes
+var BlockTypes = require('./blockTypes')
 var Protocol = require('./protocol/imago')
 var Message = Protocol.Message
 var __ = require('underscore')
@@ -15,12 +14,13 @@ function Demo(socket, opts) {
   var customApplication = 0
 
   var blocks = []
+  var valueEvents = {}
 
   function getOriginBlock() {
     return blocks[0]
   }
 
-  function getAllBlocks() {
+  function getBlocks() {
     return __(blocks).rest(1)
   }
 
@@ -81,8 +81,30 @@ function Demo(socket, opts) {
 
   reply(messages.GetAllBlocksRequest, function (req) {
     console.log('get all blocks?', req)
-    var blocks = getAllBlocks()
+    var blocks = getBlocks()
     send(new messages.GetAllBlocksResponse(blocks))
+  })
+
+  reply(messages.RegisterBlockValueEventRequest, function (req) {
+    console.log('register block value event?', req)
+    var blockId = req.blockId
+    valueEvents[blockId] = true
+    startEventQueue()
+    send(new messages.RegisterBlockValueEventResponse(0))
+  })
+
+  reply(messages.UnregisterBlockValueEventRequest, function (req) {
+    console.log('unregister block value event?', req)
+    var blockId = req.blockId
+    delete valueEvents[blockId]
+    send(new messages.UnregisterBlockValueEventResponse(0))
+  })
+
+  reply(messages.UnregisterAllBlockValueEventsRequest, function (req) {
+    console.log('unregister all block value events?', req)
+    var blockId = req.blockId
+    valueEvents = {}
+    send(new messages.UnregisterAllBlockValueEventsResponse(0))
   })
 
   reply(messages.WriteBlockMessageRequest, function (req) {
@@ -216,9 +238,34 @@ function Demo(socket, opts) {
     stream.write(msg.encode())
   }
 
+  var eventQueue = null
+
+  function startEventQueue() {
+    if (eventQueue) {
+      return
+    }
+    var time = 0
+    var interval = 100
+    eventQueue = setInterval(function () {
+      if (__(valueEvents).keys().length > 0) {
+        var blocks = __(valueEvents).map(function (e, blockId) {
+          return {
+            blockId: parseInt(blockId, 10),
+            value: Math.floor(255 * Math.abs(Math.sin(2 * Math.PI * (time % 5000) / 5000)))
+          }
+        })
+        send(new messages.BlockValueEvent(blocks))
+        time += interval
+      } else {
+        clearInterval(eventQueue)
+        eventQueue = null
+      }
+    }, interval)
+  }
+
   stream.addBlock = addBlock
   stream.removeBlock = removeBlock
-  stream.getAllBlocks = getAllBlocks
+  stream.getBlocks = getBlocks
 
   function mutation0() {
     var bluetooth = blockId

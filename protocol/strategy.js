@@ -17,6 +17,7 @@ function Strategy(protocol, client) {
         if (err) {
           client.stopKeepAliveTimer()
           client.emit('error', new Error('Keep alive timer expired.'))
+          client.emit('die')
         }
       }, timeout)
     }, interval)
@@ -33,6 +34,34 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
+  this.getBlockMap = function () {
+    throw new Error('not implemented')
+  }
+
+  this.getOriginBlock = function () {
+    return this.getBlockMap().getOriginBlock()
+  }
+
+  this.getNeighborBlocks = function () {
+    return this.getBlockMap().getNeighborBlocks()
+  }
+
+  this.getAllBlocks = function () {
+    return this.getBlockMap().getAllBlocks()
+  }
+
+  this.getGraph = function () {
+    return this.getBlockMap().getGraph()
+  }
+
+  this.findBlockById = function (blockId) {
+    return this.getBlockMap().findById(blockId)
+  }
+
+  this.filterBlocksByHopCount = function (hopCount) {
+    return this.getBlockMap().filterByHopCount(hopCount)
+  }
+
   this.getConfiguration = function () {
     throw new Error('not implemented')
   }
@@ -40,16 +69,8 @@ function Strategy(protocol, client) {
   this.fetchConfiguration = function (callback) {
     throw new Error('not implemented')
   }
-  
-  this.getOriginBlock = function () {
-    throw new Error('not implemented')
-  }
 
   this.fetchOriginBlock = function (callback) {
-    throw new Error('not implemented')
-  }
-
-  this.getNeighborBlocks = function () {
     throw new Error('not implemented')
   }
 
@@ -57,27 +78,11 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.getAllBlocks = function () {
-    throw new Error('not implemented')
-  }
-
   this.fetchAllBlocks = function (callback) {
     throw new Error('not implemented')
   }
 
-  this.getGraph = function () {
-    throw new Error('not implemented')
-  }
-
   this.fetchGraph = function () {
-    throw new Error('not implemented')
-  }
-
-  this.findBlockById = function (blockId) {
-    throw new Error('not implemented')
-  }
-
-  this.filterBlocksByHopCount = function (hopCount) {
     throw new Error('not implemented')
   }
 
@@ -102,21 +107,24 @@ function Strategy(protocol, client) {
   }
 
   this.registerBlockValueEvent = function (blockId, callback) {
-    client.sendRequest(new messages.RegisterBlockValueEventRequest(blockId), callback)
-  }
-
-  this.unregisterBlockValueEvent = function (blockId, callback) {
-    client.sendRequest(new messages.UnregisterBlockValueEventRequest(blockId), callback)
-  }
-
-  this.unregisterAllBlockValueEvents = function (callback) {
-    client.sendRequest(new messages.UnregisterAllBlockValueEventsRequest(), callback)
-  }
-
-  this.flashProgramToBlock = function (program, block, callback) {
     throw new Error('not implemented')
   }
 
+  this.unregisterBlockValueEvent = function (blockId, callback) {
+    throw new Error('not implemented')
+  }
+
+  this.unregisterAllBlockValueEvents = function (callback) {
+    throw new Error('not implemented')
+  }
+
+  this.sendBlockRequest = function (blockRequest, callback, timeout) {
+    throw new Error('not implemented')
+  }
+
+  this.flash = function () {
+    return new protocol.Flash(client)
+  }
 }
 
 module.exports = Strategy

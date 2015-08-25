@@ -3,17 +3,18 @@ var events = require('events')
 var async = require('async')
 var xtend = require('xtend')
 var cubelets = require('./client/net')
-var Protocol = cubelets.Protocol
-var Cubelet = require('./cubelet')
-var BlockTypes = Cubelet.BlockTypes
-var Program = require('./program')
-var InfoService = require('./service/info')
+var ClassicProtocol = require('./protocol/classic')
+var ImagoProtocol = require('./protocol/imago')
+var BootstrapProtocol = require('./protocol/bootstrap/upgrade')
+var Block = require('./block')
+var BlockTypes = require('./blockTypes')
+var InfoService = require('./services/info')
 var __ = require('underscore')
 
 var FirmwareType = {
   CLASSIC: 0,
-  BOOTSTRAP: 1,
-  IMAGO: 2
+  IMAGO: 1,
+  BOOTSTRAP: 2
 }
 
 var programs = {}
@@ -32,47 +33,44 @@ var programs = {}
 var done = false
 
 function detectFirmwareType(client, callback) {
-  console.log('detect firmware type')
-  client.setProtocol(Protocol.Classic)
-  client.ping(function (err) {
-    if (!err) {
-      callback(null, FirmwareType.CLASSIC)
-    } else {
-      client.setProtocol(Protocol.Imago)
-      client.fetchConfiguration(function (err, config) {
-        if (!err) {
-          callback(null,
-            (config.customApplication === 2) ? 
-              FirmwareType.BOOTSTRAP : FirmwareType.IMAGO)
-        } else {
-          callback(err)
-        }
-      })
+  // Switch to the classic protocol
+  client.setProtocol(ClassicProtocol)
+  // Send a keep alive request to test how the cubelet responds
+  client.sendRequest(new ClassicProtocol.messages.KeepAliveRequest(), function (err, response) {
+    if (err) {
+      // The imago protocol will fail to respond.
+      client.setProtocol(ImagoProtocol)
+      callback(null, FirmwareType.IMAGO)
     }
-  }, 1000)
+    else if (response.payload.length > 0) {
+      // The bootstrap protocol will differentiate itself by
+      // sending an extra byte in the response.
+      client.setProtocol(BootstrapProtocol)
+      callback(null, FirmwareType.BOOTSTRAP)
+    } else {
+      // Otherwise, the cubelet has classic firmware.
+      callback(null, FirmwareType.CLASSIC)
+    }
+  })
 }
 
 function flashBootstrapIfNeeded(client, callback) {
   detectFirmwareType(client, function (err, firmwareType) {
     if (err) {
-      console.error('could not detect firmware')
+      callback(err)
     } else if (FirmwareType.BOOTSTRAP !== firmwareType) {
-      console.log('flashing bootstrap')
       flashBootstrap(client, callback)
     } else {
-      console.log('skipping bootstrap')
       callback(null, client)
     }
   })
 }
 
 function flashBootstrap(client, callback) {
-  console.log('(flash bootstrap not implemented)')
   callback(null, client)
 }
 
 function queueBlocksUntilDone(client, callback) {
-  console.log('queue blocks until done')
   var waitingQueue = []
   var doneQueue = []
 
@@ -97,7 +95,6 @@ function queueBlocksUntilDone(client, callback) {
   }
 
   function fetchNeighborBlocks(callback) {
-    console.log('fetch neighbor blocks')
     client.fetchNeighborBlocks(function (err, blocks) {
       if (err) {
         callback(err)
@@ -110,12 +107,11 @@ function queueBlocksUntilDone(client, callback) {
   function fetchBlockInfo(blocks, callback) {
     var service = new InfoService()
     service.on('info', function (info, block) {
-      var type = Cubelet.typeForTypeId(info.blockTypeId)
+      var type = Block.blockTypeForId(info.blockTypeId)
       if (type !== BlockTypes.UNKNOWN) {
-        block.blockType = type
+        block._blockType = type
         if (!exists(waitingQueue, block) && !exists(doneQueue, block)) {
           enqueue(waitingQueue, block)
-          console.log('waiting:', waitingQueue)
         }
       }
     })
@@ -132,13 +128,11 @@ function queueBlocksUntilDone(client, callback) {
     if (!program) {
       callback(new Error('No program found for block type: ' + typeId))
     } else {
-      console.log('flashing block', block.blockId)
       client.flashProgramToBlock(program, block, function (err) {
         if (err) {
           callback(err)
         } else {
           enqueue(doneQueue, dequeue(waitingQueue))
-          console.log('done:', doneQueue)
           callback(null)
         }
       })
@@ -147,7 +141,6 @@ function queueBlocksUntilDone(client, callback) {
 
   function wait(callback) {
     var delay = 7500
-    console.log('waiting', delay+'ms')
     setTimeout(function () {
       callback(null)
     }, 5000)
@@ -155,10 +148,8 @@ function queueBlocksUntilDone(client, callback) {
 
   function tryFlashNextBlock(callback) {
     if (empty(waitingQueue)) {
-      console.log('no blocks to flash')
       wait(callback)
     } else {
-      console.log('flashing next block')
       flashNextBlock(callback)
     }
   }
@@ -174,12 +165,10 @@ function queueBlocksUntilDone(client, callback) {
 }
 
 function flashImago(client, callback) {
-  console.log('flash imago')
   callback(null, client)
 }
 
 function update(client, callback) {
-  console.log('update')
   async.seq(
     flashBootstrapIfNeeded,
     queueBlocksUntilDone,
@@ -196,17 +185,21 @@ var Upgrade = function (client) {
 
   var self = this
 
+  this.getClient = function () {
+    return client
+  }
+
   this.detectIfNeeded = function (callback) {
     detectFirmwareType(client, function (err, firmwareType) {
       if (err) {
         callback(err)
       } else {
-        callback(null, (FirmwareType.IMAGO !== firmwareType))
+        callback(null, (FirmwareType.IMAGO !== firmwareType), firmwareType)
       }
     })
   }
 
-  this.bootstrapBluetoothBlock = function (callback) {
+  this.flashBootstrap = function (callback) {
     var p = 0
     var interval = setInterval(function () {
       if (p > 100) {
@@ -218,25 +211,33 @@ var Upgrade = function (client) {
     }, 10)
   }
 
+  this.waitForDisconnect = function (callback) {
+    callback(null)
+  }
+
+  this.waitForReconnect = function (callback) {
+    callback(null)
+  }
+
   var pendingBlocks = []
   var completedBlocks = []
   var activeBlock = null
 
   function findPendingBlock(block) {
     return __(pendingBlocks).find(function (pendingBlock) {
-      return block.blockId === pendingBlock.blockId
+      return block.getBlockId() === pendingBlock.getBlockId()
     })
   }
 
   function findCompletedBlock(block) {
     return __(completedBlocks).find(function (completedBlock) {
-      return block.blockId === completedBlock.blockId
+      return block.getBlockId() === completedBlock.getBlockId()
     })
   }
 
   function filterUnknownPendingBlocks() {
     return __(pendingBlocks).filter(function (block) {
-      return block.blockType === BlockTypes.UNKNOWN
+      return block.getBlockType() === BlockTypes.UNKNOWN
     })
   }
 
@@ -245,9 +246,9 @@ var Upgrade = function (client) {
     var service = new InfoService()
     var changed = false
     service.on('info', function (info, block) {
-      var type = Cubelet.typeForTypeId(info.blockTypeId)
+      var type = Block.blockTypeForId(info.blockTypeId)
       if (type !== BlockTypes.UNKNOWN) {
-        block.blockType = type
+        block._blockType = type
         changed = true
       }
     })
@@ -262,15 +263,13 @@ var Upgrade = function (client) {
 
   function dequeueNextBlockToUpgrade() {
     var index = __(pendingBlocks).findIndex(function (block) {
-      return block.blockType !== BlockTypes.UNKNOWN
+      return block.getBlockType() !== BlockTypes.UNKNOWN
     })
     if (index > -1) {
       var nextBlock = pendingBlocks[index]
       pendingBlocks.splice(index, 1)
       self.emit('changePendingBlocks')
       return nextBlock
-    } else {
-      console.log('found no blocks', pendingBlocks)
     }
   }
 

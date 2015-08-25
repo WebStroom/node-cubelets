@@ -6,17 +6,17 @@ function blockId(b2, b1, b0) {
 
 function device() {
   return process.browser ? {
-    "address": "00:04:3e:08:21:a9"
+    "address": "00:04:3e:31:c7:3e"
   } : {
-    "path": "/dev/cu.Cubelet-GPW-AMP-SPP",
-    "address": "00:04:3e:08:21:db",
+    "path": "/dev/cu.Cubelet-RYC-AMP-SPP",
+    "address": "00:04:3e:31:c7:3e",
     "channelID": 1
   }
 }
 
-function construction() {
+function map() {
   var type = {
-    bluetooth: blockId(22, 21, 20),
+    bluetooth: 167058,
     passive: blockId(3, 2, 1),
     knob: blockId(6, 5, 4),
     distance: blockId(7, 5, 4),
@@ -26,7 +26,7 @@ function construction() {
   }
   return {
     "type": type,
-    "hopcount": [[
+    "hopCount": [[
       type.bluetooth
     ],[
       type.passive,
@@ -40,5 +40,5 @@ function construction() {
 
 module.exports = {
   "device": device(),
-  "construction": construction()
+  "map": map()
 }

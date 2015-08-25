@@ -1,10 +1,9 @@
 var util = require('util')
 var Strategy = require('../strategy')
 var Version = require('../../version')
-var Cubelet = require('../../cubelet')
-var Blocks = require('../../blocks')
-var BlockTypes = Cubelet.BlockTypes
-var xtend = require('xtend/mutable')
+var Block = require('../../block')
+var BlockMap = require('../../blockMap')
+var BlockTypes = require('../../blockTypes')
 var async = require('async')
 var __ = require('underscore')
 
@@ -21,6 +20,16 @@ function ImagoStrategy(protocol, client) {
     client.sendRequest(new messages.EchoRequest(data), callback)
   }
 
+  var map = new BlockMap()
+
+  map.on('update', function () {
+    client.emit('updateBlockMap')
+  })
+
+  this.getBlockMap = function () {
+    return map
+  }
+
   var configuration = null
 
   this.getConfiguration = function () {
@@ -34,35 +43,21 @@ function ImagoStrategy(protocol, client) {
     )(new messages.GetConfigurationRequest(), callback)
   }
 
-  var blocks = new Blocks()
-
-  blocks.on('updateBlocks', function () {
-    client.emit('updateBlocks')
-  })
-
   function onFetchConfiguration(response, callback) {
     var blockId = response.blockId
     configuration = response
-    blocks.setOrigin(blockId, BlockTypes.BLUETOOTH)
+    map.setOriginBlock(blockId, BlockTypes.BLUETOOTH)
     if (callback) {
       callback(null, configuration)
     }
   }
 
-  this.getOriginBlock = function () {
-    return blocks.getOrigin()
-  }
-
   this.fetchOriginBlock = function (callback) {
     client.fetchConfiguration(function (err) {
       if (callback) {
-        callback(err, client.getOriginBlock())
+        callback(err, map.getOriginBlock())
       }
     })
-  }
-
-  this.getNeighborBlocks = function () {
-    return blocks.filterByHopCount(1)
   }
 
   this.fetchNeighborBlocks = function (callback) {
@@ -73,20 +68,23 @@ function ImagoStrategy(protocol, client) {
   }
 
   function onFetchNeighborBlocks(response, callback) {
-    var origin = blocks.getOrigin()
+    var origin = map.getOriginBlock()
     if (origin) {
-      blocks.upsert({
-        blockId: origin.blockId,
+      map.upsert({
+        blockId: origin.getBlockId(),
         neighbors: response.neighbors
       })
     }
+    __(response.neighbors).each(function (blockId, faceIndex) {
+      map.upsert({
+        blockId: blockId,
+        hopCount: 1,
+        faceIndex: parseInt(faceIndex, 10)
+      })
+    })
     if (callback) {
-      callback(null, client.getNeighborBlocks())
+      callback(null, map.getNeighborBlocks())
     }
-  }
-
-  this.getAllBlocks = function () {
-    return blocks.getAll()
   }
 
   this.fetchAllBlocks = function (callback) {
@@ -98,28 +96,32 @@ function ImagoStrategy(protocol, client) {
 
   function onFetchAllBlocks(response, callback) {
     response.blocks.forEach(function (block) {
-      blocks.upsert({
+      map.upsert({
         blockId: block.blockId,
         hopCount: block.hopCount
       })
     })
     if (callback) {
-      callback(null, client.getAllBlocks())
+      callback(null, map.getAllBlocks())
     }
-  }
-
-  this.getGraph = function () {
-    return blocks.getGraph()
   }
 
   this.fetchGraph = function (callback) {
     async.series([
       client.fetchOriginBlock,
       client.fetchAllBlocks,
-      client.fetchAllBlockConfigurations,
       client.fetchNeighborBlocks,
-      client.fetchAllBlockNeighbors
-    ], callback)
+      fetchBlockConfigurations,
+      fetchBlockNeighbors
+    ], function (err) {
+      if (callback) {
+        if (err) {
+          callback(err)
+        } else {
+          callback(null, map.getGraph())
+        }
+      }
+    })
   }
 
   function sortBlocksByHopCount(unsortedBlocks) {
@@ -128,15 +130,15 @@ function ImagoStrategy(protocol, client) {
     })
   }
 
-  this.fetchAllBlockConfigurations = function (callback) {
-    client.fetchBlockConfigurations(client.getAllBlocks(), callback)
+  function fetchBlockConfigurations(callback) {
+    queueGetConfigurationBlockRequests(map.getAllBlocks(), callback)
   }
 
-  this.fetchBlockConfigurations = function (unsortedBlocks, callback) {
+  function queueGetConfigurationBlockRequests(unsortedBlocks, callback) {
     var fetchTasks = []
     __(sortBlocksByHopCount(unsortedBlocks)).each(function (block) {
       fetchTasks.push(function (callback) {
-        var blockId = block.blockId
+        var blockId = block.getBlockId()
         var GetConfigurationRequest = protocol.Block.messages.GetConfigurationRequest
         client.sendBlockRequest(new GetConfigurationRequest(blockId), function (err, response) {
           if (err) {
@@ -144,9 +146,9 @@ function ImagoStrategy(protocol, client) {
               callback(err)
             }
           } else {
-            blocks.upsert({
+            map.upsert({
               blockId: blockId,
-              blockType: Cubelet.typeForTypeId(response.blockTypeId),
+              blockType: Block.blockTypeForId(response.blockTypeId),
               hardwareVersion: response.hardwareVersion,
               bootloaderVersion: response.bootloaderVersion,
               applicationVersion: response.applicationVersion,
@@ -163,15 +165,15 @@ function ImagoStrategy(protocol, client) {
     async.series(fetchTasks, callback)
   }
 
-  this.fetchAllBlockNeighbors = function (callback) {
-    client.fetchBlockNeighbors(client.getAllBlocks(), callback)
+  function fetchBlockNeighbors(callback) {
+    queueGetNeighborsBlockRequests(map.getAllBlocks(), callback)
   }
 
-  this.fetchBlockNeighbors = function (unsortedBlocks, callback) {
+  function queueGetNeighborsBlockRequests(unsortedBlocks, callback) {
     var fetchTasks = []
     __(sortBlocksByHopCount(unsortedBlocks)).each(function (block) {
       fetchTasks.push(function (callback) {
-        var blockId = block.blockId
+        var blockId = block.getBlockId()
         var GetNeighborsRequest = protocol.Block.messages.GetNeighborsRequest
         client.sendBlockRequest(new GetNeighborsRequest(blockId), function (err, response) {
           if (err) {
@@ -179,7 +181,7 @@ function ImagoStrategy(protocol, client) {
               callback(err)
             }
           } else {
-            blocks.upsert({
+            map.upsert({
               blockId: blockId,
               neighbors: response.neighbors
             })
@@ -193,34 +195,86 @@ function ImagoStrategy(protocol, client) {
     async.series(fetchTasks, callback)
   }
 
-  this.findBlockById = function (blockId) {
-    return blocks.findById(blockId)
+  this.setBlockValue = function (blockId, value) {
+    var block = map.findById(blockId)
+    if (block) {
+      block._value = value
+      block._valueOverridden = true
+      client.sendCommand(new messages.SetBlockValueCommand([{
+        blockId: blockId,
+        value: value
+      }]))
+    } else {
+      client.emit('error', new Error('Block not found.'))
+    }
   }
 
-  this.filterBlocksByHopCount = function (hopCount) {
-    return blocks.filterByHopCount(hopCount)
+  this.setManyBlockValues = function (blockValueMap) {
+    var blocks = __(blockValueMap).reduce(function (blocks, blockId, value) {
+      var block = map.findById(blockId)
+      if (block) {
+        block._value = value
+        blocks.push({
+          blockId: blockId,
+          value: value
+        })
+      } else {
+        client.emit('error', new Error('Block not found.'))
+      }
+    }, [])
+    if (blocks.length > 0) {
+      client.sendCommand(new messages.SetBlockValueCommand(blocks))
+    }
   }
 
-  this.setBlockValue = function (blockId, value, callback) {
-    var block = { blockId: blockId, value: value }
-    client.sendCommand(new messages.SetBlockValueCommand([ block ]), callback)
-  }
-
-  this.setManyBlockValues = function (blocks, callback) {
-    client.sendCommand(new messages.SetBlockValueCommand(blocks), callback)
-  }
-
-  this.clearBlockValue = function (blockId, callback) {
-    var block = { blockId: blockId }
-    client.sendCommand(new messages.ClearBlockValueCommand([ block ]), callback)
+  this.clearBlockValue = function (blockId) {
+    var block = map.findById(blockId)
+    if (block) {
+      block._valueOverridden = false
+      client.sendCommand(new messages.ClearBlockValueCommand([{
+        blockId: blockId
+      }]))
+    } else {
+      client.emit('error', new Error('Block not found.'))
+    }
   }
 
   this.clearManyBlockValues = function (blocks, callback) {
-    client.sendCommand(new messages.ClearBlockValueCommand(blocks), callback)
+    var blocks = __(blockValueMap).reduce(function (blocks, blockId, value) {
+      var block = map.findById(blockId)
+      if (block) {
+        block._valueOverridden = value
+        blocks.push({
+          blockId: blockId
+        })
+      } else {
+        client.emit('error', new Error('Block not found.'))
+      }
+    }, [])
+    if (blocks.length > 0) {
+      client.sendCommand(new messages.ClearBlockValueCommand(blocks))
+    }
   }
 
   this.clearAllBlockValues = function (callback) {
-    throw new Error('not implemented')
+    var blocks = __(map.getBlocks()).filter(function (block) {
+      return block.isValueOverridden()
+    })
+    if (blocks.length > 0) {
+      client.clearManyBlockValues(blocks, callback)
+    }
+  }
+
+  this.registerBlockValueEvent = function (blockId, callback) {
+    client.sendRequest(new messages.RegisterBlockValueEventRequest(blockId), callback)
+  }
+
+  this.unregisterBlockValueEvent = function (blockId, callback) {
+    client.sendRequest(new messages.UnregisterBlockValueEventRequest(blockId), callback)
+  }
+
+  this.unregisterAllBlockValueEvents = function (callback) {
+    client.sendRequest(new messages.UnregisterAllBlockValueEventsRequest(), callback)
   }
 
   this.sendBlockRequest = function (blockRequest, callback, timeout) {
@@ -261,95 +315,6 @@ function ImagoStrategy(protocol, client) {
         onRequestError(err)
       } else if (response.result !== 0) {
         onRequestError(new Error('Failed to write block message with result: ' + response.result))
-      }
-    })
-  }
-
-  this.uploadProgramToMemory = function (program, slot, callback) {
-    var lineLength = 18
-    var slotData = program.data
-    var slotSize = Math.ceil(slotData.length / lineLength)
-    var slotIndex = slot.index
-    var blockType = slot.blockType
-    var version = slot.version
-    var isCustom = slot.isCustom
-    var crc = slot.crc
-    var request = new messages.UploadToMemoryRequest(slotIndex, slotSize, blockType, version, isCustom, crc)
-    var timeout = slotSize * 1000 // 1 second per line?
-
-    var timer = setTimeout(function () {
-      client.removeListener('event', waitForCompleteEvent)
-      if (callback) {
-        callback(new Error('Timed out waiting for upload to complete.'))
-      }
-    }, timeout)
-
-    function waitForCompleteEvent(e) {
-      if (e instanceof messages.UploadToMemoryCompleteEvent) {
-        clearTimeout(timer)
-        client.removeListener('event', waitForCompleteEvent)
-        if (callback) {
-          callback(null)
-        }
-      }
-    }
-
-    client.on('event', waitForCompleteEvent)
-    client.sendRequest(request, function (err) {
-      if (err) {
-        client.removeListener('event', waitForCompleteEvent)
-        if (callback) {
-          callback(err)
-        }
-      } else {
-        client.sendData(slotData, function (err) {
-          if (err) {
-            client.removeListener('event', waitForCompleteEvent)
-            if (callback) {
-              callback(err)
-            }
-          }
-        })
-      }
-    })
-  }
-
-  this.flashMemoryToBlock = function (blockId, slotIndex, callback) {
-    var request = new messages.FlashMemoryToBlockRequest(blockId, slotIndex)
-    client.sendRequest(request, function (err, response) {
-      if (callback) {
-        if (err) {
-          if (callback) {
-            callback(err)
-          }
-        } else if (response.result !== 0) {
-          if (callback) {
-            callback(new Error('Flashing failed.'))
-          }
-        } else {
-          if (callback) {
-            callback(null)
-          }
-        }
-      }
-    })
-  }
-
-  this.flashProgramToBlock = function (program, block, callback) {
-    var slot = {
-      index: 0,
-      blockTypeId: block.type.typeId,
-      version: new Version(0, 0, 0),
-      isCustom: false,
-      crc: 0xcc
-    }
-    client.uploadProgramToMemory(program, slot, function (err) {
-      if (err) {
-        if (callback) {
-          callback(err)
-        }
-      } else {
-        client.flashMemoryToBlock(block.blockId, slot.index, callback)
       }
     })
   }

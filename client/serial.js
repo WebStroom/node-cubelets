@@ -4,6 +4,8 @@ var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
 
+var debug = true
+
 var SerialScanner = function () {
   Scanner.call(this)
 
@@ -52,15 +54,7 @@ var SerialConnection = function (device, opts) {
 
   this._write = function (data, enc, next) {
     var chunkSize = 60
-
-    function write(data, callback) {
-      if (serialPort) {
-        serialPort.write(data, callback)
-      } else {
-        callback(new Error('disconnected'))
-      }
-    }
-
+    writeChunk(0)
     function writeChunk(i) {
       var start = i * chunkSize
       var end = start + chunkSize
@@ -77,8 +71,14 @@ var SerialConnection = function (device, opts) {
         next()
       }
     }
-
-    writeChunk(0)
+    function write(data, callback) {
+      if (serialPort) {
+        debug && console.log('<<', data)
+        serialPort.write(data, callback)
+      } else {
+        callback(new Error('disconnected'))
+      }
+    }
   }
 
   this._open = function (callback) {
@@ -102,6 +102,7 @@ var SerialConnection = function (device, opts) {
           isOpen = true
 
           serialPort.on('data', function (chunk) {
+            debug && console.log('>>', chunk)
             stream.push(chunk)
           })
 
