@@ -146,6 +146,7 @@ function Flash(protocol, client) {
     function onCompleteResponse(response) {
       if (messages.FlashMemoryToBlockResponse.code === response.code()) {
         clearTimeout(timer)
+        client.removeListener('event', onProgressEvent)
         client.removeListener('response', onCompleteResponse)
         if (response.result !== 0) {
           callback(new Error('Flashing failed.'))
@@ -156,6 +157,7 @@ function Flash(protocol, client) {
     }
 
     function onExpire() {
+      client.removeListener('event', onProgressEvent)
       client.removeListener('response', onCompleteResponse)
       callback(new Error('Timed out waiting for flash to complete.'))
     }
