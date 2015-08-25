@@ -152,6 +152,7 @@ var Upgrade = function (client) {
   function detectSkipReset(callback) {
     client.on('event', onSkipDisconnectEvent)
     function onSkipDisconnectEvent(e) {
+      console.log('event!', e.code())
       if (e instanceof UpgradeProtocol.messages.SkipDisconnectEvent) {
         client.removeListener('event', onSkipDisconnectEvent)
         callback(true)

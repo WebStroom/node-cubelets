@@ -73,7 +73,6 @@ function Factory(Scanner, Connection) {
 
     function setParser(newParser) {
       if (parser) {
-        con.removeListener('data', parser.parse)
         parser.removeAllListeners('message')
       }
       parser = newParser
@@ -85,8 +84,21 @@ function Factory(Scanner, Connection) {
           client.emit('response', message)
         }
       })
-      con.on('data', parser.parse)
     }
+
+    function logProtocol() {
+      console.log('protocol =',
+        (protocol === Protocols.Imago) ? 'imago' : 
+        (protocol === Protocols.Classic) ? 'classic' :
+          'upgrade')
+    }
+
+    con.on('data', function (data) {
+      process.nextTick(function () {
+        logProtocol()
+        client.getParser().parse(data)
+      })
+    })
 
     function setStrategy(newStrategy) {
       strategy = newStrategy
