@@ -90,14 +90,8 @@ function CompatibilityCheck(client) {
     var service = new InfoService()
 
     service.on('info', function (info, block) {
-      var blockType = Block.blockTypeForId(info.blockTypeId)
-      if (blockType !== BlockTypes.UNKNOWN) {
-        block._blockType = blockType
-      }
-      var mcuType = Block.mcuTypeForId(info.mcuTypeId)
-      if (mcuType !== MCUTypes.UNKNOWN) {
-        block._mcuType = mcuType
-      }
+      block._blockType = Block.blockTypeForId(info.blockTypeId)
+      block._mcuType = Block.mcuTypeForId(info.mcuTypeId)
     })
 
     service.fetchBlockInfo(unknownBlocks, function (err) {

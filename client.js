@@ -88,9 +88,7 @@ function Factory(Scanner, Connection) {
       parser = newParser
       parser.tag = getProtocolId()
       parser.on('message', function (message) {
-        console.log('message', message.code())
         if (protocol.isEvent(message)) {
-          console.log('event', message.code())
           client.emit('event', message)
         }
         if (protocol.isResponse(message)) {
