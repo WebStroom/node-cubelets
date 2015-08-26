@@ -50,21 +50,13 @@ var client = cubelets.connect(config.device, function (err) {
               } else {
                 testBlock = testApplicationBlock
               }
-              // Compare ID
-              t.equal(testBlock.blockId, response.blockId, 'IDs should match')
 
-              // Compare Versions
+              t.equal(testBlock.blockId, response.blockId, 'ids should match')
               t.ok(testBlock.hardwareVersion.isEqual(response.hardwareVersion), 'hardware versions should match')
               t.ok(testBlock.bootloaderVersion.isEqual(response.bootloaderVersion), 'bootloader versions should match')
               t.ok(testBlock.applicationVersion.isEqual(response.applicationVersion), 'application versions should match')
-
-              // Compare block type
-              t.equal(testBlock.blockTypeId, response.blockTypeId, 'Block types should match')
-
-              // Compare custom application
-              t.equal(testBlock.hasCustomApplication, response.hasCustomApplication, 'Custom application flag should match')
-
-              // Compare mode
+              t.equal(testBlock.blockTypeId, response.blockTypeId, 'block types should match')
+              t.equal(testBlock.hasCustomApplication, response.hasCustomApplication, 'custom application flag should match')
               t.equal(testBlock.mode, response.mode, 'mode should match')
 
               t.pass('done')
