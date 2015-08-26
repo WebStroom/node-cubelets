@@ -5,7 +5,6 @@ var ImagoProtocol = require('../protocol/imago')
 var __ = require('underscore')
 var Version = require('../version')
 
-// Default for bootloader in make file
 var testBootloaderBlock = {
   blockId: 591879,
   hardwareVersion: new Version(1, 0, 0),
@@ -16,7 +15,6 @@ var testBootloaderBlock = {
   hasCustomApplication: false
 }
 
-// Default for passive in makefile							
 var testApplicationBlock = {
   blockId: 197121,
   hardwareVersion: new Version(1, 0, 0),
