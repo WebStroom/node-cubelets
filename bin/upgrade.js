@@ -149,7 +149,7 @@ function start(client) {
     })
     upgrade.on('changeTargetBlock', function (targetBlock) {
       if (targetBlock) {
-        console.log('Target block is', formatBlockName(block) + '.')
+        console.log('Target block is', formatBlockName(targetBlock) + '.')
       }
     })
     upgrade.on('flashUpgradeToHostBlock', function (hostBlock) {

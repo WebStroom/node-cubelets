@@ -512,7 +512,7 @@ var Upgrade = function (client) {
 
       service.fetchBlockInfo(unknownBlocks, function (err) {
         service.removeAllListeners('info')
-        self.emit('changePendingBlocks')
+        self.emit('changePendingBlocks', pendingBlocks)
         callback(err)
       })
     }
