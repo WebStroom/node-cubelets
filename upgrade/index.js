@@ -678,11 +678,43 @@ var Upgrade = function (client) {
   function jumpToClassicBootloader(callback) {
     debug('jumpToClassicBootloader')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    function sendJumpToBootloaderCommand() {
-
+    assert(hostBlock, 'Host block must be set.')
+    var Encoder = ClassicProtocol.Message.Encoder
+    var stream = client.getConnection()
+    var parser = client.getParser()
+    async.parallel([
+      sendJumpCommand,
+      waitForJumpEvent
+    ], function (err) {
+      parser.setRawMode(false)
+      callback(err)
+    })
+    function sendJumpCommand(callback) {
+      process.nextTick(function () {
+        var encodedId = Encoder.encodeId(hostBlock.getBlockId())
+        client.getConnection().write(new Buffer([
+          'T'.charCodeAt(0),
+          encodedId.readUInt8(0),
+          encodedId.readUInt8(1),
+          encodedId.readUInt8(2)
+        ]), callback)
+      })
     }
-    function waitFor
-    var req = ClassicProtocol.messages.
+    function waitForJumpEvent(timeout) {
+      parser.setRawMode(true)
+      parser.on('raw', waitForRaw)
+      var timer = setTimeout(function () {
+        parser.removeListener('raw', waitForRaw)
+        callback(new Error('Timed out waiting for jump to bootloader.'))
+      }, 5000)
+      function waitForRaw(data) {
+        if (data.readUInt8(0) === '!'.charCodeAt(0)) {
+          parser.removeListener('raw', waitForRaw)
+          clearTimeout(timer)
+          callback(null)
+        }
+      }
+    }
   }
 
   function flashUpgradeToHostBlock(callback) {
