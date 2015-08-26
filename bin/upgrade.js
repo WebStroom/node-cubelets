@@ -31,8 +31,6 @@ client.on('disconnect', function () {
   console.log('Disconnected.')
 })
 
-var multimeter = require('multimeter')(process)
-
 function start(client) {
   var upgrade = new Upgrade(client)
 
@@ -112,16 +110,11 @@ function start(client) {
   }
 
   function runUpgrade() {
-    var progressBar = null
     upgrade.on('progress', function (e) {
-      if (progressBar) {
-        progressBar.ratio(e.progress, e.total, e.action)
-      } else {
-        multimeter.drop(function (bar) {
-          progressBar = bar
-          bar.percent(0)
-        })
-      }
+      console.log(
+        e.action ? e.action : '',
+        Math.floor(100.0 * e.progress / Math.max(1, e.total)) + '%'
+      )
     })
     upgrade.on('flashBootstrapToHostBlock', function (hostBlock) {
       console.log('Flashing Cubelets OS4 bootstrap firmware to the Bluetooth block...')
