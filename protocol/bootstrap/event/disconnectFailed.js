@@ -1,5 +1,5 @@
 var util = require('util')
-var Message = require('../../../imago/message')
+var Message = require('../../imago/message')
 
 var DisconnectFailedEvent = function () {
   Message.call(this)

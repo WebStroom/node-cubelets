@@ -2,7 +2,7 @@ var test = require('tape')
 var fs = require('fs')
 var config = require('../config')
 var cubelets = require('../../index')
-var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
+var BootstrapProtocol = require('../../protocol/bootstrap')
 var ClassicProtocol = require('../../protocol/classic')
 var ImagoProtocol = require('../../protocol/imago')
 var Upgrade = require('../../upgrade')
@@ -32,19 +32,19 @@ var client = cubelets.connect(config.device, function (err) {
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'no err')
           t.ok(needsUpgrade, 'needs upgrade')
-          t.equal(client.getProtocol(), UpgradeProtocol, 'has bootstrap firmware')
+          t.equal(client.getProtocol(), BootstrapProtocol, 'has bootstrap firmware')
         })
       })
 
       test('discovery mode', function (t) {
         t.plan(1)
-        client.setProtocol(UpgradeProtocol)
+        client.setProtocol(BootstrapProtocol)
         var timer = setTimeout(function () {
           client.removeListener('event', waitForBlockEvent)
           t.fail('no block found events')
         }, 1000)
         function waitForBlockEvent(e) {
-          if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+          if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
             clearTimeout(timer)
             client.removeListener('event', waitForBlockEvent)
             t.pass('got a block found event')
@@ -55,20 +55,20 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('jump to os4 and back to discovery', function (t) {
         t.plan(3)
-        client.setProtocol(UpgradeProtocol)
-        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
+        client.setProtocol(BootstrapProtocol)
+        client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
           t.ifError(err)
           t.equals(response.mode, 1, 'jumped to os4')
           client.setProtocol(ImagoProtocol)
           client.sendCommand(new ImagoProtocol.messages.ResetCommand())
           setTimeout(function () {
-            client.setProtocol(UpgradeProtocol)
+            client.setProtocol(BootstrapProtocol)
             var timer = setTimeout(function () {
               client.removeListener('event', waitForBlockEvent)
               t.fail('no block found events')
             }, 3000)
             function waitForBlockEvent(e) {
-              if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+              if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
                 clearTimeout(timer)
                 client.removeListener('event', waitForBlockEvent)
                 t.pass('jumped back to discovery')
@@ -81,20 +81,20 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('jump to os3 and back to discovery', function (t) {
         t.plan(3)
-        client.setProtocol(UpgradeProtocol)
-        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
+        client.setProtocol(BootstrapProtocol)
+        client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
           t.ifError(err)
           t.equals(response.mode, 0, 'jumped to os3')
           client.setProtocol(ClassicProtocol)
           client.sendCommand(new ClassicProtocol.messages.ResetCommand())
           setTimeout(function () {
-            client.setProtocol(UpgradeProtocol)
+            client.setProtocol(BootstrapProtocol)
             var timer = setTimeout(function () {
               client.removeListener('event', waitForBlockEvent)
               t.fail('no block found events')
             }, 3000)
             function waitForBlockEvent(e) {
-              if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+              if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
                 clearTimeout(timer)
                 client.removeListener('event', waitForBlockEvent)
                 t.pass('jumped back to discovery')

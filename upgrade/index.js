@@ -10,7 +10,7 @@ var ClassicFlash = ClassicProtocol.Flash
 var ImagoProtocol = require('../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
 var ImagoFlash = ImagoProtocol.Flash
-var UpgradeProtocol = require('../protocol/bootstrap/upgrade')
+var BootstrapProtocol = require('../protocol/bootstrap')
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var MCUTypes = require('../mcuTypes')
@@ -59,7 +59,7 @@ var Upgrade = function (client) {
       } else if (response.payload.length > 0) {
         // The bootstrap protocol will differentiate itself by
         // sending an extra byte in the response.
-        client.setProtocol(UpgradeProtocol)
+        client.setProtocol(BootstrapProtocol)
         callback(null, FirmwareTypes.BOOTSTRAP)
       } else {
         // Otherwise, the cubelet has classic firmware.
@@ -146,7 +146,7 @@ var Upgrade = function (client) {
         if (err) {
           callback(err)
         } else {
-          client.setProtocol(UpgradeProtocol)
+          client.setProtocol(BootstrapProtocol)
           async.detect([
             detectSkipReset,
             detectReset
@@ -173,7 +173,7 @@ var Upgrade = function (client) {
   function detectSkipReset(callback) {
     client.on('event', onSkipDisconnectEvent)
     function onSkipDisconnectEvent(e) {
-      if (e instanceof UpgradeProtocol.messages.SkipDisconnectEvent) {
+      if (e instanceof BootstrapProtocol.messages.SkipDisconnectEvent) {
         client.removeListener('event', onSkipDisconnectEvent)
         callback(true)
       }
@@ -212,7 +212,7 @@ var Upgrade = function (client) {
     }
     client.on('event', onDisconnectFailedEvent)
     function onDisconnectFailedEvent(e) {
-      if (e instanceof UpgradeProtocol.messages.DisconnectFailedEvent) {
+      if (e instanceof BootstrapProtocol.messages.DisconnectFailedEvent) {
         self.emit('needToDisconnect')
       }
     }
@@ -306,8 +306,8 @@ var Upgrade = function (client) {
     var protocol = client.getProtocol()
     if (ClassicProtocol === protocol) {
       callback(null)
-    } else if (UpgradeProtocol === protocol) {
-      var req = new UpgradeProtocol.messages.SetBootstrapModeRequest(0)
+    } else if (BootstrapProtocol === protocol) {
+      var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(0)
       client.sendRequest(req, function (err, res) {
         if (err) {
           callback(err)
@@ -328,8 +328,8 @@ var Upgrade = function (client) {
     var protocol = client.getProtocol()
     if (ImagoProtocol === protocol) {
       callback(null)
-    } else if (UpgradeProtocol === protocol) {
-      var req = new UpgradeProtocol.messages.SetBootstrapModeRequest(1)
+    } else if (BootstrapProtocol === protocol) {
+      var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(1)
       client.sendRequest(req, function (err, res) {
         if (err) {
           callback(err)
@@ -348,13 +348,13 @@ var Upgrade = function (client) {
   function jumpToDiscovery(callback) {
     debug('jumpToDiscovery')
     var protocol = client.getProtocol()
-    if (UpgradeProtocol === protocol) {
+    if (BootstrapProtocol === protocol) {
       callback(null)
     } else {
       var ResetCommand = protocol.messages.ResetCommand
       client.sendCommand(new ResetCommand())
       setTimeout(function () {
-        client.setProtocol(UpgradeProtocol)
+        client.setProtocol(BootstrapProtocol)
         var timer = setTimeout(function () {
           client.removeListener('event', waitForBlockEvent)
           client.setProtocol(protocol)
@@ -362,7 +362,7 @@ var Upgrade = function (client) {
         }, 2500)
         client.on('event', waitForBlockEvent)
         function waitForBlockEvent(e) {
-          if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+          if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
             client.removeListener('event', waitForBlockEvent)
             if (timer) {
               clearTimeout(timer)
@@ -376,11 +376,11 @@ var Upgrade = function (client) {
 
   function discoverTargetFaces(callback) {
     debug('discoverTargetFaces')
-    assert.equal(client.getProtocol(), UpgradeProtocol, 'Must be in discovery mode.')
+    assert.equal(client.getProtocol(), BootstrapProtocol, 'Must be in discovery mode.')
     targetFaces = {}
     client.on('event', onBlockFoundEvent)
     function onBlockFoundEvent(e) {
-      if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+      if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
         var faceIndex = e.faceIndex
         var firmwareType = e.firmwareType
         targetFaces[faceIndex] = {
@@ -555,7 +555,7 @@ var Upgrade = function (client) {
 
   function discoverTargetImagoBlock(callback) {
     debug('discoverTargetImagoBlock')
-    assert.equal(client.getProtocol(), UpgradeProtocol, 'Must be in discovery mode.')
+    assert.equal(client.getProtocol(), BootstrapProtocol, 'Must be in discovery mode.')
     assert(targetBlock, 'Target block must be set.')
     var timer = setTimeout(function () {
       client.removeListener('event', onBlockFoundEvent)
@@ -563,7 +563,7 @@ var Upgrade = function (client) {
     }, 5000)
     client.on('event', onBlockFoundEvent)
     function onBlockFoundEvent(e) {
-      if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+      if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
         if (e.firmwareType === 1 && e.faceIndex === targetBlock.getFaceIndex()) {
           clearTimeout(timer)
           client.removeListener('event', onBlockFoundEvent)

@@ -5,7 +5,7 @@ var cubelets = require('../../index')
 var Block = require('../../block')
 var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
-var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
+var BootstrapProtocol = require('../../protocol/bootstrap')
 var Upgrade = require('../../upgrade')
 var ImagoProtocol = require('../../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
@@ -116,13 +116,13 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('in discovery mode receiving packets', function (t) {
         t.plan(1)
-        client.setProtocol(UpgradeProtocol)
+        client.setProtocol(BootstrapProtocol)
         var timer = setTimeout(function () {
           client.removeListener('event', waitForBlockEvent)
           t.fail('no block found events')
         }, 1000)
         function waitForBlockEvent (e) {
-          if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+          if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
             clearTimeout(timer)
             client.removeListener('event', waitForBlockEvent)
             t.pass('got a block found event')
@@ -133,8 +133,8 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('jump to os4', function (t) {
         t.plan(2)
-        client.setProtocol(UpgradeProtocol)
-        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
+        client.setProtocol(BootstrapProtocol)
+        client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
           t.ifError(err)
           t.equals(response.mode, 1, 'jumped to os4')          
         })
@@ -171,14 +171,14 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(1)
         client.sendCommand(new ImagoProtocol.messages.ResetCommand())
         setTimeout(function () {
-          client.setProtocol(UpgradeProtocol)
+          client.setProtocol(BootstrapProtocol)
           var timer = setTimeout(function () {
             client.removeListener('event', waitForBlockEvent)
             t.fail('no block found events')
             t.end()
           }, 3000)
           function waitForBlockEvent (e) {
-            if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+            if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
               clearTimeout(timer)
               client.removeListener('event', waitForBlockEvent)
               t.pass('jumped back to discovery')
@@ -191,8 +191,8 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('jump to os3', function (t) {
         t.plan(2)
-        client.setProtocol(UpgradeProtocol)
-        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
+        client.setProtocol(BootstrapProtocol)
+        client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
           client.setProtocol(ClassicProtocol)
           t.ifError(err)
           t.equals(response.mode, 0, 'jumped to os3')

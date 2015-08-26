@@ -5,7 +5,7 @@ var cubelets = require('../../index')
 var Block = require('../../block')
 var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
-var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
+var BootstrapProtocol = require('../../protocol/bootstrap')
 var Upgrade = require('../../upgrade')
 var ClassicProtocol = require('../../protocol/classic')
 var Flash = ClassicProtocol.Flash
@@ -28,7 +28,7 @@ var client = cubelets.connect(config.device, function (err) {
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'detect ok')
           t.equal(firmwareType, 2, 'has upgrade firmware')
-          client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
+          client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
             t.ifError(err, 'set mode ok')
             t.equal(response.mode, 0, 'jumped to os3')
           })

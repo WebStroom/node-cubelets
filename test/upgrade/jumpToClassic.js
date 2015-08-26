@@ -2,7 +2,7 @@ var test = require('tape')
 var fs = require('fs')
 var config = require('../config')
 var cubelets = require('../../index')
-var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
+var BootstrapProtocol = require('../../protocol/bootstrap')
 var Upgrade = require('../../upgrade')
 
 var bluetoothBlockId = config.map.type.bluetooth
@@ -22,8 +22,8 @@ var client = cubelets.connect(config.device, function (err) {
         upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
           t.ifError(err, 'detect ok')
           t.equal(firmwareType, 2, 'has upgrade firmware')
-          client.setProtocol(UpgradeProtocol)
-          client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
+          client.setProtocol(BootstrapProtocol)
+          client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
             t.ifError(err, 'set mode ok')
             t.equal(response.mode, 0, 'jumped to os3')
           })

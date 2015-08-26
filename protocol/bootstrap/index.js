@@ -1,8 +1,8 @@
-var Protocol = require('../../../protocol')
-var Message = require('../../imago/message')
-var Parser = require('../../parser')
+var Protocol = require('../../protocol')
+var Message = require('../imago/message')
+var Parser = require('../parser')
 var xtend = require('xtend/mutable')
-var Strategy = require('../../strategy')
+var DefaultStrategy = require('../strategy')
 
 var messages = {
   SetBootstrapModeRequest: require('./request/setBootstrapMode'),
@@ -13,7 +13,7 @@ var messages = {
   SkipDisconnectEvent: require('./event/skipDisconnect')
 }
 
-var UpgradeProtocol = new Protocol({
+var BootstrapProtocol = new Protocol({
   commands: [
   ],
   requests: [
@@ -29,12 +29,12 @@ var UpgradeProtocol = new Protocol({
   ]
 })
 
-UpgradeProtocol.messages = messages
+BootstrapProtocol.messages = messages
 
-xtend(UpgradeProtocol, {
+xtend(BootstrapProtocol, {
   Message: Message,
-  Parser: Parser.bind(null, UpgradeProtocol),
-  Strategy: Strategy.bind(null, UpgradeProtocol)
+  Parser: Parser.bind(null, BootstrapProtocol),
+  Strategy: DefaultStrategy.bind(null, BootstrapProtocol)
 })
 
-module.exports = UpgradeProtocol
+module.exports = BootstrapProtocol

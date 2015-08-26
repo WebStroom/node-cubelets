@@ -5,7 +5,7 @@ var cubelets = require('../../index')
 var Block = require('../../block')
 var BlockTypes = require('../../blockTypes')
 var MCUTypes = require('../../mcuTypes')
-var UpgradeProtocol = require('../../protocol/bootstrap/upgrade')
+var BootstrapProtocol = require('../../protocol/bootstrap')
 var Upgrade = require('../../upgrade')
 var ImagoProtocol = require('../../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
@@ -32,7 +32,7 @@ var client = cubelets.connect(config.device, function (err) {
         targetBlock = new Block(591879, 1, BlockTypes.PASSIVE)
         targetBlock._mcuType = MCUTypes.PIC
         targetBlock._faceIndex = targetFaceIndex
-        client.setProtocol(UpgradeProtocol)
+        client.setProtocol(BootstrapProtocol)
         t.pass('checkpoint')
       })
 
@@ -56,7 +56,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.fail('no block found events')
         }, 1000)
         function waitForBlockEvent(e) {
-          if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+          if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
             if (e.firmwareType === 0 && e.faceIndex !== ignoreBatteryFaceIndex) {
               targetFaceIndex = e.faceIndex
               clearTimeout(timer)
@@ -69,8 +69,8 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('jump to os3', function (t) {
         t.plan(2)
-        client.setProtocol(UpgradeProtocol)
-        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
+        client.setProtocol(BootstrapProtocol)
+        client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(0), function (err, response) {
           t.ifError(err)
           client.setProtocol(ClassicProtocol)
           setTimeout(function () {
@@ -130,7 +130,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(1)
         client.sendCommand(new ClassicProtocol.messages.ResetCommand())
         setTimeout(function () {
-          client.setProtocol(UpgradeProtocol)
+          client.setProtocol(BootstrapProtocol)
           t.pass('upgrade mode')
         }, 500)
       })
@@ -143,7 +143,7 @@ var client = cubelets.connect(config.device, function (err) {
           t.fail('no block found events')
         }, 2000)
         function waitForBlockEvent(e) {
-          if (e instanceof UpgradeProtocol.messages.BlockFoundEvent) {
+          if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
             if (e.firmwareType === 1 && e.faceIndex === targetFaceIndex) {
               clearTimeout(timer)
               client.removeListener('event', waitForBlockEvent)
@@ -155,8 +155,8 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('jump to os4', function (t) {
         t.plan(2)
-        client.setProtocol(UpgradeProtocol)
-        client.sendRequest(new UpgradeProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
+        client.setProtocol(BootstrapProtocol)
+        client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
           t.ifError(err)
           client.setProtocol(ImagoProtocol)
           setTimeout(function () {
@@ -200,7 +200,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(1)
         client.sendCommand(new ImagoProtocol.messages.ResetCommand())
         setTimeout(function () {
-          client.setProtocol(UpgradeProtocol)
+          client.setProtocol(BootstrapProtocol)
           t.pass('upgrade mode')
         }, 500)
       })
