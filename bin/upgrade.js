@@ -27,6 +27,10 @@ var client = cubelets.connect(device, function (err) {
   }
 })
 
+client.on('disconnect', function () {
+  console.log('Disconnected.')
+})
+
 function start(client) {
   var upgrade = new Upgrade(client)
 
@@ -41,12 +45,22 @@ function start(client) {
       } else {
         runUpgrade()
       }
+    } else {
+      client.fetchConfiguration(function (err, configuration) {
+        if (err) {
+          exitWithError(err)
+        } else {
+          var version = configuration.applicationVersion
+          exitWithSuccess('Already upgraded to OS4. (v' + version.toString() + ')')
+        }
+      })
     }
   })
 
   function runCompatibilityCheck() {
     var check = new CompatibilityCheck(client)
     prompt('Attach all of your Cubelets. Then press ENTER.', function () {
+      console.log('Please wait about 5 seconds...')
       check.on('found', function (blocks) {
         console.log('Found', formatNumber(blocks.length), 'block(s). Checking compatibility...')
       })
@@ -67,9 +81,8 @@ function start(client) {
           if (compatible === 0) {
             console.log([
               'It looks like none of your Cubelets are compatible with OS4.',
-              'Visit modrobotics.com/sustainability to learn about',
-              'our Cubelet upgrade recycling program.'
-            ].join(' '))
+              'Visit modrobotics.com/sustainability to learn about our Cubelet upgrade recycling program.'
+            ].join('\n'))
             exitWithSuccess('Upgrade canceled.')
           } else if (notCompatible > 0) {
             askYesOrNo([
