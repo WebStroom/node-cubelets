@@ -24,6 +24,77 @@ var FirmwareTypes = {
   BOOTSTRAP: 2
 }
 
+var hexFiles = {
+  bluetooth: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/bluetooth_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/bluetooth_application.hex')
+  },
+  bargraph: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/bargraph_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/bargraph.hex')
+  },
+  battery: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/battery_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/battery.hex')
+  },
+  blocker: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/blocker_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/blocker.hex')
+  },
+  brightness: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/brightness_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/brightness.hex')
+  },
+  distance: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/distance_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/distance.hex')
+  },
+  drive: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/drive_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/drive.hex')
+  },
+  flashlight: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/flashlight_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/flashlight.hex')
+  },
+  inverse: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/inverse_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/inverse.hex')
+  },
+  knob: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/knob_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/knob.hex')
+  },
+  maximum: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/maximum_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/maximum.hex')
+  },
+  minimum: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/minimum_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/minimum.hex')
+  },
+  passive: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/passive_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/passive.hex')
+  },
+  rotate: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/rotate_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/rotate.hex')
+  },
+  speaker: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/speaker_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/speaker.hex')
+  },
+  temperature: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/temperature_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/temperature.hex')
+  },
+  threshold: {
+    bootstrap: fs.readFileSync(__dirname + '/hex/pic_bootstrap/threshold_bootstrap.hex'),
+    application: fs.readFileSync(__dirname + '/hex/application/threshold.hex')
+  }
+}
+
 var Upgrade = function (client) {
   var self = this
   events.EventEmitter.call(this)
@@ -136,7 +207,7 @@ var Upgrade = function (client) {
   function flashBootstrapToHostBlock(callback) {
     debug('flashBootstrapToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
+    var hex = hexFiles['bluetooth']['bootstrap']
     var program = new ClassicProgram(hex)
     if (program.valid) {
       self.emit('flashBootstrapToHostBlock', hostBlock)
@@ -523,7 +594,7 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
-    var hex = fs.readFileSync('./upgrade/hex/pic_bootstrap/' + blockType.name + '_bootstrap.hex')
+    var hex = hexFiles[blockType.name]['bootstrap']
     var program = new ClassicProgram(hex)
     if (program.valid) {
       self.emit('flashBootstrapToTargetBlock', targetBlock)
@@ -568,7 +639,7 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ImagoProtocol, 'Must be in OS4 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
-    var hex = fs.readFileSync('./upgrade/hex/applications/' + blockType.name + '.hex')
+    var hex = hexFiles[blockType.name]['application']
     var program = new ImagoProgram(hex)
     if (program.valid) {
       self.emit('flashUpgradeToTargetBlock', targetBlock)
@@ -623,7 +694,7 @@ var Upgrade = function (client) {
   function flashUpgradeToHostBlock(callback) {
     debug('flashUpgradeToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    var hex = fs.readFileSync('./upgrade/hex/bluetooth_application.hex')
+    var hex =  hexFiles['bluetooth']['application']
     var program = new ClassicProgram(hex)
     if (program.valid) {
       self.emit('flashUpgradeToHostBlock', hostBlock)

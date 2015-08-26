@@ -62,7 +62,7 @@ var client = cubelets.connect(config.device, function (err) {
           var faceIndex = targetBlock.getFaceIndex()
           var blockType = blockTypes[faceIndex]
           t.ok(blockType, 'block type is ' + blockType.name)
-          var hex = fs.readFileSync('./upgrade/hex/applications/' + blockType.name + '.hex')
+          var hex = fs.readFileSync('./upgrade/hex/application/' + blockType.name + '.hex')
           var program = new Program(hex)
           t.ok(program.valid, 'firmware valid')
           var flash = new Flash(client)
