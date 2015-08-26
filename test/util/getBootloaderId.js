@@ -15,7 +15,6 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      // Put neighbors into bootloader
       testNeighborsSetMode(0)
 
       test('find a neighbor and report its block id', function (t) {

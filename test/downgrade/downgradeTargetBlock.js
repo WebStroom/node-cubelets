@@ -17,6 +17,7 @@ var InfoService = require('../../services/info')
 var FirmwareService = require('../../services/firmware')
 var __ = require('underscore')
 var Version = require("../../version")
+
 var FirmwareType = {
   CLASSIC: 0,
   IMAGO: 1,
@@ -35,7 +36,7 @@ var client = cubelets.connect(config.device, function (err) {
       t.pass('connected')
 
       var upgrade = new Upgrade(client)
-      var bluetoothFirmwareVersion
+      var firmwareType
       var targetBlock
 
       test('Check Bluetooth firmware version', function (t) {
@@ -46,15 +47,15 @@ var client = cubelets.connect(config.device, function (err) {
         client.sendRequest(new ClassicProtocol.messages.KeepAliveRequest(), function (err, response) {
           if (err) {
             // The imago protocol will fail to respond.
-            bluetoothFirmwareVersion = FirmwareType.IMAGO
+            firmwareType = FirmwareType.IMAGO
           }
           else if (response.payload.length > 0) {
             // The bootstrap protocol will differentiate itself by
             // sending an extra byte in the response.
-            bluetoothFirmwareVersion = FirmwareType.BOOTSTRAP
+            firmwareType = FirmwareType.BOOTSTRAP
           } else {
             // Otherwise, the cubelet has classic firmware.
-            bluetoothFirmwareVersion = FirmwareType.CLASSIC
+            firmwareType = FirmwareType.CLASSIC
           }
           t.pass('Detected the Bluetooth firmware version')
         })
@@ -62,7 +63,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('Update BT firmware if necessary', function (t) {
         // Make sure we are in bootstrap mode
-        switch (bluetoothFirmwareVersion) {
+        switch (firmwareType) {
           case FirmwareType.IMAGO:
             // Flash bootstrap firmware
             client.setProtocol(ImagoProtocol)
@@ -116,8 +117,7 @@ var client = cubelets.connect(config.device, function (err) {
         }
       })
 
-      // Make sure we are in bootstrap (ie receiving discovery packets)
-      test('discovery mode', function (t) {
+      test('in discovery mode receiving packets', function (t) {
         t.plan(1)
         client.setProtocol(UpgradeProtocol)
         var timer = setTimeout(function () {
@@ -134,7 +134,6 @@ var client = cubelets.connect(config.device, function (err) {
         client.on('event', waitForBlockEvent)
       })
 
-      // Jump to OS4 mode
       test('jump to os4', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
@@ -166,11 +165,9 @@ var client = cubelets.connect(config.device, function (err) {
           flash.on('progress', function (e) {
             console.log('progress', '(' + e.progress + '/' + e.total + ')')
           })
-
         })
       })
 
-      // Switch to discovery mode
       test('jump to discovery mode', function (t) {
         t.plan(1)
         client.sendCommand(new ImagoProtocol.messages.ResetCommand())
@@ -193,7 +190,6 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      // jump to classic mode
       test('jump to os3', function (t) {
         t.plan(2)
         client.setProtocol(UpgradeProtocol)
@@ -204,10 +200,10 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      var hexString
-      // Fetch Cube information
+      var testHex
+
       test('fetch info for block', function (t) {
-        t.plan(5)
+        t.plan(6)
 
         var infoService = new InfoService()
         infoService.fetchBlockInfo([targetBlock], function (err, infos) {
@@ -217,28 +213,30 @@ var client = cubelets.connect(config.device, function (err) {
           var version = info.latestFirmwareVersion
           var blockType = Block.blockTypeForId(info.blockTypeId)
           t.ok(blockType !== BlockTypes.UNKNOWN)
-
-          targetBlock._mcuType = Block.mcuTypeForId(info.mcuTypeId)
           targetBlock._blockType = blockType
+          t.ok(blockType !== MCUTypes.UNKNOWN)
+          targetBlock._mcuType = Block.mcuTypeForId(info.mcuTypeId)
+
           firmwareService.downloadVersion(targetBlock, version, function (err, hex) {
             t.ifError(err)
-            hexString = hex
+            testHex = hex
             t.ok(hex)
           }) 
         })
       })
 
-      // flash the correct block types application
-      test('Flash OS3 application', function (t) {
+      test('flash os3 application to target', function (t) {
+        t.plan(2)
         var blockId = targetBlock.getBlockId()
         var faceIndex = targetBlock.getFaceIndex()
 
         var program = new ClassicProgram(hexString)
         t.ok(program.valid, 'firmware valid')
-        var flash = new ClassicFlash(client)
-        //Hack to not send reset command
+
+        //XXX(donald): hack to not send reset command
         targetBlock._applicationVersion = new Version(0, 0, 0);
-                
+
+        var flash = new ClassicFlash(client)
         flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err, 'flashed block')
         })
@@ -247,11 +245,9 @@ var client = cubelets.connect(config.device, function (err) {
         })
         flash.on('success', function (e) {
           t.pass("successfully flashed target.")
-          t.end()
         })
         flash.on('error', function (e) {
-          //t.ifError(err, 'flashed block')
-          //t.end()
+          t.end(err)
         })
       })
 
