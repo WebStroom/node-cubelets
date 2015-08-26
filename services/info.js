@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:infoService')
 var util = require('util')
 var events = require('events')
 var request = require('request')
@@ -31,7 +32,7 @@ function InfoService() {
       }
     } else {
       var url = urlForBlocks(blocks)
-      console.log(url)
+      debug(url)
       request.get({
         url: url,
         json: true

@@ -31,6 +31,8 @@ client.on('disconnect', function () {
   console.log('Disconnected.')
 })
 
+var multimeter = require('multimeter')(process)
+
 function start(client) {
   var upgrade = new Upgrade(client)
 
@@ -59,8 +61,8 @@ function start(client) {
 
   function runCompatibilityCheck() {
     var check = new CompatibilityCheck(client)
-    prompt('Attach all of your Cubelets. Then press ENTER.', function () {
-      console.log('Please wait about 5 seconds...')
+    prompt('Attach all of your Cubelets. Then press ENTER.\n', function () {
+      console.log('Please wait about 5 seconds for Cubelet Kit discovery...')
       check.on('found', function (blocks) {
         console.log('Found', formatNumber(blocks.length), 'block(s). Checking compatibility...')
       })
@@ -71,10 +73,11 @@ function start(client) {
         console.log('✓', 'Block', formatBlockName(block), 'is compatible.')
       })
       check.start(function (err) {
+        console.log('Checked', formatNumber(check.getCheckedBlocks().length), 'block(s).')
         prompt([
           'Attach more Cubelets directly to the Bluetooth block,',
-          'or press ENTER to finish the check.'
-        ].join(' '), function enter() {
+          'or press ENTER to finish the check.\n'
+        ].join('\n'), function enter() {
           check.finish()
           var compatible = check.getCompatibleBlocks().length
           var notCompatible = check.getNotCompatibleBlocks().length
@@ -86,18 +89,18 @@ function start(client) {
             exitWithSuccess('Upgrade canceled.')
           } else if (notCompatible > 0) {
             askYesOrNo([
-              'It looks like ' + formatNumber(notCompatible) + ' of your Cubelets ',
-              'are compatible with OS4. Do you want to continue the upgrade anyway?'
-            ].join(' '), function yes() {
+              'It looks like ' + formatNumber(notCompatible) + ' of your Cubelets are compatible with OS4.',
+              'Do you want to continue the upgrade?'
+            ].join('\n'), function yes() {
               runUpgrade()
             }, function no() {
               exitWithSuccess('Upgrade canceled. Goodbye.')
             })
           } else {
             askYesOrNo([
-              'All of your Cubelets are compatible with OS4?',
+              'All of your Cubelets are compatible with OS4!',
               'Ready to upgrade your Cubelets?'
-            ].join(' '), function yes() {
+            ].join('\n'), function yes() {
               runUpgrade()
             }, function no() {
               exitWithSuccess('Upgrade canceled. Goodbye.')
@@ -109,9 +112,16 @@ function start(client) {
   }
 
   function runUpgrade() {
+    var progressBar = null
     upgrade.on('progress', function (e) {
-      var pct = Math.floor(100.0 * e.progress / e.total)
-      console.log(e.action ? e.action : '', pct + '%')
+      if (progressBar) {
+        progressBar.ratio(e.progress, e.total, e.action)
+      } else {
+        multimeter.drop(function (bar) {
+          progressBar = bar
+          bar.percent(0)
+        })
+      }
     })
     upgrade.on('flashBootstrapToHostBlock', function (hostBlock) {
       console.log('Flashing Cubelets OS4 bootstrap firmware to the Bluetooth block...')
@@ -138,38 +148,21 @@ function start(client) {
     upgrade.on('flashUpgradeToTargetBlock', function (block) {
       console.log('Flashing Cubelets OS4 firmware to block', formatBlockName(block) + '...')
     })
-    upgrade.on('completeBlock', function (block) {
+    upgrade.on('completeTargetBlock', function (block) {
       console.log('Successfully upgraded block', formatBlockName(block), 'to OS4.')
-      var pending = upgrade.getPendingBlocks().count
-      if (0 === pending) {
-        promptContinueOrFinish()
-      } else {
-        console.log('There are', formatNumber(pending), 'pending blocks to upgrade.')
-      }
+    })
+    upgrade.on('changePendingBlocks', function (pendingBlocks) {
+      console.log('There are', formatNumber(pendingBlocks.length), 'pending blocks to upgrade.')
     })
     upgrade.on('changeTargetBlock', function (targetBlock) {
-      if (null === targetBlock) {
-        promptContinueOrFinish()
+      if (targetBlock) {
+        console.log('Target block is', formatBlockName(block) + '.')
       }
     })
-    function promptContinueOrFinish() {
-      var text = [
-        'Attach more Cubelets directly to the Bluetooth block,',
-        'or press ENTER if you are done upgrading all of your Cubelets.'
-      ].join(' ')
-      if (this.once) {
-        console.log(text)
-      } else {
-        this.once = true
-        prompt(text, function () {
-          upgrade.finish()
-        })
-      }
-    }
-    upgrade.on('flashUpgradeToHostBlock', function () {
+    upgrade.on('flashUpgradeToHostBlock', function (hostBlock) {
       console.log('Flashing Cubelets OS4 firmware to the Bluetooth block...')
     })
-    upgrade.on('completedHostBlock', function () {
+    upgrade.on('completeHostBlock', function (hostBlock) {
       console.log('Successfully upgraded Bluetooth block.')
     })
     upgrade.on('error', function onError(err) {
@@ -178,6 +171,14 @@ function start(client) {
         process.nextTick(runUpgrade)
       }, function no() {
         exitWithError(err)
+      })
+    })
+    upgrade.on('start', function () {
+      prompt([
+        'Attach more Cubelets directly to the Bluetooth block,',
+        'or press ENTER if you are done upgrading all of your Cubelets.\n'
+      ].join('\n'), function () {
+        upgrade.finish()
       })
     })
     upgrade.start(function (err) {
@@ -198,7 +199,7 @@ function askYesOrNo(text, yesCallback, noCallback) {
 }
 
 function formatNumber(n) {
-  if (n === 0) return 'none'
+  if (n === 0) return '0'
   else if (n === 1) return 'one'
   else if (n === 2) return 'two'
   else if (n === 3) return 'three'

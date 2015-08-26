@@ -24,6 +24,10 @@ function CompatibilityCheck(client) {
     return notCompatibleBlocks
   }
 
+  this.getCheckedBlocks = function () {
+    return [].concat(compatibleBlocks, notCompatibleBlocks)
+  }
+
   this.start = function (callback) {
     if (fetchTimer) {
       callback(null)

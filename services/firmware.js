@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:firmwareService')
 var util = require('util')
 var request = require('request')
 var config = require('../config.json')
@@ -19,7 +20,7 @@ function FirmwareService() {
     var mcuTypeId = block.getMCUType().typeId
     var blockTypeId = block.getBlockType().typeId
     var url = urlForDownload(mcuTypeId, version, blockTypeId)
-    console.log(url)
+    debug(url)
     request.get({ url: url }, function (err, response, body) {
       if (err) {
         if (callback) {
@@ -44,7 +45,7 @@ function FirmwareService() {
 
   this.updateVersion = function (block, version, callback) {
     var url = urlForUpdate()
-    console.log(url)
+    debug(url)
     request.post({
       url: url,
       form: {

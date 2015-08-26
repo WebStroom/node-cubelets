@@ -17,7 +17,7 @@ var client = cubelets.connect(config.device, function (err) {
 
       testNeighborsSetMode(0)
 
-      test('find a neighbor and report its block id', function (t) {
+      test.skip('find a neighbor and report its block id', function (t) {
         t.plan(2)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'fetched neighbors')

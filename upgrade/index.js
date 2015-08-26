@@ -75,6 +75,7 @@ var Upgrade = function (client) {
     } else {
       running = true
       finished = false
+      self.emit('start')
       detectFirmwareType(function (err, firmwareType) {
         if (err) {
           callback(err)
@@ -280,7 +281,7 @@ var Upgrade = function (client) {
     debug('enqueueCompletedBlock')
     if (!findCompletedBlockById(block.getBlockId())) {
       completedBlocks.unshift(block)
-      self.emit('completeBlock', block)
+      self.emit('completeTargetBlock', block)
       self.emit('changeCompletedBlocks', completedBlocks)
       return true
     } else {
@@ -353,23 +354,10 @@ var Upgrade = function (client) {
     } else {
       var ResetCommand = protocol.messages.ResetCommand
       client.sendCommand(new ResetCommand())
+      client.setProtocol(BootstrapProtocol)
       setTimeout(function () {
-        client.setProtocol(BootstrapProtocol)
-        var timer = setTimeout(function () {
-          client.removeListener('event', waitForBlockEvent)
-          client.setProtocol(protocol)
-          callback(new Error('Failed to jump to discovery mode.'))
-        }, 2500)
-        client.on('event', waitForBlockEvent)
-        function waitForBlockEvent(e) {
-          if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
-            client.removeListener('event', waitForBlockEvent)
-            if (timer) {
-              clearTimeout(timer)
-              callback(null)
-            }
-          }
-        }
+        debug('blind jump to bootstrap')
+        callback(null)
       }, 500)
     }
   }
@@ -393,11 +381,11 @@ var Upgrade = function (client) {
     pendingBlocks = []
     setTimeout(function () {
       client.removeListener('event', onBlockFoundEvent)
-      debug('targetFaces', targetFaces)
+      debug('faces', targetFaces)
       var classicFaces = __(targetFaces).where({ firmwareType: 0 })
       var imagoFaces = __(targetFaces).where({ firmwareType: 1 })
       if (classicFaces.length > 0) {
-        debug('classic faces > 0')
+        debug('has os3 faces')
         async.series([
           jumpToClassic,
           enqueuePendingClassicBlocks,
@@ -405,7 +393,7 @@ var Upgrade = function (client) {
           upgradeNextPendingClassicBlock
         ], callback)
       } else if (imagoFaces.length > 0) {
-        debug('imago faces > 0')
+        debug('os4 faces only')
         async.series([
           jumpToImago,
           enqueuePendingImagoBlocks,
@@ -633,11 +621,11 @@ var Upgrade = function (client) {
   function flashUpgradeToHostBlock(callback) {
     debug('flashUpgradeToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
-    var program = new Program(hex)
+    var hex = fs.readFileSync('./upgrade/hex/bluetooth_application.hex')
+    var program = new ClassicProgram(hex)
     if (program.valid) {
-      self.emit('flashBootstrapToHostBlock', hostBlock)
-      var flash = new Flash(client, {
+      self.emit('flashUpgradeToHostBlock', hostBlock)
+      var flash = new ClassicProgram(client, {
         skipSafeCheck: true
       })
       flash.programToBlock(program, hostBlock, function (err) {
@@ -645,10 +633,9 @@ var Upgrade = function (client) {
         if (err) {
           callback(err)
         } else {
-          async.series([
-            retry({ times: 1, interval: 5000 }, waitForDisconnect),
-            retry({ times: 1, interval: 5000 }, waitForReconnect)
-          ], callback)
+          client.setProtocol(ImagoProtocol)
+          self.emit('completeHostBlock', hostBlock)
+          callback(null)
         }
       })
       flash.on('progress', onProgress)
@@ -656,13 +643,13 @@ var Upgrade = function (client) {
         self.emit('progress', e)
       }
     } else {
-      callback(new Error('Invalid program.'))
+      callback(new Error('Program invalid.'))
     }
   }
 
   function waitForFinish(timeout) {
     return function (callback) {
-      debug('Waiting for blocks...')
+      debug('waiting for blocks...')
       setTimeout(callback, timeout)
     }
   }
