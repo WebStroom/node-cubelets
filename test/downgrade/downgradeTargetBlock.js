@@ -64,7 +64,7 @@ var client = cubelets.connect(config.device, function (err) {
       test('update bluetooth firmware if necessary', function (t) {
         switch (firmwareType) {
           case FirmwareType.IMAGO:
-            t.plan(4)
+            t.plan(3)
             client.setProtocol(ImagoProtocol)
             var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
             var program = new ImagoProgram(hex)
@@ -79,7 +79,6 @@ var client = cubelets.connect(config.device, function (err) {
             flash.programToBlock(program, block, function (err) {
               t.ifError(err, 'flash err')
               t.pass('flashed bootstrap firmware')
-              t.end()
             })
             flash.on('progress', function (e) {
               console.log('progress', '(' + e.progress + '/' + e.total + ')')

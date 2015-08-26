@@ -187,7 +187,7 @@ var client = cubelets.connect(config.device, function (err) {
 
         // check the program is valid
         var blockId = blockIds.bargraph
-        var hex = fs.readFileSync('./upgrade/hex/applications/bargraph.hex')
+        var hex = fs.readFileSync('./upgrade/hex/application/bargraph.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
 

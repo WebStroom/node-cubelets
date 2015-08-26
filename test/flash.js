@@ -39,7 +39,7 @@ var client = cubelets.connect(config.device, function (err) {
         t.plan(9)
 
         // check the program is valid
-        var hex = fs.readFileSync('./upgrade/hex/applications/' + blockType.name + '.hex')
+        var hex = fs.readFileSync('./upgrade/hex/application/' + blockType.name + '.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'program valid')
 

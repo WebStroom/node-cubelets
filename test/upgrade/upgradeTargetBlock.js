@@ -182,7 +182,7 @@ var client = cubelets.connect(config.device, function (err) {
       test('flash os4 application to target', function (t) {
         t.plan(2)
         var blockType = targetBlock.getBlockType()
-        var hex = fs.readFileSync('./upgrade/hex/applications/' + blockType.name + '.hex')
+        var hex = fs.readFileSync('./upgrade/hex/application/' + blockType.name + '.hex')
         var program = new ImagoProgram(hex)
         t.ok(program.valid, 'program is valid')
         var flash = new ImagoFlash(client, {
