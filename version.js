@@ -22,11 +22,23 @@ module.exports = function Version(major, minor, patch) {
   }
 
   this.isGreaterThan = function (v) {
-    return (
-      this.major > v.major &&
-      this.minor > v.minor &&
-      this.patch > v.patch
-    )
+  	if(this.isEqual(v))
+  	{
+  		return false;
+  	}
+  	else if(this.major > v.major)
+  	{
+  		return true;
+  	}
+  	else if(this.major == v.major && this.minor > v.minor)
+  	{
+  		return true;
+  	}
+  	else if(this.major == v.major && this.minor == v.minor && this.patch > v.patch)
+  	{
+  		return true;
+  	}
+  	return false;
   }
 
   this.isGreaterThanOrEqual = function (v) {
@@ -34,11 +46,23 @@ module.exports = function Version(major, minor, patch) {
   }
 
   this.isLessThan = function (v) {
-    return (
-      this.major < v.major &&
-      this.minor < v.minor &&
-      this.patch < v.patch
-    )
+  	if(this.isEqual(v))
+  	{
+  		return false;
+  	}
+  	else if(this.major < v.major)
+  	{
+  		return true;
+  	}
+  	else if(this.major == v.major && this.minor < v.minor)
+  	{
+  		return true;
+  	}
+  	else if(this.major == v.major && this.minor == v.minor && this.patch < v.patch)
+  	{
+  		return true;
+  	}
+  	return false;
   }
 
   this.isLessThanOrEqual = function (v) {

@@ -22,18 +22,17 @@ GetConfigurationResponse.prototype.encodeBody = function () {
 }
 
 GetConfigurationResponse.prototype.decodeBody = function (body) {
-  if (body.length !== 15) {
-    this.error = new Error('Size should be 15 bytes but is', body.length, 'bytes.')
+  if (body.length !== 12) {
+    this.error = new Error('Size should be 12 bytes but is', body.length, 'bytes.')
     return false
   }
 
   this.hardwareVersion = Message.Decoder.decodeVersion(body.slice(0, 3))
   this.bootloaderVersion = Message.Decoder.decodeVersion(body.slice(3, 6))
   this.applicationVersion = Message.Decoder.decodeVersion(body.slice(6, 9))
-  this.blockId = Message.Decoder.decodeId(body.slice(9, 12))
-  this.blockTypeId = body.readUInt8(12)
-  this.mode = body.readUInt8(13)
-  this.customApplication = body.readUInt8(14)
+  this.blockTypeId = body.readUInt8(9)
+  this.mode = body.readUInt8(10)
+  this.customApplication = body.readUInt8(11)
   this.hasCustomApplication = (this.customApplication !== 0)
   return true
 }

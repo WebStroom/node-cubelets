@@ -148,6 +148,7 @@ function Flash(protocol, client) {
         clearTimeout(timer)
         client.removeListener('event', onProgressEvent)
         client.removeListener('response', onCompleteResponse)
+        client.removeListener('event', onProgressEvent)
         if (response.result !== 0) {
           callback(new Error('Flashing failed.'))
         } else {
@@ -159,6 +160,7 @@ function Flash(protocol, client) {
     function onExpire() {
       client.removeListener('event', onProgressEvent)
       client.removeListener('response', onCompleteResponse)
+      client.removeListener('event', onProgressEvent)
       callback(new Error('Timed out waiting for flash to complete.'))
     }
 
