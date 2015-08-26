@@ -44,12 +44,8 @@ var client = cubelets.connect(config.device, function (err) {
             client.sendBlockRequest(request, function (err, response) {
               t.ifError(err, 'fetched configuration')
 
-              var testBlock
-              if (response.mode === 0) {
-                testBlock = testBootloaderBlock
-              } else {
-                testBlock = testApplicationBlock
-              }
+              var testBlock = (response.mode === 0) ?
+                testBootloaderBlock : testApplicationBlock
 
               t.equal(testBlock.blockId, response.blockId, 'ids should match')
               t.ok(testBlock.hardwareVersion.isEqual(response.hardwareVersion), 'hardware versions should match')
