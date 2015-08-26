@@ -292,6 +292,7 @@ var Upgrade = function (client) {
 
   function startBlockUpgrades(callback) {
     debug('startBlockUpgrades')
+    self.emit('startBlockUpgrades')
     async.until(function () {
       return finished
     }, function (next) {
