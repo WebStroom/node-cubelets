@@ -158,6 +158,7 @@ var Upgrade = function (client) {
             startBlockUpgrades,
             jumpToDiscovery,
             jumpToClassic,
+            jumpToClassicBootloader,
             flashUpgradeToHostBlock
           ], function (err) {
             finished = true
@@ -170,6 +171,7 @@ var Upgrade = function (client) {
             jumpToDiscovery,
             jumpToClassic,
             discoverHostBlock,
+            jumpToClassicBootloader,
             flashUpgradeToHostBlock
           ], callback)
         } else {
@@ -181,6 +183,12 @@ var Upgrade = function (client) {
         running = false
         callback(err)
       }
+    }
+  }
+
+  this.finish = function () {
+    if (running) {
+      finished = true
     }
   }
 
@@ -667,28 +675,14 @@ var Upgrade = function (client) {
     callback(null)
   }
 
-  function findPendingBlockById(blockId) {
-    return __(pendingBlocks).find(function (pendingBlock) {
-      return blockId === pendingBlock.getBlockId()
-    })
-  }
+  function jumpToClassicBootloader(callback) {
+    debug('jumpToClassicBootloader')
+    assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
+    function sendJumpToBootloaderCommand() {
 
-  function findCompletedBlockById(blockId) {
-    return __(completedBlocks).find(function (completedBlock) {
-      return blockId === completedBlock.getBlockId()
-    })
-  }
-
-  function filterUnknownPendingBlocks() {
-    return __(pendingBlocks).filter(function (block) {
-      return block.getBlockType() === BlockTypes.UNKNOWN
-    })
-  }
-
-  this.finish = function () {
-    if (running) {
-      finished = true
     }
+    function waitFor
+    var req = ClassicProtocol.messages.
   }
 
   function flashUpgradeToHostBlock(callback) {
@@ -725,6 +719,24 @@ var Upgrade = function (client) {
       debug('waiting for blocks...')
       setTimeout(callback, timeout)
     }
+  }
+
+  function findPendingBlockById(blockId) {
+    return __(pendingBlocks).find(function (pendingBlock) {
+      return blockId === pendingBlock.getBlockId()
+    })
+  }
+
+  function findCompletedBlockById(blockId) {
+    return __(completedBlocks).find(function (completedBlock) {
+      return blockId === completedBlock.getBlockId()
+    })
+  }
+
+  function filterUnknownPendingBlocks() {
+    return __(pendingBlocks).filter(function (block) {
+      return block.getBlockType() === BlockTypes.UNKNOWN
+    })
   }
 }
 
