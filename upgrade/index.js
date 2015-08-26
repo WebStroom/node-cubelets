@@ -86,7 +86,7 @@ var Upgrade = function (client) {
             flashBootstrapToHostBlock,
             startBlockUpgrades,
             jumpToDiscovery,
-            jumpToImago,
+            jumpToClassic,
             flashUpgradeToHostBlock
           ], function (err) {
             finished = true
@@ -97,7 +97,8 @@ var Upgrade = function (client) {
           async.series([
             startBlockUpgrades,
             jumpToDiscovery,
-            jumpToImago,
+            jumpToClassic,
+            discoverHostBlock,
             flashUpgradeToHostBlock
           ], callback)
         } else {
@@ -625,7 +626,7 @@ var Upgrade = function (client) {
     var program = new ClassicProgram(hex)
     if (program.valid) {
       self.emit('flashUpgradeToHostBlock', hostBlock)
-      var flash = new ClassicProgram(client, {
+      var flash = new ClassicFlash(client, {
         skipSafeCheck: true
       })
       flash.programToBlock(program, hostBlock, function (err) {
