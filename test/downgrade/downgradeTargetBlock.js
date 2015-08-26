@@ -15,8 +15,8 @@ var ClassicProgram = ClassicProtocol.Program
 var ClassicFlash = ClassicProtocol.Flash
 var InfoService = require('../../services/info')
 var FirmwareService = require('../../services/firmware')
+var Version = require('../../version')
 var __ = require('underscore')
-var Version = require("../../version")
 
 var FirmwareType = {
   CLASSIC: 0,
@@ -37,9 +37,8 @@ var client = cubelets.connect(config.device, function (err) {
 
       var upgrade = new Upgrade(client)
       var firmwareType
-      var targetBlock
 
-      test('Check Bluetooth firmware version', function (t) {
+      test('check bluetooth firmware version', function (t) {
         t.plan(1)
         // Switch to the classic protocol
         client.setProtocol(ClassicProtocol)
@@ -48,38 +47,38 @@ var client = cubelets.connect(config.device, function (err) {
           if (err) {
             // The imago protocol will fail to respond.
             firmwareType = FirmwareType.IMAGO
-          }
-          else if (response.payload.length > 0) {
+            t.pass('detected imago')
+          } else if (response.payload.length > 0) {
             // The bootstrap protocol will differentiate itself by
             // sending an extra byte in the response.
             firmwareType = FirmwareType.BOOTSTRAP
+            t.pass('detected bootstrap')
           } else {
             // Otherwise, the cubelet has classic firmware.
             firmwareType = FirmwareType.CLASSIC
+            t.pass('detected classic')
           }
-          t.pass('Detected the Bluetooth firmware version')
         })
       })
 
-      test('Update BT firmware if necessary', function (t) {
-        // Make sure we are in bootstrap mode
+      test('update bluetooth firmware if necessary', function (t) {
         switch (firmwareType) {
           case FirmwareType.IMAGO:
-            // Flash bootstrap firmware
+            t.plan(4)
             client.setProtocol(ImagoProtocol)
             var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
             var program = new ImagoProgram(hex)
             t.ok(program.valid, 'firmware valid')
-            var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
 
+            var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
             block._mcuType = MCUTypes.AVR
+
             var flash = new ImagoFlash(client, {
               skipSafeCheck: true
             })
-            var timer
             flash.programToBlock(program, block, function (err) {
               t.ifError(err, 'flash err')
-              t.pass('Flashed bootstrap firmware')
+              t.pass('flashed bootstrap firmware')
               t.end()
             })
             flash.on('progress', function (e) {
@@ -87,27 +86,25 @@ var client = cubelets.connect(config.device, function (err) {
             })
             break
           case FirmwareType.BOOTSTRAP:
-            t.pass('BT already running bootstrap no need to update')
-            t.end()
-            return
+            t.plan(1)
+            t.pass('bluetooth already running bootstrap no need to update')
             break
           case FirmwareType.CLASSIC:
-            // Flash bootstrap firmware
-            t.ok(true, 'Need to flash bootstrap firmware')
+            t.plan(4)
             client.setProtocol(ClassicProtocol)
             var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
             var program = new ClassicProgram(hex)
             t.ok(program.valid, 'firmware valid')
-            var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
 
+            var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
             block._mcuType = MCUTypes.AVR
+
             var flash = new ClassicFlash(client, {
               skipSafeCheck: true
             })
-            var timer
             flash.programToBlock(program, block, function (err) {
               t.ifError(err, 'flash err')
-              t.pass('Flashed bootstrap firmware')
+              t.pass('flashed bootstrap firmware')
               t.end()
             })
             flash.on('progress', function (e) {
@@ -142,6 +139,8 @@ var client = cubelets.connect(config.device, function (err) {
           t.equals(response.mode, 1, 'jumped to os4')          
         })
       })
+
+      var targetBlock
 
       test('find os4 target block and flash bootloader', function (t) {
         t.plan(4)
@@ -226,11 +225,11 @@ var client = cubelets.connect(config.device, function (err) {
       })
 
       test('flash os3 application to target', function (t) {
-        t.plan(2)
+        t.plan(3)
         var blockId = targetBlock.getBlockId()
         var faceIndex = targetBlock.getFaceIndex()
 
-        var program = new ClassicProgram(hexString)
+        var program = new ClassicProgram(testHex)
         t.ok(program.valid, 'firmware valid')
 
         //XXX(donald): hack to not send reset command
@@ -244,7 +243,7 @@ var client = cubelets.connect(config.device, function (err) {
           console.log('progress', '(' + e.progress + '/' + e.total + ')')
         })
         flash.on('success', function (e) {
-          t.pass("successfully flashed target.")
+          t.pass('successfully flashed target.')
         })
         flash.on('error', function (e) {
           t.end(err)
