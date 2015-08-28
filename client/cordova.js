@@ -42,14 +42,32 @@ var BluetoothConnection = function (device, opts) {
     // do nothing
   }
 
-  this._write = function (chunk, enc, next) {
-    if (isOpen) {
-      bluetooth.send(device.deviceId, toArrayBuffer(chunk), function () {
+  this._write = function (data, enc, next) {
+    var chunkSize = 60
+    writeChunk(0)
+    function writeChunk(i) {
+      var start = i * chunkSize
+      var end = start + chunkSize
+      var chunk = data.slice(start, end)
+      if (chunk.length > 0) {
+        write(chunk, function (err) {
+          if (err) {
+            next(err)
+          } else {
+            writeChunk(i + 1)
+          }
+        })
+      } else {
+        next()
+      }
+    }
+    function write(chunk, callback) {
+      if (isOpen) {
         debug('<<', chunk)
-        next(null)
-      })
-    } else {
-      next(new Error('disconnected'))
+        bluetooth.send(device.deviceId, toArrayBuffer(chunk), callback)
+      } else {
+        callback(new Error('disconnected'))
+      }
     }
   }
 
