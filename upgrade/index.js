@@ -628,7 +628,7 @@ var Upgrade = function (client) {
     assert(targetBlock, 'Target block must be set.')
     var timer = setTimeout(function () {
       client.removeListener('event', onBlockFoundEvent)
-      callback(new Error('Failed to discover target OS3 block.'))
+      callback(new Error('Failed to discover target OS4 block.'))
     }, 5000)
     client.on('event', onBlockFoundEvent)
     function onBlockFoundEvent(e) {
