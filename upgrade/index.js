@@ -136,7 +136,7 @@ var Upgrade = function (client) {
         // Otherwise, the cubelet has classic firmware.
         callback(null, FirmwareTypes.CLASSIC)
       }
-    })
+    }, 500)
   }
 
   this.start = function (callback) {
@@ -150,6 +150,7 @@ var Upgrade = function (client) {
       detectFirmwareType(function (err, firmwareType) {
         if (err) {
           callback(err)
+          self.emit('error', err)
         } else if (FirmwareTypes.CLASSIC === firmwareType) {
           async.series([
             jumpToClassic,
@@ -158,22 +159,16 @@ var Upgrade = function (client) {
             startBlockUpgrades,
             jumpToDiscovery,
             jumpToClassic,
-            jumpToClassicBootloader,
             flashUpgradeToHostBlock
-          ], function (err) {
-            finished = true
-            running = false
-            callback(err)
-          })
+          ], onFinish)
         } else if (FirmwareTypes.BOOTSTRAP === firmwareType) {
           async.series([
             startBlockUpgrades,
             jumpToDiscovery,
             jumpToClassic,
             discoverHostBlock,
-            jumpToClassicBootloader,
             flashUpgradeToHostBlock
-          ], callback)
+          ], onFinish)
         } else {
           callback(new Error('Upgrade started with invalid firmware type.'))
         }
@@ -182,6 +177,11 @@ var Upgrade = function (client) {
         finished = true
         running = false
         callback(err)
+        if (err) {
+          self.emit('error', err)
+        } else {
+          self.emit('finish')
+        }
       }
     }
   }
@@ -673,48 +673,6 @@ var Upgrade = function (client) {
     enqueueCompletedBlock(targetBlock)
     setTargetBlock(null)
     callback(null)
-  }
-
-  function jumpToClassicBootloader(callback) {
-    debug('jumpToClassicBootloader')
-    assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    assert(hostBlock, 'Host block must be set.')
-    var Encoder = ClassicProtocol.Message.Encoder
-    var stream = client.getConnection()
-    var parser = client.getParser()
-    async.parallel([
-      sendJumpCommand,
-      waitForJumpEvent
-    ], function (err) {
-      parser.setRawMode(false)
-      callback(err)
-    })
-    function sendJumpCommand(callback) {
-      process.nextTick(function () {
-        var encodedId = Encoder.encodeId(hostBlock.getBlockId())
-        client.getConnection().write(new Buffer([
-          'T'.charCodeAt(0),
-          encodedId.readUInt8(0),
-          encodedId.readUInt8(1),
-          encodedId.readUInt8(2)
-        ]), callback)
-      })
-    }
-    function waitForJumpEvent(timeout) {
-      parser.setRawMode(true)
-      parser.on('raw', waitForRaw)
-      var timer = setTimeout(function () {
-        parser.removeListener('raw', waitForRaw)
-        callback(new Error('Timed out waiting for jump to bootloader.'))
-      }, 5000)
-      function waitForRaw(data) {
-        if (data.readUInt8(0) === '!'.charCodeAt(0)) {
-          parser.removeListener('raw', waitForRaw)
-          clearTimeout(timer)
-          callback(null)
-        }
-      }
-    }
   }
 
   function flashUpgradeToHostBlock(callback) {

@@ -61,7 +61,7 @@ function InfoService() {
             }
           } else {
             if (callback) {
-              callback(new Error('Bad response. Error status code.'))
+              callback(new Error('Cubelets Info Service not available. Check your Internet connection and try again.'))
             }
           }
         }

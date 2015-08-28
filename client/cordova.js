@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:cordova')
 var util = require('util')
 var Scanner = require('../scanner')
 var Connection = require('../connection')
@@ -41,9 +42,10 @@ var BluetoothConnection = function (device, opts) {
     // do nothing
   }
 
-  this._write = function (data, enc, next) {
+  this._write = function (chunk, enc, next) {
     if (isOpen) {
-      bluetooth.send(device.deviceId, toArrayBuffer(data), function () {
+      bluetooth.send(device.deviceId, toArrayBuffer(chunk), function () {
+        debug('<<', chunk)
         next(null)
       })
     } else {
@@ -53,7 +55,9 @@ var BluetoothConnection = function (device, opts) {
 
   function onReceive(receiveInfo) {
     if (receiveInfo.deviceId === device.deviceId) {
-      stream.push(toBuffer(receiveInfo.data))
+      var chunk = toBuffer(receiveInfo.data)
+      debug('>>', chunk)
+      stream.push(chunk)
     }
   }
 

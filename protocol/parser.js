@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:parser')
 var events = require('events')
 var util = require('util')
 
@@ -185,6 +186,7 @@ var Parser = function (protocol) {
     message.decodeBody(body)
     process.nextTick(function () {
       self.emit('message', message)
+      debug('message', message)
     })
   }
 
@@ -192,6 +194,7 @@ var Parser = function (protocol) {
   var emitExtra = function (data) {
     process.nextTick(function () {
       self.emit('extra', data)
+      debug('extra', data)
     })
   }
 
@@ -199,6 +202,7 @@ var Parser = function (protocol) {
   var emitRaw = function (data) {
     process.nextTick(function () {
       self.emit('raw', data)
+      debug('raw', data)
     })
   }
 }

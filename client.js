@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:client')
 var util = require('util')
 var events = require('events')
 var xtend = require('xtend/mutable')
@@ -6,7 +7,8 @@ var RequestQueue = require('./requestQueue')
 
 var Protocols = {
   Imago: require('./protocol/imago'),
-  Classic: require('./protocol/classic')
+  Classic: require('./protocol/classic'),
+  Bootstrap: require('./protocol/bootstrap')
 }
 
 Protocols.OS4 = Protocols.Imago
@@ -51,15 +53,16 @@ function Factory(Scanner, Connection) {
 
     con.on('open', function () {
       client.emit('connect')
+      debug('connect')
     })
 
     con.on('data', function (data) {
-      var parser = client.getParser()
       parser.parse(data)
     })
 
     con.on('close', function (err) {
       client.emit('disconnect', err)
+      debug('disconnect')
     })
 
     var protocol, parser, strategy
@@ -67,9 +70,19 @@ function Factory(Scanner, Connection) {
     this.setProtocol = function (newProtocol) {
       if (newProtocol !== protocol) {
         protocol = newProtocol
+        debug('protocol', getProtocolName())
         setParser(new protocol.Parser())
         setStrategy(new protocol.Strategy(client))
       }
+    }
+
+    function getProtocolName() {
+      return (
+        (protocol === Protocols.Imago) ? 'imago' :
+        (protocol === Protocols.Classic) ? 'classic' :
+        (protocol === Protocols.Bootstrap) ? 'bootstrap' :
+          'unknown'
+      )
     }
 
     function setParser(newParser) {
