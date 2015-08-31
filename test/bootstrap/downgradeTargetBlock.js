@@ -162,7 +162,9 @@ var client = cubelets.connect(config.device, function (err) {
           var hex = fs.readFileSync('./downgrade/pic_downgrader.hex')
           var program = new ImagoProgram(hex)
           t.ok(program.valid, 'firmware valid')
-          var flash = new ImagoFlash(client)
+          var flash = new ImagoFlash(client, {
+            skipSafeCheck: true
+          })
           flash.programToBlock(program, targetBlock, function (err) {
             t.ifError(err, 'flashed block')
           })
@@ -247,7 +249,9 @@ var client = cubelets.connect(config.device, function (err) {
         //XXX(donald): hack to not send reset command
         targetBlock._applicationVersion = new Version(0, 0, 0);
 
-        var flash = new ClassicFlash(client)
+        var flash = new ClassicFlash(client, {
+          skipSafeCheck: true
+        })
         flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err, 'flashed block')
         })
