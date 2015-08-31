@@ -381,16 +381,15 @@ function Flash(protocol, client, opts) {
               ]))
               series.push(progress(p += 1))
             })
-            series.push(parallelize([
-              send(new Buffer([
-                0xFE,
-                0xFD
-              ])),
-              waitForCode('@', timeout)
-            ]))
             return series
           })(), callback)
         }
+      }
+      function sendJumpCommand(timeout) {
+        return parallelize([
+          send(new Buffer([ 0xFE, 0xFD ])),
+          waitForCode('@', timeout)
+        ])
       }
       function sendSafeCheck(timeout) {
         return parallelize([
@@ -404,7 +403,8 @@ function Flash(protocol, client, opts) {
         sendDisableAutoMapUpdatesCommand,
       ]:[]).concat([        
         sendReadyCommand(10000),
-        sendProgramPages(10000)
+        sendProgramPages(10000),
+        sendJumpCommand(10000)
       ]).concat(opts.skipSafeCheck ? []:[
         wait(1000),
         sendSafeCheck(10000)

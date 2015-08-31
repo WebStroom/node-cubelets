@@ -166,7 +166,7 @@ var Upgrade = function (client) {
             if (result) {
               callback(null)
             } else {
-              callback(new Error('Block failed to reset after boostrap.'))
+              callback(new Error('Block failed to reset after bootstrap.'))
             }
           })
         }
