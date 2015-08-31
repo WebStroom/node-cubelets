@@ -138,6 +138,13 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
+      test('wait a second', function (t) {
+        t.plan(1)
+        setTimeout(function () {
+          t.pass('ok')
+        }, 1000)
+      })
+
       var targetBlock
 
       test('find os4 target block and flash bootloader', function (t) {
@@ -199,7 +206,14 @@ var client = cubelets.connect(config.device, function (err) {
 
       var testHex
 
-      test('fetch info for block', function (t) {
+      test('force block type', function (t) {
+        t.plan(1)
+        var hex = './downgrade/hex/battery.hex'
+        testHex = fs.readFileSync(hex)
+        t.pass('using hex: ' + hex)
+      })
+
+      test.skip('fetch info for block', function (t) {
         t.plan(6)
 
         var infoService = new InfoService()

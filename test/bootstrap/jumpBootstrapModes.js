@@ -54,9 +54,9 @@ var client = cubelets.connect(config.device, function (err) {
       })
 
       // Specify how many times you want to run the jump tests.
-      repeat_jumps(10)
+      repeatJumps(10)
 
-      function repeat_jumps (attempts) {
+      function repeatJumps (attempts) {
         for (var i = 0; i < attempts; i++) {
           test('jump to os4 and back to discovery', function (t) {
             t.plan(3)
@@ -109,14 +109,13 @@ var client = cubelets.connect(config.device, function (err) {
               }, 500)
             })
           })
-
-          test('disconnect', function (t) {
-            t.plan(1)
-            client.disconnect(t.ifError)
-          })
-
         }
       }
+
+      test('disconnect', function (t) {
+        t.plan(1)
+        client.disconnect(t.ifError)
+      })
     }
   })
 })

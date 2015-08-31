@@ -378,7 +378,7 @@ var Upgrade = function (client) {
       async.series([
         jumpToDiscovery,
         discoverTargetFaces,
-        waitForFinish(2500)
+        wait(2500)
       ], next)
     }, callback)
   }
@@ -469,6 +469,7 @@ var Upgrade = function (client) {
         debug('has os3 faces')
         async.series([
           jumpToClassic,
+          wait(1000),
           enqueuePendingClassicBlocks,
           fetchUnknownPendingBlockTypes,
           upgradeNextPendingClassicBlock
@@ -477,6 +478,7 @@ var Upgrade = function (client) {
         debug('os4 faces only')
         async.series([
           jumpToImago,
+          wait(1000),
           enqueuePendingImagoBlocks,
           fetchUnknownPendingBlockTypes,
           upgradeNextPendingImagoBlock
@@ -704,9 +706,9 @@ var Upgrade = function (client) {
     }
   }
 
-  function waitForFinish(timeout) {
+  function wait(timeout) {
     return function (callback) {
-      debug('waiting for blocks...')
+      debug('waiting...')
       setTimeout(callback, timeout)
     }
   }

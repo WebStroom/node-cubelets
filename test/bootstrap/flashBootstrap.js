@@ -41,7 +41,7 @@ var client = cubelets.connect(config.device, function (err) {
       })
 
       test('flash bluetooth bootstrap firmware', function (t) {
-        t.plan(3)
+        t.plan(2)
         var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
         var program = new Program(hex)
         t.ok(program.valid, 'firmware valid')
@@ -50,26 +50,12 @@ var client = cubelets.connect(config.device, function (err) {
         var flash = new Flash(client, {
           skipSafeCheck: true
         })
-        var timer
         flash.programToBlock(program, block, function (err) {
           t.ifError(err, 'flash err')
-          timer = setTimeout(function () {
-            t.fail('did not disconnect after flashing')
-          }, 2000)
         })
         flash.on('progress', function (e) {
           console.log('progress', '(' + e.progress + '/' + e.total + ')')
         })
-        client.on('disconnect', onDisconnect)
-        function onDisconnect(err) {
-          client.removeListener('disconnect', onDisconnect)
-          if (timer) {
-            clearTimeout(timer)
-            t.pass('disconnected after flashing')
-          } else {
-            t.fail('disconnected before flashing completed')
-          }
-        }
       })
 
       test.skip('disconnect', function (t) {
