@@ -11,7 +11,7 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      test('find a neighbor and flash it', function (t) {
+      test('find neighbors', function (t) {
         t.plan(3)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
           t.ifError(err, 'fetched neighbors')
@@ -20,6 +20,13 @@ var client = cubelets.connect(config.device, function (err) {
             console.log('found', block.getBlockId())
           })
           t.pass('done')
+        })
+      })
+
+      test('fetch block configs', function (t) {
+        var neighborBlocks = client.getNeighborBlocks()
+        client.fetchBlockConfigurations(neighborBlocks, function (err) {
+          t.ifError(err, 'fetched block configs')
         })
       })
 
