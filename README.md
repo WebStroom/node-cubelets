@@ -50,8 +50,8 @@ client.on('updateBlockMap', function () {
   console.log('Origin block', client.getOriginBlock())
   console.log('Neighbor blocks', client.getNeighborBlocks())
   console.log('All blocks (except origin)', client.getAllBlocks())
-  console.log('By ID', client.findById(1234))
-  console.log('By hop count', client.filterByHopCount(2))
+  console.log('By ID', client.findBlockById(1234))
+  console.log('By hop count', client.filterBlocksByHopCount(2))
   console.log('Graph', client.getGraph())
 })
 
