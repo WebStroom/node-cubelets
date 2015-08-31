@@ -87,6 +87,13 @@ var BluetoothConnection = function (device, opts) {
     }
   }
 
+  function onDisconnect(disconnectInfo) {
+    if (disconnectInfo.deviceId === device.deviceId) {
+      isOpen = false
+      stream.close()
+    }
+  }
+
   this._open = function (callback) {
     if (isOpen) {
       if (callback) {
@@ -147,11 +154,13 @@ var BluetoothConnection = function (device, opts) {
   function addListeners() {
     bluetooth.onReceive.addListener(onReceive)
     bluetooth.onReceiveError.addListener(onReceiveError)
+    bluetooth.onDisconnect.addListener(onDisconnect)
   }
 
   function removeListeners() {
     bluetooth.onReceive.removeListener(onReceive)
     bluetooth.onReceiveError.removeListener(onReceiveError)
+    bluetooth.onDisconnect.removeListener(onDisconnect)
   }
 }
 
