@@ -44,38 +44,21 @@ Discover
 Once connected, you can discover other Cubelets connected to the Bluetooth Cubelet.
 
 ```
-client.on('blocksChanged', function () {
-  console.log('Origin block', construction.getOriginBlock())
-  console.log('Neighbor blocks', construction.getNeighborBlocks())
-  console.log('All blocks', construction.getAllBlocks())
-  console.log('By ID', construction.findById(1234))
-  console.log('By hop count', construction.filterByHopCount(2))
-  console.log('Edges', construction.getEdges())
-  console.log('Graph', construction.getGraph())
+// Listen for incremental updates to the graph,
+// as data becomes available.
+client.on('updateBlockMap', function () {
+  console.log('Origin block', client.getOriginBlock())
+  console.log('Neighbor blocks', client.getNeighborBlocks())
+  console.log('All blocks (except origin)', client.getAllBlocks())
+  console.log('By ID', client.findById(1234))
+  console.log('By hop count', client.filterByHopCount(2))
+  console.log('Graph', client.getGraph())
 })
 
-client.discoverBlocks()
+// Fetch the graph. Callback is fired once entire
+// graph has been retrieved.
+client.fetchGraph(function (err, graph) {
+  console.log('Nodes:', graph.nodes)
+  console.log('Edges:', graph.links)
+})
 ```
-
-The change event will fire when the robot construction changes in any detectable way, included if a block is added, removed, or moved.
-
-Command
-=======
-
-Once Cubelets are discovered, you can send commands to them. For example, to blink the LED on a Cubelet with ID `1234`:
-
-```
-var LED = false // Off
-setInterval(function() {
-  client.sendBlockCommand(new cubelets.block.SetLED(1234, LED))
-  LED = !LED
-}, 500)
-```
-
-Request
-=======
-
-
-Notification
-============
-
