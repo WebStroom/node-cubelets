@@ -1,11 +1,11 @@
 high
 ----
-[ ] flash new target
-[ ] jump back to discovery bootstrap mode
-[ ] flash target application hex
-[ ] flash target updater and bootloader hex
-[ ] jump to imago bootstrap mode
-[ ] jump to classic bootstrap mode
+[x] flash new target
+[x] jump back to discovery bootstrap mode
+[x] flash target application hex
+[x] flash target upgrade and bootloader hex
+[x] jump to imago bootstrap mode
+[x] jump to classic bootstrap mode
 [X] receive block found events
 [ ] wait for reconnect
 [ ] wait for disconnect
