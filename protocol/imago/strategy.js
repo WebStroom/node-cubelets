@@ -166,10 +166,10 @@ function ImagoStrategy(protocol, client) {
   }
 
   function fetchAllBlockNeighbors(callback) {
-    client.getBlockNeighbors(map.getAllBlocks(), callback)
+    client.fetchBlockNeighbors(map.getAllBlocks(), callback)
   }
 
-  this.getBlockNeighbors = function (unsortedBlocks, callback) {
+  this.fetchBlockNeighbors = function (unsortedBlocks, callback) {
     var fetchTasks = []
     __(sortBlocksByHopCount(unsortedBlocks)).each(function (block) {
       fetchTasks.push(function (callback) {
