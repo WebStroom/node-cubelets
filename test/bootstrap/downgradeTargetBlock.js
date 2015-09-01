@@ -208,14 +208,14 @@ var client = cubelets.connect(config.device, function (err) {
 
       var testHex
 
-      test('force block type', function (t) {
+      test.skip('force block type', function (t) {
         t.plan(1)
         var hex = './downgrade/hex/battery.hex'
         testHex = fs.readFileSync(hex)
         t.pass('using hex: ' + hex)
       })
 
-      test.skip('fetch info for block', function (t) {
+      test('fetch info for block', function (t) {
         t.plan(6)
 
         var infoService = new InfoService()
@@ -250,7 +250,7 @@ var client = cubelets.connect(config.device, function (err) {
         targetBlock._applicationVersion = new Version(0, 0, 0);
 
         var flash = new ClassicFlash(client, {
-          skipSafeCheck: true
+          skipSafeCheck: false
         })
         flash.programToBlock(program, targetBlock, function (err) {
           t.ifError(err, 'flashed block')
@@ -263,6 +263,35 @@ var client = cubelets.connect(config.device, function (err) {
         })
         flash.on('error', function (e) {
           t.end(err)
+        })
+      })
+      
+    test('wait two seconds', function (t) {
+        t.plan(1)
+        setTimeout(function () {
+          t.pass('ok')
+        }, 1000)
+  	})
+      
+    test('jump back to discovery mode', function (t) {
+        t.plan(1)
+        client.sendCommand(new ClassicProtocol.messages.ResetCommand())
+        setTimeout(function () {
+          client.setProtocol(BootstrapProtocol)
+          var timer = setTimeout(function () {
+            client.removeListener('event', waitForBlockEvent)
+            t.fail('no block found events')
+            t.end()
+          }, 3000)
+          function waitForBlockEvent (e) {
+            if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
+              clearTimeout(timer)
+              client.removeListener('event', waitForBlockEvent)
+              t.pass('jumped back to discovery')
+              t.end()
+            }
+          }
+          client.on('event', waitForBlockEvent)
         })
       })
 
