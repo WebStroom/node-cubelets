@@ -2,8 +2,7 @@ var fs = require('fs')
 
 module.exports = {
   bluetooth: {
-    //bootstrap: fs.readFileSync(__dirname + '/hex/bluetooth_bootstrap.hex'),
-    bootstrap: fs.readFileSync(__dirname + '/hex/test/bluetooth_bootstrap_always_config.hex'),
+    bootstrap: fs.readFileSync(__dirname + '/hex/bluetooth_bootstrap.hex'),
     application: fs.readFileSync(__dirname + '/hex/bluetooth_application.hex')
   },
   bargraph: {
