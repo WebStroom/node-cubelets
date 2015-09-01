@@ -36,6 +36,10 @@ var Upgrade = function (client) {
   var completedBlocks = []
   var targetBlock = null
 
+  this.getClient = function () {
+    return client
+  }
+
   this.detectIfNeeded = function (callback) {
     callback = callback || emptyFunction
     detectFirmwareType(function (err, firmwareType) {
@@ -196,29 +200,19 @@ var Upgrade = function (client) {
 
   function detectReset(callback) {
     async.series([
-      retry({ times: 20, interval: 5000 }, waitForDisconnect),
-      retry({ times: 20, interval: 5000 }, waitForReconnect)
+      waitForDisconnect,
+      waitForReconnect
     ], function (err) {
       callback(err ? false : true)
     })
   }
 
   function waitForDisconnect(callback) {
-    var timer = setTimeout(function () {
-      client.removeListener('disconnect', onDisconnect)
-      client.removeListener('event', onDisconnectFailedEvent)
-      callback(new Error('Failed to disconnect.'))
-    }, 5000)
     client.on('disconnect', onDisconnect)
     function onDisconnect() {
       client.removeListener('disconnect', onDisconnect)
       client.removeListener('event', onDisconnectFailedEvent)
-      if (timer) {
-        clearTimeout(timer)
-        callback(null)
-      } else {
-        callback(new Error('Disconnected before flashing complete.'))
-      }
+      callback(null)
     }
     client.on('event', onDisconnectFailedEvent)
     function onDisconnectFailedEvent(e) {
@@ -229,19 +223,14 @@ var Upgrade = function (client) {
   }
 
   function waitForReconnect(callback) {
-    var timer = setTimeout(function () {
-      client.removeListener('connect', onConnect)
-      callback(new Error('Failed to reconnect.'))
-    }, 5000)
     client.on('connect', onConnect)
     function onConnect() {
       client.removeListener('connect', onConnect)
-      if (timer) {
-        clearTimeout(timer)
-        callback(null)
-      }
+      callback(null)
     }
-    self.emit('needToConnect')
+    process.nextTick(function () {
+      self.emit('needToConnect')
+    })
   }
 
   this.getPendingBlocks = function () {
@@ -667,10 +656,6 @@ var Upgrade = function (client) {
       return block.getBlockType() === BlockTypes.UNKNOWN
     })
   }
-}
-
-function retry(options, fn) {
-  return async.retry.bind(null, options, fn)
 }
 
 util.inherits(Upgrade, events.EventEmitter)
