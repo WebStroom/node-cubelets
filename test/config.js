@@ -8,7 +8,7 @@ function device() {
   return process.browser ? {
     "address": "00:04:3e:31:c7:3e"
   } : {
-    "path": "/dev/cu.Cubelet-RYC-AMP-SPP",
+    "path": "COM5",
     "address": "00:04:3e:31:c7:3e",
     "channelID": 1
   }
