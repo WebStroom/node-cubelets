@@ -134,7 +134,7 @@ var client = cubelets.connect(config.device, function (err) {
         client.setProtocol(BootstrapProtocol)
         client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(1), function (err, response) {
           t.ifError(err)
-          t.equals(response.mode, 1, 'jumped to os4')          
+          t.equals(response.mode, 1, 'jumped to os4')
         })
       })
 
@@ -234,7 +234,7 @@ var client = cubelets.connect(config.device, function (err) {
             t.ifError(err)
             testHex = hex
             t.ok(hex)
-          }) 
+          })
         })
       })
 
@@ -246,8 +246,8 @@ var client = cubelets.connect(config.device, function (err) {
         var program = new ClassicProgram(testHex)
         t.ok(program.valid, 'firmware valid')
 
-        //XXX(donald): hack to not send reset command
-        targetBlock._applicationVersion = new Version(0, 0, 0);
+        // XXX(donald): hack to not send reset command
+        targetBlock._applicationVersion = new Version(0, 0, 0)
 
         var flash = new ClassicFlash(client, {
           skipSafeCheck: false
@@ -265,15 +265,15 @@ var client = cubelets.connect(config.device, function (err) {
           t.end(err)
         })
       })
-      
-    test('wait two seconds', function (t) {
+
+      test('wait two seconds', function (t) {
         t.plan(1)
         setTimeout(function () {
           t.pass('ok')
         }, 1000)
-  	})
-      
-    test('jump back to discovery mode', function (t) {
+      })
+
+      test('jump back to discovery mode', function (t) {
         t.plan(1)
         client.sendCommand(new ClassicProtocol.messages.ResetCommand())
         setTimeout(function () {
