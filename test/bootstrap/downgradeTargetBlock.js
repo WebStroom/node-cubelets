@@ -266,7 +266,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('wait two seconds', function (t) {
+      test('wait a second', function (t) {
         t.plan(1)
         setTimeout(function () {
           t.pass('ok')

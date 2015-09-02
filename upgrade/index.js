@@ -109,11 +109,12 @@ var Upgrade = function (client) {
       function onFinish(err) {
         finished = true
         running = false
-        callback(err)
         if (err) {
           self.emit('error', err)
+          callback(err)
         } else {
           self.emit('finish')
+          callback(null)
         }
       }
     }
@@ -185,6 +186,7 @@ var Upgrade = function (client) {
   }
 
   function detectSkipReset(callback) {
+    debug('detectSkipReset')
     client.on('event', onSkipDisconnectEvent)
     function onSkipDisconnectEvent(e) {
       if (e instanceof BootstrapProtocol.messages.SkipDisconnectEvent) {
@@ -199,6 +201,7 @@ var Upgrade = function (client) {
   }
 
   function detectReset(callback) {
+    debug('detectReset')
     async.series([
       waitForDisconnect,
       waitForReconnect
@@ -468,7 +471,6 @@ var Upgrade = function (client) {
                 // continue. However, still emit the error so it can still
                 // be noticed by the app.
                 callback(null)
-                self.emit('error', err)
               } else {
                 // Only enqueue pending imago blocks if they are in bootloader.
                 if (res.mode === 0 && !findPendingBlockById(blockId)) {

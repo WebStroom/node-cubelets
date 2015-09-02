@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:flash')
 var events = require('events')
 var util = require('util')
 var async = require('async')
@@ -381,6 +382,7 @@ function Flash(protocol, client, opts) {
               ]))
               series.push(progress(p += 1))
             })
+            series.push(sendJumpCommand(10000))
             return series
           })(), callback)
         }
@@ -403,8 +405,7 @@ function Flash(protocol, client, opts) {
         sendDisableAutoMapUpdatesCommand,
       ]:[]).concat([        
         sendReadyCommand(10000),
-        sendProgramPages(10000),
-        sendJumpCommand(10000)
+        sendProgramPages(10000)
       ]).concat(opts.skipSafeCheck ? []:[
         wait(1000),
         sendSafeCheck(10000)
@@ -412,6 +413,7 @@ function Flash(protocol, client, opts) {
         wait(1000),
         sendResetCommand(10000)
       ]:[])), function (error) {
+        debug('flash complete')
         parser.setRawMode(false)
         handleResult(error)
       })
@@ -423,10 +425,11 @@ function Flash(protocol, client, opts) {
 
     function handleResult(error) {
       if (error) {
-        console.error(error)
+        debug('flash error')
         self.emit('error', error)
         callback(error)
       } else {
+        debug('flash success')
         self.emit('success')
         callback(null)
       }
