@@ -81,16 +81,20 @@ var BluetoothConnection = function (device, opts) {
 
   function onReceiveError(errorInfo) {
     if (errorInfo.deviceId === device.deviceId) {
-      isOpen = false
       stream.emit('error', new Error(errorInfo.errorMessage))
-      stream.close()
+      if (isOpen) {
+        isOpen = false
+        stream.close()
+      }
     }
   }
 
   function onDisconnect(disconnectInfo) {
     if (disconnectInfo.deviceId === device.deviceId) {
-      isOpen = false
-      stream.close()
+      if (isOpen) {
+        isOpen = false
+        stream.close()
+      }
     }
   }
 
