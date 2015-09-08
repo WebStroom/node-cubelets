@@ -106,8 +106,10 @@ var SerialConnection = function (device, opts) {
           })
 
           serialPort.on('close', function () {
-            isOpen = false
-            stream.close()
+            if (isOpen) {
+              isOpen = false
+              stream.close()
+            }
           })
 
           if (callback) {

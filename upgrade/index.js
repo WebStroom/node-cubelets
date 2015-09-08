@@ -162,18 +162,7 @@ var Upgrade = function (client) {
           callback(err)
         } else {
           client.setProtocol(BootstrapProtocol)
-          async.detect([
-            detectSkipReset,
-            detectReset
-          ], function (detector, callback) {
-            detector(callback)
-          }, function (result) {
-            if (result) {
-              callback(null)
-            } else {
-              callback(new Error('Block failed to reset after bootstrap.'))
-            }
-          })
+          detectReset(callback)
         }
       })
       flash.on('progress', onProgress)
@@ -185,55 +174,30 @@ var Upgrade = function (client) {
     }
   }
 
-  function detectSkipReset(callback) {
-    debug('detectSkipReset')
-    client.on('event', onSkipDisconnectEvent)
-    function onSkipDisconnectEvent(e) {
-      if (e instanceof BootstrapProtocol.messages.SkipDisconnectEvent) {
-        client.removeListener('event', onSkipDisconnectEvent)
-        callback(true)
-      }
-    }
-    setTimeout(function () {
-      client.removeListener('event', onSkipDisconnectEvent)
-      callback(false)
-    }, 5000)
-  }
-
   function detectReset(callback) {
     debug('detectReset')
-    async.series([
-      waitForDisconnect,
-      waitForReconnect
-    ], function (err) {
-      callback(err ? false : true)
-    })
-  }
-
-  function waitForDisconnect(callback) {
+    self.emit('detectReset')
     client.on('disconnect', onDisconnect)
     function onDisconnect() {
       client.removeListener('disconnect', onDisconnect)
-      client.removeListener('event', onDisconnectFailedEvent)
-      callback(null)
+      client.removeListener('event', onEvent)
+      client.on('connect', onConnect)
+      self.emit('needToConnect')
+      function onConnect() {
+        client.removeListener('connect', onConnect)
+        callback(null)
+      }
     }
-    client.on('event', onDisconnectFailedEvent)
-    function onDisconnectFailedEvent(e) {
-      if (e instanceof BootstrapProtocol.messages.DisconnectFailedEvent) {
+    client.on('event', onEvent)
+    function onEvent(e) {
+      if (e instanceof BootstrapProtocol.messages.SkipDisconnectEvent) {
+        client.removeListener('disconnect', onDisconnect)
+        client.removeListener('event', onEvent)
+        callback(null)
+      } else if (e instanceof BootstrapProtocol.messages.DisconnectFailedEvent) {
         self.emit('needToDisconnect')
       }
     }
-  }
-
-  function waitForReconnect(callback) {
-    client.on('connect', onConnect)
-    function onConnect() {
-      client.removeListener('connect', onConnect)
-      callback(null)
-    }
-    process.nextTick(function () {
-      self.emit('needToConnect')
-    })
   }
 
   this.getPendingBlocks = function () {
