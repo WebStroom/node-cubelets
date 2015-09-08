@@ -15,21 +15,11 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      testNeighborsSetMode(0)
+      var mode = 0
+      testNeighborsSetModeFromImago(mode)
 
-      test.skip('find a neighbor and report its block id', function (t) {
-        t.plan(2)
-        client.fetchNeighborBlocks(function (err, neighborBlocks) {
-          t.ifError(err, 'fetched neighbors')
-          t.ok(neighborBlocks.length > 0, 'found at least one neighbor')
-          __(neighborBlocks).each(function (block) {
-            console.log('found', block.getBlockId(), 'on face', block.getFaceIndex())
-          })
-        })
-      })
-
-      function testNeighborsSetMode(mode) {
-        test(('put neighbors into ' + (mode ? 'application' : 'bootloader')), function (t) {
+      function testNeighborsSetModeFromImago(mode) {
+        test(('put neighbors into ' + (mode ? 'application' : 'bootloader') + ' from imago'), function (t) {
           t.plan(2)
           client.sendRequest(new ImagoProtocol.messages.GetNeighborBlocksRequest(), function (err, response) {
             t.ifError(err)

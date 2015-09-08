@@ -206,12 +206,12 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      var testHex
+      var targetHex
 
       test.skip('force block type', function (t) {
         t.plan(1)
         var hex = './downgrade/hex/battery.hex'
-        testHex = fs.readFileSync(hex)
+        targetHex = fs.readFileSync(hex)
         t.pass('using hex: ' + hex)
       })
 
@@ -232,7 +232,7 @@ var client = cubelets.connect(config.device, function (err) {
 
           firmwareService.downloadVersion(targetBlock, version, function (err, hex) {
             t.ifError(err)
-            testHex = hex
+            targetHex = hex
             t.ok(hex)
           })
         })
@@ -243,7 +243,7 @@ var client = cubelets.connect(config.device, function (err) {
         var blockId = targetBlock.getBlockId()
         var faceIndex = targetBlock.getFaceIndex()
 
-        var program = new ClassicProgram(testHex)
+        var program = new ClassicProgram(targetHex)
         t.ok(program.valid, 'firmware valid')
 
         // XXX(donald): hack to not send reset command
