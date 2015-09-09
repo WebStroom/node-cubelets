@@ -59,7 +59,20 @@ var Upgrade = function (client) {
       if (err) {
         // The imago protocol will fail to respond.
         client.setProtocol(ImagoProtocol)
-        callback(null, FirmwareTypes.IMAGO)
+        // Get configuration to detect if this is imago running in bootstrap.
+        client.sendRequest(new ImagoProtocol.messages.GetConfigurationRequest(), function (err, response) {
+          if (err) {
+            callback(err)
+          } else if (response.mode === 2) {
+            // Bootstrap mode detected. Force a jump to discovery mode.
+            jumpToDiscovery(function (err) {
+              callback(err, FirmwareTypes.BOOTSTRAP)
+            })
+          } else {
+            // This is actually imago firmware.
+            callback(null, FirmwareTypes.IMAGO)
+          }
+        })
       } else if (response.payload.length > 0) {
         // The bootstrap protocol will differentiate itself by
         // sending an extra byte in the response.
