@@ -28,6 +28,15 @@ var client = cubelets.connect(config.device, function (err) {
         t.pass('set protocol')
       })
 
+      test('find host id', function (t) {
+        t.plan(2)
+        client.fetchOriginBlock(function (err, originBlock) {
+          t.ifError(err, 'fetched origin')
+          t.ok(originBlock)
+          console.log('found', originBlock.getBlockId())
+        })
+      })
+
       test('find a neighbor and report its block id', function (t) {
         t.plan(2)
         client.fetchNeighborBlocks(function (err, neighborBlocks) {
