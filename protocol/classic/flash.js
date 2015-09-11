@@ -367,6 +367,7 @@ function Flash(protocol, client, opts) {
             function progress(p) {
               return function (callback) {
                 emitProgressEvent({
+                  step: [1,1],
                   progress: p,
                   total: pages.length,
                   action: 'flash'

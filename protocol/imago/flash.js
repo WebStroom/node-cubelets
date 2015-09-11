@@ -17,6 +17,7 @@ function Flash(protocol, client) {
 
   var self = this
   var messages = protocol.messages
+  var steps = 1
 
   this.programToBlock = function (program, block, callback) {
     callback = callback || emptyFunction
@@ -49,11 +50,15 @@ function Flash(protocol, client) {
       crc: 0xcc
     }
 
+    steps = 2
     self.programToSlot(program, slot, function (err) {
       if (err) {
         callback(err)
       } else {
-        self.slotToBlock(slot.index, block.getBlockId(), callback)
+        self.slotToBlock(slot.index, block.getBlockId(), function (err) {
+          steps = 1
+          callback(err)
+        })
       }
     })
   }
@@ -99,7 +104,8 @@ function Flash(protocol, client) {
                 emitProgressEvent({
                   progress: start,
                   total: slotData.length,
-                  action: 'upload'
+                  action: 'upload',
+                  step: getStep()
                 })
                 writeChunk(i + 1)
               }
@@ -108,12 +114,17 @@ function Flash(protocol, client) {
             emitProgressEvent({
               progress: slotData.length,
               total: slotData.length,
-              action: 'upload'
+              action: 'upload',
+              step: getStep()
             })
           }
         }
       }
     })
+
+    function getStep() {
+      return (steps === 2) ? [1,2] : [1,1]
+    }
 
     function handleResult(err) {
       clearTimeout(timer)
@@ -121,10 +132,6 @@ function Flash(protocol, client) {
       if (callback) {
         callback(err)
       }
-    }
-
-    function emitProgressEvent(e) {
-      self.emit('progress', e)
     }
   }
 
@@ -152,9 +159,22 @@ function Flash(protocol, client) {
         if (response.result !== 0) {
           callback(new Error('Flashing failed.'))
         } else {
-          callback(null)
+          // XXX(donald): Fake progress event.
+          emitProgressEvent({
+            progress: 100,
+            total: 100,
+            action: 'flash',
+            step: getStep()
+          })
+          setTimeout(function () {
+            callback(null)
+          }, 50)
         }
       }
+    }
+
+    function getStep() {
+      return (steps === 2) ? [2,2] : [1,1]
     }
 
     function onExpire() {
@@ -170,6 +190,18 @@ function Flash(protocol, client) {
     // each time a progress event is received.
     client.sendMessage(request)
     client.emit('request', request)
+
+    // XXX(donald): Fake progress event.
+    emitProgressEvent({
+      progress: 0,
+      total: 100,
+      action: 'flash',
+      step: getStep()
+    })
+  }
+
+  function emitProgressEvent(e) {
+    self.emit('progress', e)
   }
 }
 

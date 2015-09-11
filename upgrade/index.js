@@ -35,6 +35,7 @@ var Upgrade = function (client) {
   var pendingBlocks = []
   var completedBlocks = []
   var targetBlock = null
+  var step = [0,1]
 
   this.getClient = function () {
     return client
@@ -159,7 +160,33 @@ var Upgrade = function (client) {
     })
   }
 
+  function emitProgressEvent(e) {
+    var x = step[0]
+    var n = step[1]
+    if (e.step) {
+      x += e.step[0]
+    }
+    if (n > 0) {
+      self.emit('progress', {
+        progress: e.progress,
+        total: e.total,
+        action: e.action,
+        step: [x,n]
+      })
+    } else {
+      self.emit('progress', e)
+    }
+  }
+
+  function setNextStep(nextStep) {
+    return function (callback) {
+      step = nextStep
+      callback(null)
+    }
+  }
+
   function flashBootstrapToHostBlock(callback) {
+    step = [0,1]
     debug('flashBootstrapToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     var hex = HexFiles['bluetooth']['bootstrap']
@@ -180,7 +207,7 @@ var Upgrade = function (client) {
       })
       flash.on('progress', onProgress)
       function onProgress(e) {
-        self.emit('progress', e)
+        emitProgressEvent(e)
       }
     } else {
       callback(new Error('Program invalid.'))
@@ -275,7 +302,7 @@ var Upgrade = function (client) {
     }, function (next) {
       async.series([
         jumpToDiscovery,
-        discoverTargetFaces,
+        retry(3, discoverTargetFaces),
         wait(2500)
       ], next)
     }, callback)
@@ -416,10 +443,12 @@ var Upgrade = function (client) {
     if (nextBlock) {
       setTargetBlock(nextBlock)
       async.series([
+        setNextStep([0,4]),
         flashBootstrapToTargetBlock,
         jumpToDiscovery,
         discoverTargetImagoBlock,
         jumpToImago,
+        setNextStep([2,4]),
         flashUpgradeToTargetBlock,
         checkTargetBlockComplete
       ], callback)
@@ -470,15 +499,14 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ImagoProtocol, 'Must be in OS4 mode.')
     var nextBlock = dequeuePendingBlock()
     if (nextBlock) {
-      targetBlock = nextBlock
-      self.emit('changeTargetBlock', targetBlock)
+      setTargetBlock(nextBlock)
       async.series([
+        setNextStep([0,2]),
         flashUpgradeToTargetBlock,
         checkTargetBlockComplete
       ], callback)
     } else {
-      targetBlock = null
-      self.emit('changeTargetBlock', targetBlock)
+      setTargetBlock(null)
       callback(null)
     }
   }
@@ -522,7 +550,7 @@ var Upgrade = function (client) {
       })
       flash.on('progress', onProgress)
       function onProgress(e) {
-        self.emit('progress', e)
+        emitProgressEvent(e)
       }
     } else {
       callback(new Error('Program invalid.'))
@@ -567,7 +595,7 @@ var Upgrade = function (client) {
       })
       flash.on('progress', onProgress)
       function onProgress(e) {
-        self.emit('progress', e)
+        emitProgressEvent(e)
       }
     } else {
       callback(new Error('Program invalid.'))
@@ -583,6 +611,7 @@ var Upgrade = function (client) {
   }
 
   function flashUpgradeToHostBlock(callback) {
+    step = [0,1]
     debug('flashUpgradeToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     var hex = HexFiles['bluetooth']['application']
@@ -604,7 +633,7 @@ var Upgrade = function (client) {
       })
       flash.on('progress', onProgress)
       function onProgress(e) {
-        self.emit('progress', e)
+        emitProgressEvent(e)
       }
     } else {
       callback(new Error('Program invalid.'))
@@ -615,6 +644,12 @@ var Upgrade = function (client) {
     return function (callback) {
       debug('waiting...')
       setTimeout(callback, timeout)
+    }
+  }
+
+  function retry(times, fun) {
+    return function (callback) {
+      async.retry({ times: times, interval: 500 }, fun, callback)
     }
   }
 

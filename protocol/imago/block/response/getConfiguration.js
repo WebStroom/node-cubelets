@@ -12,7 +12,6 @@ GetConfigurationResponse.prototype.encodeBody = function () {
     Message.Encoder.encodeVersion(this.hardwareVersion),
     Message.Encoder.encodeVersion(this.bootloaderVersion),
     Message.Encoder.encodeVersion(this.applicationVersion),
-    Message.Encoder.encodeId(this.blockId),
     new Buffer([
       this.blockTypeId,
       this.mode,

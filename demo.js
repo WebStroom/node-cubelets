@@ -128,7 +128,6 @@ function Demo(socket, opts) {
         break
       case GetConfigurationRequest.code:
         var res = new GetConfigurationResponse(blockId)
-        res.blockId = blockId
         res.hardwareVersion = hardwareVersion
         res.bootloaderVersion = bootloaderVersion
         res.applicationVersion = applicationVersion

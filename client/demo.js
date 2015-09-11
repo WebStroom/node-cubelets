@@ -16,10 +16,10 @@ var DemoScanner = function () {
   this._getDevices = function (callback) {
     setTimeout(function () {
       callback([{
-        name: 'Imago Cubelet',
+        name: 'Cubelet-RGB',
         deviceId: 1337
       }, {
-        name: 'Classic Cubelet',
+        name: 'Cubelet-CWM',
         deviceId: 42,
         classic: true
       }])
