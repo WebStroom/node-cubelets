@@ -1,6 +1,6 @@
 var args = process.argv
-if (args.length !== 4) {
-  console.log('Usage: node bin/upgrade PATH DEFAULT_COLOR')
+if (args.length < 3) {
+  console.log('Usage: node bin/upgrade PATH {{DEFAULT_COLOR}}')
   process.exit(1)
 }
 
@@ -18,8 +18,15 @@ var clc = require('cli-color');
 //Console output colors
 var error = clc.bgRed.white.bold;
 var success = clc.bgGreen.white.bold
-//Default color of the terminal window
-var defaultColor = args[3]
+
+if(args.length === 3){
+	//Default color of the terminal window
+	var defaultColor = args[3]
+}
+else{
+	defaultColors = "\x1b[37;40m";
+}
+
 
 var device = {
   path: args[2]
