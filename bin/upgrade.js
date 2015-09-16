@@ -18,6 +18,7 @@ var clc = require('cli-color');
 var error = clc.red.bold;
 var warn = clc.yellow;
 var notice = clc.blue;
+var success = clc.bgGreen.bold
 
 var device = {
   path: args[2]
@@ -147,7 +148,8 @@ function start(client) {
       console.log('Flashing Cubelets OS4 firmware to block', formatBlockName(block) + '...')
     })
     upgrade.on('completeTargetBlock', function (block) {
-      console.log('Successfully upgraded block', formatBlockName(block), 'to OS4.')
+	  console.log(success('\n'))
+      console.log(success('\n\nSuccessfully upgraded block ' + formatBlockName(block) + ' to OS4.\n'))
     })
     upgrade.on('changePendingBlocks', function (pendingBlocks) {
       console.log('There are', formatNumber(pendingBlocks.length), 'pending blocks to upgrade.')

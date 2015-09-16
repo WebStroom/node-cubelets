@@ -1,6 +1,19 @@
+var args = process.argv
+if (args.length !== 3) {
+  console.log('Usage: node production PATH')
+  process.exit(1)
+}
+
+var clc = require('cli-color');
+
+var error = clc.red.bold;
+var warn = clc.yellow;
+var notice = clc.blue;
+var success = clc.bgGreen.bold
+
 var respawn = require('respawn')
 
-var monitor = respawn(['node', 'bin/upgrade.js', 'COM4'], {
+var monitor = respawn(['node', 'bin/upgrade.js', args[2]], {
   env: {}, // set env vars
   cwd: '.',              // set cwd
   maxRestarts:10,        // how many restarts are allowed within 60s
@@ -12,18 +25,36 @@ var monitor = respawn(['node', 'bin/upgrade.js', 'COM4'], {
 
 monitor.on('start', function()
 {
-	console.log('start')
+	
 });
 
 monitor.on('stop', function()
 {
-	console.log('stop')
+	console.log("The upgrade CLI has finished. Please restart if you need to update more blocks.")
 });
 
 monitor.on('crash', function()
 {
-	console.log('crash')
+	
 });
+
+var spawn_count = 0;
+monitor.on('spawn', function(process)
+{
+	spawn_count++;
+	if(spawn_count == 1)
+	{
+		console.log("Starting the OS4 Upgrade CLI...")
+	}
+	else
+	{
+		console.log("Restarting the OS4 Upgrade CLI...")
+	}
+});
+
+monitor.on('warn', function(err){
+	
+})
 
 monitor.on('stdout', function(data)
 {
@@ -32,6 +63,6 @@ monitor.on('stdout', function(data)
 
 monitor.on('stderr', function(data)
 {
-	console.log(data.toString('utf-8'));
+	console.log(error(data.toString('utf-8')));
 });
 monitor.start() // spawn and watch
