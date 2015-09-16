@@ -1,6 +1,6 @@
 var args = process.argv
-if (args.length !== 3) {
-  console.log('Usage: node bin/upgrade PATH')
+if (args.length !== 4) {
+  console.log('Usage: node bin/upgrade PATH DEFAULT_COLOR')
   process.exit(1)
 }
 
@@ -15,10 +15,11 @@ var InfoService = require('../services/info')
 var __ = require('underscore')
 var clc = require('cli-color');
 
-var error = clc.red.bold;
-var warn = clc.yellow;
-var notice = clc.blue;
-var success = clc.bgGreen.bold
+//Console output colors
+var error = clc.bgRed.white.bold;
+var success = clc.bgGreen.white.bold
+//Default color of the terminal window
+var defaultColor = args[3]
 
 var device = {
   path: args[2]
@@ -148,8 +149,7 @@ function start(client) {
       console.log('Flashing Cubelets OS4 firmware to block', formatBlockName(block) + '...')
     })
     upgrade.on('completeTargetBlock', function (block) {
-	  console.log(success('\n'))
-      console.log(success('\n\nSuccessfully upgraded block ' + formatBlockName(block) + ' to OS4.\n'))
+      printSuccessMessage('Successfully upgraded block ' + formatBlockName(block) + ' to OS4.')
     })
     upgrade.on('changePendingBlocks', function (pendingBlocks) {
       console.log('There are', formatNumber(pendingBlocks.length), 'pending blocks to upgrade.')
@@ -209,6 +209,16 @@ function formatNumber(n) {
 
 function formatBlockName(block) {
   return block.getBlockType().name + ' (' + block.getBlockId() + ')'
+}
+
+function printSuccessMessage(msg)
+{
+	var fullLine = "                                                                                ";
+	//process.stdout.write(success(fullLine));
+	process.stdout.write(success(fullLine));
+	process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length))));
+	process.stdout.write(success(fullLine));
+	process.stdout.write(defaultColor);//TODO: Reset color to blue background white text
 }
 
 function exitWithError(err) {

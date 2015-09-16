@@ -1,19 +1,49 @@
 var args = process.argv
-if (args.length !== 3) {
-  console.log('Usage: node production PATH')
+if (args.length !== 4) {
+  console.log('Usage: node production PATH THEME(0-5)')
   process.exit(1)
 }
 
 var clc = require('cli-color');
 
-var error = clc.red.bold;
-var warn = clc.yellow;
-var notice = clc.blue;
-var success = clc.bgGreen.bold
+var error = clc.bgRed.white;
+var success = clc.bgGreen.white
+var theme = parseInt(args[3])
+
+var defaultColors = "";
+switch(theme)
+{
+	//baground/text
+	
+	case 0:
+	//black/white
+	defaultColors = "\x1b[37;40m";
+	break;
+	case 1:
+	//blue/white
+	defaultColors = "\x1b[37;44m";
+	break;
+	case 2:
+	//white/black
+	defaultColors = "\x1b[30;47m";
+	break;
+	case 3:
+	//magenta/white
+	defaultColors = "\x1b[37;45m";
+	break;
+	case 4:
+	//cyan/white
+	defaultColors = "\x1b[1;37;46m";
+	break;
+	case 5:
+	//yellow/white
+	defaultColors = "\x1b[1;37;43m";
+	break;
+}
 
 var respawn = require('respawn')
 
-var monitor = respawn(['node', 'bin/upgrade.js', args[2]], {
+var monitor = respawn(['node', 'bin/upgrade.js', args[2], defaultColors], {
   env: {}, // set env vars
   cwd: '.',              // set cwd
   maxRestarts:10,        // how many restarts are allowed within 60s
@@ -59,10 +89,13 @@ monitor.on('warn', function(err){
 monitor.on('stdout', function(data)
 {
 	console.log(data.toString('utf-8'));
+	process.stdout.write(defaultColors);
 });
 
 monitor.on('stderr', function(data)
 {
 	console.log(error(data.toString('utf-8')));
+	process.stdout.write(defaultColors);
+	
 });
 monitor.start() // spawn and watch
