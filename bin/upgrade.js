@@ -13,6 +13,11 @@ var Upgrade = require('../upgrade')
 var CompatibilityCheck = require('../upgrade/compatibilityCheck')
 var InfoService = require('../services/info')
 var __ = require('underscore')
+var clc = require('cli-color');
+
+var error = clc.red.bold;
+var warn = clc.yellow;
+var notice = clc.blue;
 
 var device = {
   path: args[2]
@@ -205,7 +210,7 @@ function formatBlockName(block) {
 }
 
 function exitWithError(err) {
-  console.error(err)
+  console.error(error(err))
   if (client) {
     client.disconnect(function () {
       process.exit(1)
