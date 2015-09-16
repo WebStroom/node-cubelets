@@ -13,20 +13,18 @@ var Upgrade = require('../upgrade')
 var CompatibilityCheck = require('../upgrade/compatibilityCheck')
 var InfoService = require('../services/info')
 var __ = require('underscore')
-var clc = require('cli-color');
+var clc = require('cli-color')
 
-//Console output colors
-var error = clc.bgRed.white.bold;
+// Console output colors
+var error = clc.bgRed.white.bold
 var success = clc.bgGreen.white.bold
 
-if(args.length === 3){
-	//Default color of the terminal window	
-  defaultColor = "\x1b[37;40m";
+if (args.length === 3) {
+  // Default color of the terminal window	
+  defaultColor = '\x1b[37;40m'
+} else {
+  var defaultColor = args[3]
 }
-else{
-	var defaultColor = args[3]
-}
-
 
 var device = {
   path: args[2]
@@ -45,7 +43,7 @@ client.on('disconnect', function () {
   console.log('Disconnected.')
 })
 
-function start(client) {
+function start (client) {
   var upgrade = new Upgrade(client)
 
   upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
@@ -71,7 +69,7 @@ function start(client) {
     }
   })
 
-  function runCompatibilityCheck() {
+  function runCompatibilityCheck () {
     var check = new CompatibilityCheck(client)
     prompt('Attach all of your Cubelets. Then press ENTER.\n', function () {
       console.log('Please wait about 5 seconds for Cubelet Kit discovery...')
@@ -89,7 +87,7 @@ function start(client) {
         prompt([
           'Attach more Cubelets directly to the Bluetooth block,',
           'or press ENTER to finish the check.\n'
-        ].join('\n'), function enter() {
+        ].join('\n'), function enter () {
           check.finish()
           var compatible = check.getCompatibleBlocks().length
           var notCompatible = check.getNotCompatibleBlocks().length
@@ -103,18 +101,18 @@ function start(client) {
             askYesOrNo([
               'It looks like ' + formatNumber(notCompatible) + ' of your Cubelets are compatible with OS4.',
               'Do you want to continue the upgrade?'
-            ].join('\n'), function yes() {
+            ].join('\n'), function yes () {
               runUpgrade()
-            }, function no() {
+            }, function no () {
               exitWithSuccess('Upgrade canceled. Goodbye.')
             })
           } else {
             askYesOrNo([
               'All of your Cubelets are compatible with OS4!',
               'Ready to upgrade your Cubelets?'
-            ].join('\n'), function yes() {
+            ].join('\n'), function yes () {
               runUpgrade()
-            }, function no() {
+            }, function no () {
               exitWithSuccess('Upgrade canceled. Goodbye.')
             })
           }
@@ -123,7 +121,7 @@ function start(client) {
     })
   }
 
-  function runUpgrade() {
+  function runUpgrade () {
     upgrade.on('progress', function (e) {
       console.log(
         e.action ? e.action : '',
@@ -140,7 +138,7 @@ function start(client) {
       console.log('Attempting to reconnect to Cubelets...')
       setTimeout(tryReconnect, 5000)
     })
-    function tryReconnect() {
+    function tryReconnect () {
       async.retry({ times: 5, interval: 5000 }, function (callback) {
         client.connect(device, callback)
       }, function (err) {
@@ -172,11 +170,11 @@ function start(client) {
     upgrade.on('completeHostBlock', function (hostBlock) {
       console.log('Successfully upgraded Bluetooth block.')
     })
-    upgrade.on('error', function onError(err) {
+    upgrade.on('error', function onError (err) {
       console.error('Upgrade failed:\n\t', err)
-      askYesOrNo('Retry?', function yes() {
+      askYesOrNo('Retry?', function yes () {
         process.nextTick(runUpgrade)
-      }, function no() {
+      }, function no () {
         exitWithError(err)
       })
     })
@@ -198,14 +196,14 @@ function start(client) {
   }
 }
 
-function askYesOrNo(text, yesCallback, noCallback) {
+function askYesOrNo (text, yesCallback, noCallback) {
   prompt(text + ' [Y/n] ', function (val) {
     (val.toLowerCase() === 'y' ?
       yesCallback : noCallback)()
   })
 }
 
-function formatNumber(n) {
+function formatNumber (n) {
   if (n === 0) return '0'
   else if (n === 1) return 'one'
   else if (n === 2) return 'two'
@@ -214,21 +212,20 @@ function formatNumber(n) {
   else return n
 }
 
-function formatBlockName(block) {
+function formatBlockName (block) {
   return block.getBlockType().name + ' (' + block.getBlockId() + ')'
 }
 
-function printSuccessMessage(msg)
-{
-	var fullLine = "                                                                                ";
-	//process.stdout.write(success(fullLine));
-	process.stdout.write(success(fullLine));
-	process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length))));
-	process.stdout.write(success(fullLine));
-	process.stdout.write(defaultColor);//TODO: Reset color to blue background white text
+function printSuccessMessage (msg) {
+  var fullLine = '                                                                                '
+  // process.stdout.write(success(fullLine))
+  process.stdout.write(success(fullLine))
+  process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length))))
+  process.stdout.write(success(fullLine))
+  process.stdout.write(defaultColor)
 }
 
-function exitWithError(err) {
+function exitWithError (err) {
   console.error(error(err))
   if (client) {
     client.disconnect(function () {
@@ -239,7 +236,7 @@ function exitWithError(err) {
   }
 }
 
-function exitWithSuccess(msg) {
+function exitWithSuccess (msg) {
   console.log(msg)
   process.exit(0)
 }
