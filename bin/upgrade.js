@@ -217,6 +217,7 @@ function formatBlockName (block) {
 }
 
 function printSuccessMessage (msg) {
+  //80 blanks spaces to fill a complete line
   var fullLine = '                                                                                '
   // process.stdout.write(success(fullLine))
   process.stdout.write(success(fullLine))
