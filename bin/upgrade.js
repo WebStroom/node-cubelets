@@ -20,11 +20,11 @@ var error = clc.bgRed.white.bold;
 var success = clc.bgGreen.white.bold
 
 if(args.length === 3){
-	//Default color of the terminal window
-	var defaultColor = args[3]
+	//Default color of the terminal window	
+  defaultColor = "\x1b[37;40m";
 }
 else{
-	defaultColors = "\x1b[37;40m";
+	var defaultColor = args[3]
 }
 
 
