@@ -113,7 +113,8 @@
   "urls": {
     "info": "http://cubelets-programming.appspot.com",
     "compile": "http://compile.modrobotics.com",
-    "firmware": "http://cubelets-programming.appspot.com"
+    "firmware": "http://cubelets-programming.appspot.com",
+    "update": "http://cubelets-programming.appspot.com"
   },
   "chrome": {
     "appId": "fehdhddkknkaeimadppmacaoclnllcjm"
