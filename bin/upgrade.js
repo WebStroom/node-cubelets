@@ -14,6 +14,10 @@ var CompatibilityCheck = require('../upgrade/compatibilityCheck')
 var InfoService = require('../services/info')
 var __ = require('underscore')
 var clc = require('cli-color')
+var UpdateService = require('../services/update')
+
+//Service for marking a block as upgraded
+var updateService = new UpdateService()
 
 // Console output colors
 var error = clc.bgRed.white.bold
@@ -155,6 +159,7 @@ function start (client) {
     })
     upgrade.on('completeTargetBlock', function (block) {
       printSuccessMessage('Successfully upgraded block ' + formatBlockName(block) + ' to OS4.')
+      updateService.setBlockUpdated(block.getBlockId(), true);
     })
     upgrade.on('changePendingBlocks', function (pendingBlocks) {
       console.log('There are', formatNumber(pendingBlocks.length), 'pending blocks to upgrade.')

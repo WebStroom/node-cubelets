@@ -26,11 +26,11 @@ function UpdateService() {
             callback(err)
           }
         }
-        if(body['status'] !== 'success')
+        if(body['status'] !== 'success' && callback)
         {
         	callback(body['status_message'])
         }
-        else
+        else if(callback)
         {
         	callback(null)
         }      
