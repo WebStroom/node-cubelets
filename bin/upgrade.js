@@ -54,13 +54,7 @@ function start (client) {
     if (err) {
       exitWithError(err)
     } else if (needsUpgrade) {
-      if (firmwareType === Upgrade.FirmwareTypes.CLASSIC) {
-        askYesOrNo('Run compatibility check?',
-          runCompatibilityCheck,
-          runUpgrade)
-      } else {
         runUpgrade()
-      }
     } else {
       client.fetchConfiguration(function (err, configuration) {
         if (err) {
