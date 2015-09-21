@@ -30,7 +30,7 @@ GetAllBlocks.prototype.decodeBody = function (body) {
   }
 
   if (body.length % 6 !== 0) {
-    this.error = new Error('Size should be divisible by 5 but is', body.length, 'bytes.')
+    this.error = new Error('Size should be divisible by 6 but is', body.length, 'bytes.')
     return false
   }
 
