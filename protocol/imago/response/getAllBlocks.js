@@ -37,7 +37,7 @@ GetAllBlocks.prototype.decodeBody = function (body) {
   var blocks = []
   var count = body.length / 6
   for (var i = 0; i < count; ++i) {
-    var p = i * 5
+    var p = i * 6
     /* format: [ id2, id1, id0, hc, face ] */
     blocks.push({
       blockId: Message.Decoder.decodeId(body.slice(p + 0, p + 3)),
