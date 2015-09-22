@@ -115,6 +115,7 @@
     "compile": "http://compile.modrobotics.com",
     "firmware": "http://cubelets-programming.appspot.com",
     "update": "http://cubelets-programming.appspot.com"
+    "kit": "http://cubelets-programming.appspot.com"
   },
   "chrome": {
     "appId": "fehdhddkknkaeimadppmacaoclnllcjm"
