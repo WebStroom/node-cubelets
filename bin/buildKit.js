@@ -47,43 +47,58 @@ function start (client) {
       printBlocksFound(blocks)
 
       if (blocks.length === 6) {
-        validateSix(blocks)
+        validateSix(blocks, function(err)
+        {
+        	start(client)
+        })
       } else if (blocks.length === 12) {
-        validateTwelve(blocks)
+        validateTwelve(blocks, function(err)
+        {
+        	start(client)
+        })
       } else if (blocks.length === 20) {
-        validateTwenty(blocks)
+        validateTwenty(blocks, function(err)
+        {
+        	start(client)
+        })
       } else {
         console.log('No valid kit was detected:')
-        validateSix(blocks)
-        validateTwelve(blocks)
-        validateTwenty(blocks)
-        start(client)
+        validateSix(blocks, null)
+        validateTwelve(blocks, null)
+        validateTwenty(blocks, function(err)
+        {
+        	start(client)
+        })
       }
     })
   })
 }
 
-function validateSix (blocks) {
+function validateSix (blocks, callback) {
   var expectedKit = new SixKit()
-  validateKit(blocks, expectedKit)
+  validateKit(blocks, expectedKit, callback)
 }
 
-function validateTwelve (blocks) {
+function validateTwelve (blocks, callback) {
   var expectedKit = new TwelveKit()
-  validateKit(blocks, expectedKit)
+  validateKit(blocks, expectedKit, callback)
 }
 
-function validateTwenty (blocks) {
+function validateTwenty (blocks, callback) {
   var expectedKit = new TwentyKit()
-  validateKit(blocks, expectedKit)
+  validateKit(blocks, expectedKit, callback)
 }
 
-function validateKit (blocks, expectedKit) {
+function validateKit (blocks, expectedKit, callback) {
   kit.verifyKit(expectedKit, blocks, function (isValid, missing, extra) {
     if (isValid) {
-      askToBuildKit(expectedKit, blocks)
+      askToBuildKit(expectedKit, blocks, callback)
     } else {
       kitVerificationFailure(expectedKit, blocks, missing, extra)
+      if(callback)
+      {
+      	callback(null);
+      }
     }
   })
 }
@@ -96,7 +111,7 @@ function printBlocksFound (blocks) {
   console.log('')
 }
 
-function askToBuildKit (type, blocks) {
+function askToBuildKit (type, blocks, callback) {
   prompt.multi([{
     label: 'This appears to be a valid ' + type.name + '. \nDo you want to complete the kit?',
     key: 'submit',
@@ -110,13 +125,19 @@ function askToBuildKit (type, blocks) {
         console.log('Successfully added kit to datastore: ' + kitId)
         console.log('')
         console.log('')
-        start(client)
+        if(callback)
+        {
+        	callback(null)
+        }
       })
 
     } else {
       console.log('')
       console.log('')
-      start(client)
+      if(callback)
+      {
+      	callback(null)
+      }
     }
   })
 
