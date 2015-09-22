@@ -12,7 +12,7 @@ function Kit () {
       if (i > -1) {
         expectedKit.blockTypes.splice(i, 1)
       } else {
-        extraBlocks.push(block.blockType)
+        extraBlocks.push(block.getBlockType())
       }
     })
     missingBlocks = expectedKit.blockTypes
