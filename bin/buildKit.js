@@ -8,7 +8,6 @@ var device = {
   path: args[2]
 }
 
-var prompt = require('cli-prompt')
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
 var Kit = require('../kit/index.js')
@@ -21,6 +20,7 @@ var KitService = require('../services/kit')
 
 var kit = new Kit()
 var kitService = new KitService()
+var stdin = process.stdin
 
 var client = cubelets.connect(device, function (err) {
   if (err) {
@@ -34,7 +34,7 @@ client.on('disconnect', function () {
   console.log('Disconnected.')
 })
 function start (client) {
-  prompt('To detect a kit press any key and ENTER.\n', function (val) {
+  promptForAnyKey('To detect a kit press any key.\n', function () {
     client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
       if (err) {
         exitWithError(err)
@@ -47,27 +47,23 @@ function start (client) {
       printBlocksFound(blocks)
 
       if (blocks.length === 6) {
-        validateSix(blocks, function(err)
-        {
-        	start(client)
+        validateSix(blocks, function () {
+          start(client)
         })
       } else if (blocks.length === 12) {
-        validateTwelve(blocks, function(err)
-        {
-        	start(client)
+        validateTwelve(blocks, function () {
+          start(client)
         })
       } else if (blocks.length === 20) {
-        validateTwenty(blocks, function(err)
-        {
-        	start(client)
+        validateTwenty(blocks, function () {
+          start(client)
         })
       } else {
         console.log('No valid kit was detected:')
         validateSix(blocks, null)
         validateTwelve(blocks, null)
-        validateTwenty(blocks, function(err)
-        {
-        	start(client)
+        validateTwenty(blocks, function () {
+          start(client)
         })
       }
     })
@@ -95,9 +91,8 @@ function validateKit (blocks, expectedKit, callback) {
       askToBuildKit(expectedKit, blocks, callback)
     } else {
       kitVerificationFailure(expectedKit, blocks, missing, extra)
-      if(callback)
-      {
-      	callback(null);
+      if (callback) {
+        callback(null)
       }
     }
   })
@@ -112,35 +107,30 @@ function printBlocksFound (blocks) {
 }
 
 function askToBuildKit (type, blocks, callback) {
-  prompt.multi([{
-    label: 'This appears to be a valid ' + type.name + '. \nDo you want to complete the kit?',
-    key: 'submit',
-    default: 'yes'
-  }], function (val) {
-    if (val['submit'] && (val['submit'].toLowerCase() === 'yes' || val['submit'].toLowerCase() === 'y')) {
+  console.log('This appears to be a valid ' + type.name + '.')
+  promptYesOrNo('Do you want to complete the kit?', true, function (val) {
+    if (val) {
       kitService.buildKit(blocks, function (err, kitId) {
         if (err) {
           exitWithError(err)
         }
+        console.log('')
+        console.log('')
         console.log('Successfully added kit to datastore: ' + kitId)
         console.log('')
         console.log('')
-        if(callback)
-        {
-        	callback(null)
+        if (callback) {
+          callback(null)
         }
       })
-
     } else {
       console.log('')
       console.log('')
-      if(callback)
-      {
-      	callback(null)
+      if (callback) {
+        callback(null)
       }
     }
   })
-
 }
 
 function kitVerificationFailure (type, blocks, missing, extra) {
@@ -159,6 +149,70 @@ function kitVerificationFailure (type, blocks, missing, extra) {
     })
   }
   console.log('')
+}
+
+function promptForAnyKey (message, callback) {
+  stdin.setRawMode(true)
+  stdin.resume()
+  stdin.setEncoding('utf8')
+
+  console.log(message)
+  stdin.once('data', function (key) {
+    if (key == '\u0003') {
+      process.exit()
+    } // ctrl-c
+    stdin.pause()
+    if (callback) {
+      callback()
+    }
+  })
+}
+
+function promptYesOrNo (message, _default, callback) {
+  stdin.setRawMode(true)
+  stdin.resume()
+  stdin.setEncoding('utf8')
+
+  message = message + ( _default ? ' [yes]: ' : ' [no]: ')
+  process.stdout.write(message)
+  var keyLog = []
+  stdin.on('data', function keyCallback (key) {
+    if (key == '\u0003') { // ctrl-c
+      process.exit()
+    } else if (key == '\u000D') {
+      stdin.pause()
+      stdin.removeListener('data', keyCallback)
+      console.log('')
+      if (keyLog.length === 0) {
+        if (callback) {
+          callback(_default)
+        }
+      } else if (callback) {
+        var resp = keyLog.join('').toLowerCase()
+        if (resp === 'yes' || resp == 'y') {
+          callback(true)
+        } else if (resp === 'no' || resp == 'n') {
+          callback(false)
+        } else {
+          callback(_default)
+        }
+      }
+    } else if (key === ' ') {
+      if (keyLog.length === 0) {
+        stdin.pause()
+        stdin.removeListener('data', keyCallback)
+        console.log('')
+        if (callback) {
+          callback(_default)
+        }
+      } else {
+        process.stdout.write(key)
+      }
+    } else {
+      keyLog.push(key)
+      process.stdout.write(key)
+    }
+  })
 }
 
 function formatBlockName (block) {
