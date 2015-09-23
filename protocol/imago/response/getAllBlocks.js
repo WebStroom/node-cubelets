@@ -15,7 +15,8 @@ GetAllBlocks.prototype.encodeBody = function () {
       Message.Encoder.encodeId(block.blockId),
       new Buffer([
         block.hopCount,
-        block.faceIndex
+        block.faceIndex,
+        block.blockTypeId
       ])
     ])
   })
@@ -38,12 +39,12 @@ GetAllBlocks.prototype.decodeBody = function (body) {
   var count = body.length / 6
   for (var i = 0; i < count; ++i) {
     var p = i * 6
-    /* format: [ id2, id1, id0, hc, face ] */
+    /* format: [ id2, id1, id0, hc, face, typeId ] */
     blocks.push({
       blockId: Message.Decoder.decodeId(body.slice(p + 0, p + 3)),
       hopCount: body.readUInt8(p + 3),
       faceIndex: body.readUInt8(p + 4),
-      blockType: body.readUInt8(p + 5)
+      blockTypeId: body.readUInt8(p + 5)
     })
   }
 
