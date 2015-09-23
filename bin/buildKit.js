@@ -114,6 +114,8 @@ function askToBuildKit (type, blocks, callback) {
         if (err) {
           exitWithError(err)
         }
+        console.log('')
+        console.log('')
         console.log('Successfully added kit to datastore: ' + kitId)
         console.log('')
         console.log('')
