@@ -5,8 +5,9 @@ var Protocol = require('./protocol/imago')
 var Message = Protocol.Message
 var __ = require('underscore')
 
+var blockId = 1337
+
 function Demo(socket, opts) {
-  var blockId = 1337
   var hardwareVersion = new Version(2, 0, 0)
   var bootloaderVersion = new Version(4, 0, 0)
   var applicationVersion = new Version(4, 0, 0)
@@ -133,13 +134,13 @@ function Demo(socket, opts) {
         res.applicationVersion = applicationVersion
         res.mode = mode
         res.customApplication = customApplication
-        res.blockTypeId = BlockTypes.UNKNOWN
+        res.blockTypeId = BlockTypes.UNKNOWN.typeId
         var block = __(blocks).find(function (block) {
           return block.blockId === blockId
         })
         if (block) {
-          res.blockTypeId = block.blockType.typeId
-          sendReadBlockMessageEvent(res, rand(300))
+          res.blockTypeId = block.blockTypeId
+          sendReadBlockMessageEvent(res, rand(50))
         }
         break
       case GetNeighborsRequest.code:
@@ -155,7 +156,7 @@ function Demo(socket, opts) {
             }
           })
           res.neighbors = neighbors
-          sendReadBlockMessageEvent(res, rand(300 * block.hopCount))
+          sendReadBlockMessageEvent(res, rand(50 * block.hopCount))
         }
         break
     }
@@ -266,102 +267,14 @@ function Demo(socket, opts) {
   stream.removeBlock = removeBlock
   stream.getBlocks = getBlocks
 
-  function mutation0() {
-    var bluetooth = blockId
-    var drive1 = 10004
-    var drive2 = 10010
-    var distance1 = 10005
-    var distance2 = 10015
-    var inverse = 22496
-    var battery = 31852
-    var rotate = 48200
-    return [{
-      blockId: bluetooth,
-      blockType: BlockTypes.BLUETOOTH,
-      hopCount: 0,
-      neighborIds: [ drive2, null, drive1, rotate, null, inverse ]
-    },{
-      blockId: drive1,
-      blockType: BlockTypes.DRIVE,
-      hopCount: 1,
-      neighborIds: [ bluetooth, null, null, null, null, distance1 ]
-    },{
-      blockId: drive2,
-      blockType: BlockTypes.DRIVE,
-      hopCount: 1,
-      neighborIds: [ null, null, bluetooth, null, null, distance2 ]
-    },{
-      blockId: distance1,
-      blockType: BlockTypes.DISTANCE,
-      hopCount: 2,
-      neighborIds: [ null, null, inverse, null, drive1, null ]
-    },{
-      blockId: distance2,
-      blockType: BlockTypes.DISTANCE,
-      hopCount: 2,
-      neighborIds: [ inverse, null, null, null, drive1, null ]
-    },{
-      blockId: inverse,
-      blockType: BlockTypes.INVERSE,
-      hopCount: 1,
-      neighborIds: [ distance2, null, distance1, battery, bluetooth, null ]
-    },{
-      blockId: battery,
-      blockType: BlockTypes.BATTERY,
-      hopCount: 2,
-      neighborIds: [ null, inverse, null, null, rotate, null ]
-    },{
-      blockId: rotate,
-      blockType: BlockTypes.ROTATE,
-      hopCount: 1,
-      neighborIds: [ null, bluetooth, null, null, null, battery ]
-    }]
-  }
-
   var mutations = [
-    mutation0()
+    mutation0(),
+    mutation1()
   ]
 
   function mutate() {
     blocks = []
     any(mutations).forEach(addBlock)
-  }
-
-  function rand(n) {
-    return Math.floor(n * Math.random())
-  }
-
-  function any(A) {
-    return A[rand(A.length)]
-  }
-
-  function choices(n) {
-    var map = {}
-
-    var stride = (n / 2)
-    var i = rand(n)
-    var max = 0
-    
-    this.choose = function () {
-      if (max === n) {
-        return -1
-      } else {
-        var x = i
-        while (map[x]) {
-          i = (i + rand(stride)) % n
-          x = i
-        }
-        map[x] = true
-        max++
-        return x
-      }
-    }
-
-    this.without = function (x) {
-      map[x] = true
-      max++
-      return this
-    }
   }
 
   mutate()
@@ -371,11 +284,118 @@ function Demo(socket, opts) {
 
 module.exports = Demo
 
-var Strategy = {
-  Classic: function (demo) {
+function mutation0() {
+  var bluetooth = blockId
+  var drive1 = 10004
+  var drive2 = 10010
+  var distance1 = 10005
+  var distance2 = 10015
+  var inverse = 22496
+  var battery = 31852
+  var rotate = 48200
+  return [{
+    blockId: bluetooth,
+    blockTypeId: BlockTypes.BLUETOOTH.typeId,
+    hopCount: 0,
+    neighborIds: [ drive2, null, drive1, rotate, null, inverse ]
+  },{
+    blockId: drive1,
+    blockTypeId: BlockTypes.DRIVE.typeId,
+    hopCount: 1,
+    neighborIds: [ bluetooth, null, null, null, null, distance1 ]
+  },{
+    blockId: drive2,
+    blockTypeId: BlockTypes.DRIVE.typeId,
+    hopCount: 1,
+    neighborIds: [ null, null, bluetooth, null, null, distance2 ]
+  },{
+    blockId: distance1,
+    blockTypeId: BlockTypes.DISTANCE.typeId,
+    hopCount: 2,
+    neighborIds: [ null, null, inverse, null, drive1, null ]
+  },{
+    blockId: distance2,
+    blockTypeId: BlockTypes.DISTANCE.typeId,
+    hopCount: 2,
+    neighborIds: [ inverse, null, null, null, drive1, null ]
+  },{
+    blockId: inverse,
+    blockTypeId: BlockTypes.INVERSE.typeId,
+    hopCount: 1,
+    neighborIds: [ distance2, null, distance1, battery, bluetooth, null ]
+  },{
+    blockId: battery,
+    blockTypeId: BlockTypes.BATTERY.typeId,
+    hopCount: 2,
+    neighborIds: [ null, inverse, null, null, rotate, null ]
+  },{
+    blockId: rotate,
+    blockTypeId: BlockTypes.ROTATE.typeId,
+    hopCount: 1,
+    neighborIds: [ null, bluetooth, null, null, null, battery ]
+  }]
+}
 
-  },
-  Imago: function (demo) {
+function mutation1() {
+  var blockIds = []
+  var blockIdChoices = new choices(1000).without(blockId)
+  __(20).times(function () {
+    blockIds.push(blockIdChoices.choose())
+  })
+  var previousBlockId = blockId
+  var nextBlockId = blockIds[0]
+  var blocks = [{
+    blockId: blockId,
+    blockTypeId: BlockTypes.BLUETOOTH.typeId,
+    hopCount: 0,
+    neighborIds: [ nextBlockId, null, null, null, null, null ]
+  }]
+  for (var i = 0; i < blockIds.length; ++i) {
+    nextBlockId = (i + 1 < blockIds.length) ? null : blockIds[i]
+    blocks.push({
+      blockId: blockIds[i],
+      blockTypeId: BlockTypes.PASSIVE.typeId,
+      hopCount: (i + 1),
+      neighborIds: [ nextBlockId, null, null, null, null, previousBlockId ]
+    })
+    previousBlockId = blockIds[i]
+  }
+  return blocks
+}
 
+function rand(n) {
+  return Math.floor(n * Math.random())
+}
+
+function any(A) {
+  return A[rand(A.length)]
+}
+
+function choices(n) {
+  var map = {}
+
+  var stride = (n / 2)
+  var i = rand(n)
+  var max = 0
+  
+  this.choose = function () {
+    if (max === n) {
+      return -1
+    } else {
+      var x = i
+      while (map[x]) {
+        i = (i + rand(stride)) % n
+        x = i
+      }
+      map[x] = true
+      max++
+      return x
+    }
+  }
+
+  this.without = function (x) {
+    map[x] = true
+    max++
+    return this
   }
 }
