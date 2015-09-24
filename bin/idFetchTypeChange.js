@@ -8,9 +8,15 @@ var device = {
 	path : args[2]
 }
 
+var fs = require('fs')
+var ImagoProtocol = require('../protocol/imago')
+var ImagoProgram = ImagoProtocol.Program
+var ImagoFlash = ImagoProtocol.Flash
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
 var Block = require('../block')
+var BlockTypes = require('../blockTypes')
+var MCUTypes = require('../mcuTypes')
 var __ = require('underscore')
 
 var stdin = process.stdin
@@ -27,6 +33,9 @@ client.on('disconnect', function() {
 	console.log('Disconnected.')
 })
 function start(client) {
+	console.log('')
+	console.log('')
+	console.log('')
 	promptForAnyKey('To detect a Cubelets press any key.\n', function() {
 		client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function(err, response) {
 			if (err) {
@@ -42,15 +51,16 @@ function start(client) {
 			if (blocks.length === 0) {
 				console.log("No Cubelets were detected.")
 			} else if (blocks.length === 1) {
-				console.log(blocks)
-				//askToChangeCubeletType()
+				askToChangeCubeletType(blocks[0], function() {
+					start(client)
+				})
 			} else {
 				console.log("To switch a Cubelets type, please attach just that Cubelet.")
+				start(client)
 			}
 		})
 	})
 }
-
 
 function printBlocksFound(blocks) {
 	console.log('Blocks Found:')
@@ -60,28 +70,99 @@ function printBlocksFound(blocks) {
 	console.log('')
 }
 
-function askToChangeCubeletType(id, callback) {
-	promptYesOrNo('Would you like to change the block type for '+id+'?', true, function(val) {
+function askToChangeCubeletType(block, callback) {
+	block._mcuType = MCUTypes.PIC
+	promptYesOrNo('Would you like to change the block type for ' + block.getBlockId() + '?', true, function(val) {
 		if (val) {
-			kitService.buildKit(blocks, function(err, kitId) {
-				if (err) {
-					exitWithError(err)
+			askForResponse("\nEnter the first three characters of the new type: ", function(response) {
+				console.log("Begin validating response: " + response)
+				if(response.length < 3)
+				{
+					console.log("Invalid Cubelet type.")
 				}
-				console.log('')
-				console.log('')
-				console.log('Successfully added kit to datastore: ' + kitId)
-				console.log('')
-				console.log('')
+				else
+				{
+					var convertType = null
+					//Loop over type and try to figure out what they mean
+					__.each(BlockTypes, function(blockType){
+						if(blockType.name.substring(0, response.length) === response)
+						{
+							convertType = blockType
+						}
+					})
+					
+					if(convertType)
+					{
+						convertBlockToType(block, convertType, callback)
+					}
+					
+				}
+				
 				if (callback) {
 					callback()
 				}
 			})
 		} else {
-			console.log('')
-			console.log('')
 			if (callback) {
 				callback()
 			}
+		}
+	})
+}
+
+function convertBlockToType(block, convertType, callback)
+{
+	var converterHex = fs.readFileSync('./upgrade/hex/pic_type_switch/' + convertType.name + ".hex")
+	var program = new ImagoProgram(converterHex)
+	var flash = new ImagoFlash(client, {
+		skipSafeCheck : true
+	})
+	flash.programToBlock(program, block, function(err) {
+		if (err) {
+			exitWithError(err)
+		} else {
+			var applicationHex = fs.readFileSync('./upgrade/hex/application/' + convertType.name + ".hex")
+			var program = new ImagoProgram(converterHex)
+			flash = new ImagoFlash(client)
+			flash.programToBlock(program, block, function(err) {
+				if(err)
+				{
+					exitWithError(err)
+				}
+				else if(callback)
+				{
+					callback()
+				}
+			})
+		}
+	})
+	flash.on('progress', function(e) {
+		console.log('progress', '(' + e.progress + '/' + e.total + ')')
+	})
+}
+
+function askForResponse(message, callback) {
+	stdin.setRawMode(true)
+	stdin.resume()
+	stdin.setEncoding('utf8')
+
+	process.stdout.write(message)
+	var keyLog = []
+
+	stdin.on('data', function keyCallback(key) {
+		if (key == '\u0003') {// ctrl-c
+			process.exit()
+		} else if (key == '\u000D') {//Enter
+			stdin.pause()
+			stdin.removeListener('data', keyCallback)
+			console.log('')
+			if (callback) {
+				var resp = keyLog.join('').toLowerCase()
+				callback(resp)
+			}
+		} else {
+			keyLog.push(key)
+			process.stdout.write(key)
 		}
 	})
 }
