@@ -76,30 +76,22 @@ function askToChangeCubeletType(block, callback) {
 		if (val) {
 			askForResponse("\nEnter the first three characters of the new type: ", function(response) {
 				console.log("Begin validating response: " + response)
-				if(response.length < 3)
-				{
+				if (response.length < 3) {
 					console.log("Invalid Cubelet type.")
-				}
-				else
-				{
+					if (callback) {
+						callback()
+					}
+				} else {
 					var convertType = null
 					//Loop over type and try to figure out what they mean
-					__.each(BlockTypes, function(blockType){
-						if(blockType.name.substring(0, response.length) === response)
-						{
+					__.each(BlockTypes, function(blockType) {
+						if (blockType.name.substring(0, response.length) === response) {
 							convertType = blockType
 						}
 					})
-					
-					if(convertType)
-					{
+					if (convertType) {
 						convertBlockToType(block, convertType, callback)
 					}
-					
-				}
-				
-				if (callback) {
-					callback()
 				}
 			})
 		} else {
@@ -110,8 +102,7 @@ function askToChangeCubeletType(block, callback) {
 	})
 }
 
-function convertBlockToType(block, convertType, callback)
-{
+function convertBlockToType(block, convertType, callback) {
 	var converterHex = fs.readFileSync('./upgrade/hex/pic_type_switch/' + convertType.name + ".hex")
 	var program = new ImagoProgram(converterHex)
 	var flash = new ImagoFlash(client, {
@@ -122,15 +113,16 @@ function convertBlockToType(block, convertType, callback)
 			exitWithError(err)
 		} else {
 			var applicationHex = fs.readFileSync('./upgrade/hex/application/' + convertType.name + ".hex")
-			var program = new ImagoProgram(converterHex)
+			var program = new ImagoProgram(applicationHex)
 			flash = new ImagoFlash(client)
+			flash.on('progress', function(e) {
+				console.log('progress', '(' + e.progress + '/' + e.total + ')')
+			})
 			flash.programToBlock(program, block, function(err) {
-				if(err)
-				{
+				if (err) {
 					exitWithError(err)
-				}
-				else if(callback)
-				{
+				} else if (callback) {
+					console.log("\nSuccessfully flashed "+convertType.name+" firmware to "+block.getBlockId()+".")
 					callback()
 				}
 			})
