@@ -10,10 +10,11 @@ var ImagoProtocol = require('../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
 var ImagoFlash = ImagoProtocol.Flash
 var BootstrapProtocol = require('../protocol/bootstrap')
-var Block = require('../block')
-var BlockTypes = require('../blockTypes')
-var MCUTypes = require('../mcuTypes')
-var InfoService = require('../services/info')
+var cubelets = require('../index')
+var Block = cubelets.Block
+var BlockTypes = cubelets.BlockTypes
+var MCUTypes = cubelets.MCUTypes
+var InfoService = cubelets.InfoService
 var HexFiles = require('./hexFiles')
 var emptyFunction = function () {}
 var __ = require('underscore')
@@ -86,13 +87,14 @@ var Upgrade = function (client) {
       if (i <= 100) {
         self.emit('progress', {
           progress: i,
-          total: 100
+          total: 100,
+          step: [0,1]
         })
       } else {
         clearInterval(timer)
         callback(null)
       }
-    }, 100)
+    }, 10)
   }
 
   this.getPendingBlocks = function () {
@@ -128,37 +130,42 @@ var Upgrade = function (client) {
     async.until(function () {
       return finished
     }, function (next) {
-      pendingBlocks = [
-        getRandomBlock(),
-        getRandomBlock()
-      ]
+      pendingBlocks = []
+      __(Math.floor(6 * Math.random())).times(function () {
+        pendingBlocks.push(getRandomBlock())
+      })
       self.emit('changePendingBlocks', pendingBlocks)
-      var i = 0
-      setTimeout(function () {
-        targetBlock = pendingBlocks.shift()
-        self.emit('changeTargetBlock', targetBlock)
-        self.emit('changePendingBlocks', pendingBlocks)
-        var timer = setInterval(function () {
-          ++i
-          if (i <= 100) {
-            self.emit('progress', {
-              progress: i,
-              total: 100
-            })
-          } else {
-            clearInterval(timer)
-            setTimeout(function () {
-              completedBlocks.push(targetBlock)
-              targetBlock = null
-              self.emit('changeCompletedBlocks', completedBlocks)
-              self.emit('changeTargetBlock', targetBlock)
+      if (pendingBlocks.length > 0) {
+        var i = 0
+        setTimeout(function () {
+          targetBlock = pendingBlocks.shift()
+          self.emit('changeTargetBlock', targetBlock)
+          self.emit('changePendingBlocks', pendingBlocks)
+          var timer = setInterval(function () {
+            ++i
+            if (i <= 100) {
+              self.emit('progress', {
+                progress: i,
+                total: 100,
+                step: [0,1]
+              })
+            } else {
+              clearInterval(timer)
               setTimeout(function () {
-                callback(null)
-              }, 500)
-            }, 500)
-          }
-        }, 100)
-      }, 500)
+                completedBlocks.push(targetBlock)
+                targetBlock = null
+                self.emit('changeCompletedBlocks', completedBlocks)
+                self.emit('changeTargetBlock', targetBlock)
+                next(null)
+              }, 10)
+            }
+          }, 10)
+        }, 500)
+      } else {
+        setTimeout(function () {
+          next(null)
+        }, 5000)
+      }
     }, callback)
   }
 
@@ -171,7 +178,8 @@ var Upgrade = function (client) {
       if (i <= 100) {
         self.emit('progress', {
           progress: i,
-          total: 100
+          total: 100,
+          step: [0,1]
         })
       } else {
         clearInterval(timer)

@@ -121,6 +121,10 @@ function BlockMap() {
     return block
   }
 
+  self.remove = function (blockId) {
+    removeBlock(blockId)
+  }
+
   function getBlock(blockId) {
     return idMap[blockId]
   }
@@ -131,11 +135,25 @@ function BlockMap() {
   }
 
   function removeBlock(blockId) {
-    delete idMap[blockId]
     var block = getBlock(blockId)
+    removeLinks(blockId)
+    delete idMap[blockId]
     var i = nodes.indexOf(block)
     if (i > -1) {
       nodes.splice(i, 1)
+    }
+  }
+
+  function removeLinks(blockId) {
+    var link
+    while (link = (__(links).find(function (link) {
+      var source = link.source, target = link.target
+      return source.getBlockId() === blockId || target.getBlockId() === blockId
+    }))) {
+      var i = links.indexOf(link)
+      if (i > -1) {
+        links.splice(i, 1)
+      }
     }
   }
 

@@ -1,9 +1,10 @@
 var util = require('util')
 var events = require('events')
-var Block = require('../block')
-var BlockTypes = require('../blockTypes')
-var MCUTypes = require('../mcuTypes')
-var InfoService = require('../services/info')
+var cubelets = require('../index')
+var Block = cubelets.Block
+var BlockTypes = cubelets.BlockTypes
+var MCUTypes = cubelets.MCUTypes
+var InfoService = cubelets.InfoService
 var __ = require('underscore')
 
 function CompatibilityCheck(client) {

@@ -98,7 +98,8 @@ function ImagoStrategy(protocol, client) {
     response.blocks.forEach(function (block) {
       map.upsert({
         blockId: block.blockId,
-        hopCount: block.hopCount
+        hopCount: block.hopCount,
+        blockType: Block.blockTypeForId(block.blockTypeId)
       })
     })
     if (callback) {
@@ -111,7 +112,6 @@ function ImagoStrategy(protocol, client) {
       client.fetchOriginBlock,
       client.fetchAllBlocks,
       client.fetchNeighborBlocks,
-      fetchAllBlockConfigurations,
       fetchAllBlockNeighbors
     ], function (err) {
       if (callback) {
@@ -306,7 +306,7 @@ function ImagoStrategy(protocol, client) {
       client.removeListener('event', waitForBlockResponse)
       if (callback) {
         callback(err)
-      }      
+      }
     }
 
     client.on('event', waitForBlockResponse)

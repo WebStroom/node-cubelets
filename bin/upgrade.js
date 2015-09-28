@@ -11,7 +11,7 @@ var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var Upgrade = require('../upgrade')
 var CompatibilityCheck = require('../upgrade/compatibilityCheck')
-var InfoService = require('../services/info')
+var InfoService = cubelets.InfoService
 var __ = require('underscore')
 
 var device = {

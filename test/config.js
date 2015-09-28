@@ -8,7 +8,7 @@ function device() {
   return process.browser ? {
     "address": "00:04:3e:31:c7:3e"
   } : {
-    "path": "COM31",
+    "path": "/dev/cu.Cubelet-MGY-AMP-SPP",
     "address": "00:04:3e:31:c7:3e",
     "channelID": 1
   }
@@ -16,7 +16,7 @@ function device() {
 
 function map() {
   var type = {
-    bluetooth: 67328,
+    bluetooth: 174028,
     passive: blockId(3, 2, 1),
     knob: blockId(6, 5, 4),
     distance: blockId(7, 5, 4),

@@ -7,7 +7,7 @@ var Demo = require('../demo')
 var xtend = require('xtend')
 
 function delay() {
-  return 500
+  return 10
 }
 
 var DemoScanner = function () {

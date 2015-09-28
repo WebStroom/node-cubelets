@@ -140,7 +140,7 @@ function Demo(socket, opts) {
         })
         if (block) {
           res.blockTypeId = block.blockTypeId
-          sendReadBlockMessageEvent(res, rand(50))
+          sendReadBlockMessageEvent(res, rand(150))
         }
         break
       case GetNeighborsRequest.code:
@@ -156,7 +156,7 @@ function Demo(socket, opts) {
             }
           })
           res.neighbors = neighbors
-          sendReadBlockMessageEvent(res, rand(50 * block.hopCount))
+          sendReadBlockMessageEvent(res, rand(150 * block.hopCount))
         }
         break
     }
