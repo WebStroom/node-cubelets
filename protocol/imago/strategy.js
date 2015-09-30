@@ -26,6 +26,26 @@ function ImagoStrategy(protocol, client) {
     client.emit('updateBlockMap')
   })
 
+  client.on('event', function (e) {
+    if (e instanceof messages.BlockRemovedEvent) {
+      map.remove(e.blockId)
+    } else
+    if (e instanceof messages.BlockAddedEvent) {
+      console.log('added', JSON.stringify(e))
+      var block = map.upsert({
+        blockId: e.blockId,
+        hopCount: e.hopCount,
+        blockType: Block.blockTypeForId(e.blockTypeId)
+      })
+      if (block) {
+        async.series([
+          client.fetchAllBlocks,
+          client.fetchBlockNeighbors.bind(client, [block])
+        ])
+      }
+    }
+  })
+
   this.getBlockMap = function () {
     return map
   }
@@ -128,6 +148,20 @@ function ImagoStrategy(protocol, client) {
     return __(unsortedBlocks).sortBy(function (block) {
       return typeof block.hopCount === 'number' ? block.hopCount : 255
     })
+  }
+
+  function filterUnknownBlocks(blocks) {
+    return __(blocks).filter(function (block) {
+      return BlockTypes.UNKNOWN !== block.getBlockType()
+    })
+  }
+
+  function fetchAllBlockTypes(callback) {
+    client.fetchBlockTypes(map.getAllBlocks(), callback)
+  }
+
+  this.fetchBlockTypes = function (unsortedBlocks, callback) {
+    client.fetchBlockConfigurations(filterUnknownBlocks(unsortedBlocks), callback)
   }
 
   function fetchAllBlockConfigurations(callback) {

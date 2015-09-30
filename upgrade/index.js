@@ -37,6 +37,7 @@ var Upgrade = function (client) {
   var completedBlocks = []
   var targetBlock = null
   var step = [0,1]
+  var skipReadyCommand = false
 
   this.getClient = function () {
     return client
@@ -72,6 +73,7 @@ var Upgrade = function (client) {
             })
           } else {
             // This is actually imago firmware.
+            setHostBlock(response.blockId)
             callback(null, FirmwareTypes.IMAGO)
           }
         })
@@ -117,6 +119,16 @@ var Upgrade = function (client) {
             discoverHostBlock,
             flashUpgradeToHostBlock
           ], onFinish)
+        } else if (FirmwareTypes.IMAGO === firmwareType) {
+          skipReadyCommand = true
+          async.series([
+            jumpToImagoBootloader,
+            flashBootstrapToHostBlock,
+            startBlockUpgrades,
+            jumpToDiscovery,
+            jumpToClassic,
+            flashUpgradeToHostBlock
+          ], onFinish)
         } else {
           callback(new Error('Upgrade started with invalid firmware type.'))
         }
@@ -141,6 +153,11 @@ var Upgrade = function (client) {
     }
   }
 
+  function setHostBlock(originBlockId) {
+    hostBlock = new Block(originBlockId, 0, BlockTypes.BLUETOOTH)
+    hostBlock._mcuType = MCUTypes.AVR
+  }
+
   function discoverHostBlock(callback) {
     debug('discoverHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
@@ -151,8 +168,7 @@ var Upgrade = function (client) {
       } else {
         var originBlockId = res.originBlockId
         if (originBlockId > 0) {
-          hostBlock = new Block(originBlockId, 0, BlockTypes.BLUETOOTH)
-          hostBlock._mcuType = MCUTypes.AVR
+          setHostBlock(originBlockId)
           callback(null)
         } else {
           callback(new Error('Host block not found.'))
@@ -195,7 +211,8 @@ var Upgrade = function (client) {
     if (program.valid) {
       self.emit('flashBootstrapToHostBlock', hostBlock)
       var flash = new ClassicFlash(client, {
-        skipSafeCheck: true
+        skipSafeCheck: true,
+        skipReadyCommand: skipReadyCommand
       })
       flash.programToBlock(program, hostBlock, function (err) {
         flash.removeListener('progress', onProgress)
@@ -354,6 +371,21 @@ var Upgrade = function (client) {
       })
     } else {
       callback(new Error('Must not jump to OS4 mode from OS3 mode.'))
+    }
+  }
+
+  function jumpToImagoBootloader(callback) {
+    debug('jumpToImagoBootloader')
+    var protocol = client.getProtocol()
+    if (ImagoProtocol === protocol) {
+      var req = new ImagoProtocol.messages.SetModeRequest(0)
+      client.sendRequest(req)
+      client.setProtocol(ClassicProtocol)
+      setTimeout(function () {
+        callback(null)
+      }, 2000)
+    } else {
+      callback(new Error('Must only jump to OS4 bootloader from OS4 mode.'))
     }
   }
 

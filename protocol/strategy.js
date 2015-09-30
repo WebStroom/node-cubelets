@@ -92,8 +92,12 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
+  this.fetchBlockTypes = function (blocks, callback) {
+    throw new Error('not implemented')
+  }
+
   this.fetchBlockConfigurations = function (blocks, callback) {
-   throw new Error('not implemented')
+    throw new Error('not implemented')
   }
 
   this.fetchBlockNeighbors = function (blocks, callback) {
