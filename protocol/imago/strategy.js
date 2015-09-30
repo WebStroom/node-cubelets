@@ -139,18 +139,16 @@ function ImagoStrategy(protocol, client) {
         client.fetchNeighborBlocks,
         fetchAllBlockNeighbors
       ], function (err) {
-        if (callback) {
-          var callbacks = [callback].concat(self.__pendingFetchGraphCallbacks.slice(0))
-          self.__pendingFetchGraphCallbacks = []
-          self.__isFetchingGraph = false
-          __(callbacks).each(function (callback) {
-            if (err) {
-              callback(err)
-            } else {
-              callback(null, map.getGraph())
-            }
-          })
-        }
+        var callbacks = self.__pendingFetchGraphCallbacks.slice(0).concat(callback ? [callback] : [])
+        self.__pendingFetchGraphCallbacks = []
+        self.__isFetchingGraph = false
+        __(callbacks).each(function (callback) {
+          if (err) {
+            callback(err)
+          } else {
+            callback(null, map.getGraph())
+          }
+        })
       })
     }
   }
