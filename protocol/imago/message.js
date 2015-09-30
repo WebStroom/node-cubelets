@@ -36,8 +36,8 @@ Message.prototype.encode = function () {
 
 // Returns a priority compared to an other message:
 //   0: same priority
-//  >1: higher priority
-//  <1: lower priority
+//  >0: higher priority
+//  <0: lower priority
 Message.prototype.prioritize = function (otherMessage) {
   return 0
 }

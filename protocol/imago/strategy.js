@@ -124,20 +124,27 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchGraph = function (callback) {
-    async.series([
-      client.fetchOriginBlock,
-      client.fetchAllBlocks,
-      client.fetchNeighborBlocks,
-      fetchAllBlockNeighbors
-    ], function (err) {
-      if (callback) {
-        if (err) {
-          callback(err)
-        } else {
-          callback(null, map.getGraph())
+    var self = this
+    if (self.__isFetchingGraph) {
+      callback(null, map.getGraph())
+    } else {
+      self.__isFetchingGraph = true
+      async.series([
+        client.fetchOriginBlock,
+        client.fetchAllBlocks,
+        client.fetchNeighborBlocks,
+        fetchAllBlockNeighbors
+      ], function (err) {
+        if (callback) {
+          self.__isFetchingGraph = false
+          if (err) {
+            callback(err)
+          } else {
+            callback(null, map.getGraph())
+          }
         }
-      }
-    })
+      })
+    }
   }
 
   function sortBlocksByHopCount(unsortedBlocks) {
