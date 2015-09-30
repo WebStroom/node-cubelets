@@ -17,9 +17,11 @@ var TwentyKit = require('../kit/twenty')
 var Block = require('../block')
 var __ = require('underscore')
 var KitService = require('../services/kit')
+var IdService = require('../services/id')
 
 var kit = new Kit()
 var kitService = new KitService()
+var idService = new IdService()
 var stdin = process.stdin
 
 var client = cubelets.connect(device, function (err) {
@@ -88,7 +90,10 @@ function validateTwenty (blocks, callback) {
 function validateKit (blocks, expectedKit, callback) {
   kit.verifyKit(expectedKit, blocks, function (isValid, missing, extra) {
     if (isValid) {
-      askToBuildKit(expectedKit, blocks, callback)
+    	addAllBlocks(blocks, function(err)
+    	{
+    		askToBuildKit(expectedKit, blocks, callback)
+    	})      
     } else {
       kitVerificationFailure(expectedKit, blocks, missing, extra)
       if (callback) {
@@ -96,6 +101,18 @@ function validateKit (blocks, expectedKit, callback) {
       }
     }
   })
+}
+
+function addAllBlocks(blocks, callback)
+{
+	__.each(blocks, function(block)
+	{
+		idService.addId(block, function(err)
+		{
+			
+		})
+	})
+	callback()
 }
 
 function printBlocksFound (blocks) {
