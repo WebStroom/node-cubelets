@@ -40,7 +40,7 @@ function start(client) {
 		client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function(err, response) {
 			if (err) {
 				exitWithError(err)
-			}
+			}		
 
 			var blocks = []
 			__.each(response.blocks, function(block) {
@@ -123,6 +123,7 @@ function convertBlockToType(block, convertType, callback) {
 					exitWithError(err)
 				} else if (callback) {
 					console.log("\nSuccessfully flashed "+convertType.name+" firmware to "+block.getBlockId()+".")
+					client.sendCommand(new ImagoProtocol.messages.ResetCommand())
 					callback()
 				}
 			})
