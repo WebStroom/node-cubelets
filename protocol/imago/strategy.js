@@ -126,7 +126,11 @@ function ImagoStrategy(protocol, client) {
   this.fetchGraph = function (callback) {
     var self = this
     if (self.__isFetchingGraph) {
-      callback(null, map.getGraph())
+      if (!Array.isArray(self.__pendingFetchGraphCallbacks)) {
+        self.__pendingFetchGraphCallbacks = [callback]
+      } else {
+        self.__pendingFetchGraphCallbacks.push(callback)
+      }
     } else {
       self.__isFetchingGraph = true
       async.series([
@@ -136,12 +140,16 @@ function ImagoStrategy(protocol, client) {
         fetchAllBlockNeighbors
       ], function (err) {
         if (callback) {
+          var callbacks = [callback].concat(self.__pendingFetchGraphCallbacks.slice(0))
+          self.__pendingFetchGraphCallbacks = []
           self.__isFetchingGraph = false
-          if (err) {
-            callback(err)
-          } else {
-            callback(null, map.getGraph())
-          }
+          __(callbacks).each(function (callback) {
+            if (err) {
+              callback(err)
+            } else {
+              callback(null, map.getGraph())
+            }
+          })
         }
       })
     }
