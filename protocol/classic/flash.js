@@ -404,8 +404,10 @@ function Flash(protocol, client, opts) {
         drain
       ].concat(opts.disableAutoMapUpdates ? [
         sendDisableAutoMapUpdatesCommand,
-      ]:[]).concat([        
-        sendReadyCommand(10000),
+      ]:[]).concat(
+        opts.skipReadyCommand ? []:[
+        sendReadyCommand(10000)
+      ]).concat([
         sendProgramPages(10000)
       ]).concat(opts.skipSafeCheck ? []:[
         wait(1000),
