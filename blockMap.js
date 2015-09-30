@@ -9,6 +9,7 @@ function BlockMap() {
   events.EventEmitter.call(self)
 
   var idMap = {}
+  var typeCache = {}
   var origin = null
   var nodes = []
   var links = []
@@ -84,9 +85,9 @@ function BlockMap() {
   self.upsert = function (info) {
     var blockId = info.blockId
     var hopCount = info.hopCount
-    var blockType = info.blockType
     var neighbors = info.neighbors
     var faceIndex = info.faceIndex
+    var blockType = info.blockType
 
     var block = getBlock(blockId)
     var updated = false
@@ -108,6 +109,7 @@ function BlockMap() {
       // Since block doesn't exist, add it to the block construction.
       block = new Block(blockId, hopCount, blockType)
       addBlock(blockId, block)
+      updateBlockType(block, blockType)
       updateNeighbors(block, neighbors)
       updateFaceIndex(block, faceIndex)
       self.emit('addBlock', block)
@@ -122,7 +124,12 @@ function BlockMap() {
   }
 
   self.remove = function (blockId) {
-    removeBlock(blockId)
+    var block = getBlock(blockId)
+    if (block) {
+      removeBlock(blockId)
+      self.emit('removeBlock', block)
+      self.emit('update')
+    }
   }
 
   function getBlock(blockId) {
@@ -145,13 +152,10 @@ function BlockMap() {
   }
 
   function removeLinks(blockId) {
-    var link
-    while (link = (__(links).find(function (link) {
-      var source = link.source, target = link.target
-      return source.getBlockId() === blockId || target.getBlockId() === blockId
-    }))) {
-      var i = links.indexOf(link)
-      if (i > -1) {
+    for (var i = links.length; i--;) {
+      var source = links[i].source
+      var target = links[i].target
+      if (source.getBlockId() === blockId || target.getBlockId() === blockId) {
         links.splice(i, 1)
       }
     }
@@ -196,9 +200,13 @@ function BlockMap() {
   }
 
   function updateBlockType(block, blockType) {
+    var blockId = block.getBlockId()
     if (blockType !== undefined && blockType !== BlockTypes.UNKNOWN) {
       block._blockType = blockType
+      typeCache[blockId] = blockType
       return true
+    } else if (typeCache[blockId]) {
+      block._blockType = typeCache[blockId]
     } else {
       return false
     }

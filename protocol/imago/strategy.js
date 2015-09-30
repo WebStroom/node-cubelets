@@ -31,17 +31,13 @@ function ImagoStrategy(protocol, client) {
       map.remove(e.blockId)
     } else
     if (e instanceof messages.BlockAddedEvent) {
-      console.log('added', JSON.stringify(e))
       var block = map.upsert({
         blockId: e.blockId,
         hopCount: e.hopCount,
         blockType: Block.blockTypeForId(e.blockTypeId)
       })
       if (block) {
-        async.series([
-          client.fetchAllBlocks,
-          client.fetchBlockNeighbors.bind(client, [block])
-        ])
+        client.fetchBlockNeighbors([ block ])
       }
     }
   })
