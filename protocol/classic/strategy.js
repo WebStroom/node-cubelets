@@ -134,6 +134,10 @@ function ClassicStrategy(protocol, client) {
       callback(null)
     }
   }
+
+  this.handleEvent = function (e) {
+    console.log('unhandled event', e)
+  }
 }
 
 util.inherits(ClassicStrategy, Strategy)

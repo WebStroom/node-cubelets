@@ -144,8 +144,12 @@ function Strategy(protocol, client) {
     throw new Error('not implemented')
   }
 
-  this.flash = function () {
-    return new protocol.Flash(client)
+  this.flash = function (options) {
+    return new protocol.Flash(client, options)
+  }
+
+  this.handleEvent = function (event) {
+    throw new Error('not implemented')
   }
 }
 

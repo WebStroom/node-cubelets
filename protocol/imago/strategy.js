@@ -26,22 +26,6 @@ function ImagoStrategy(protocol, client) {
     client.emit('updateBlockMap')
   })
 
-  client.on('event', function (e) {
-    if (e instanceof messages.BlockRemovedEvent) {
-      map.remove(e.blockId)
-    } else
-    if (e instanceof messages.BlockAddedEvent) {
-      var block = map.upsert({
-        blockId: e.blockId,
-        hopCount: e.hopCount,
-        blockType: Block.blockTypeForId(e.blockTypeId)
-      })
-      if (block) {
-        client.fetchBlockNeighbors([ block ])
-      }
-    }
-  })
-
   this.getBlockMap = function () {
     return map
   }
@@ -333,6 +317,7 @@ function ImagoStrategy(protocol, client) {
     }
 
     function onRequestError(err) {
+      clearTimeout(timer)
       client.removeListener('event', waitForBlockResponse)
       if (callback) {
         callback(err)
@@ -347,6 +332,22 @@ function ImagoStrategy(protocol, client) {
         onRequestError(new Error('Failed to write block message with result: ' + response.result))
       }
     })
+  }
+
+  this.handleEvent = function (e) {
+    if (e instanceof messages.BlockRemovedEvent) {
+      map.remove(e.blockId)
+    }
+    if (e instanceof messages.BlockAddedEvent) {
+      var block = map.upsert({
+        blockId: e.blockId,
+        hopCount: e.hopCount,
+        blockType: Block.blockTypeForId(e.blockTypeId)
+      })
+      if (block) {
+        client.fetchBlockNeighbors([ block ])
+      }
+    }
   }
 }
 
