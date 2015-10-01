@@ -51,13 +51,12 @@ function start(client) {
 			printBlocksFound(blocks)
 
 			checkForBadBlocks(blocks, function(err, badBlocks) {
-				if(badBlocks)
-				{
+				if (badBlocks) {
 					console.log("\n\n")
 					start(client)
 					return
 				}
-				
+
 				if (blocks.length === 6) {
 					validateSix(blocks, function() {
 						start(client)
@@ -98,8 +97,13 @@ function checkForBadBlocks(blocks, callback) {
 				}
 				count--
 				if (count == 0) {
-					callback(null, true)
-					return
+					if (badCount == 0) {
+						callback(null, false)
+						return
+					} else {
+						callback(null, true)
+						return
+					}
 				}
 			})
 		} else {
@@ -107,14 +111,11 @@ function checkForBadBlocks(blocks, callback) {
 		}
 	})
 	if (count == 0) {
-		if(badCount == 0)
-		{
+		if (badCount == 0) {
 			callback(null, false)
-		}
-		else
-		{
+		} else {
 			callback(null, true)
-		}		
+		}
 	}
 }
 
