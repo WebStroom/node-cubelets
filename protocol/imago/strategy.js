@@ -26,22 +26,6 @@ function ImagoStrategy(protocol, client) {
     client.emit('updateBlockMap')
   })
 
-  client.on('event', function (e) {
-    if (e instanceof messages.BlockRemovedEvent) {
-      map.remove(e.blockId)
-    } else
-    if (e instanceof messages.BlockAddedEvent) {
-      var block = map.upsert({
-        blockId: e.blockId,
-        hopCount: e.hopCount,
-        blockType: Block.blockTypeForId(e.blockTypeId)
-      })
-      if (block) {
-        client.fetchBlockNeighbors([ block ])
-      }
-    }
-  })
-
   this.getBlockMap = function () {
     return map
   }
@@ -124,33 +108,20 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchGraph = function (callback) {
-    var self = this
-    if (self.__isFetchingGraph) {
-      if (!Array.isArray(self.__pendingFetchGraphCallbacks)) {
-        self.__pendingFetchGraphCallbacks = [callback]
-      } else {
-        self.__pendingFetchGraphCallbacks.push(callback)
+    async.series([
+      client.fetchOriginBlock,
+      client.fetchAllBlocks,
+      client.fetchNeighborBlocks,
+      fetchAllBlockNeighbors
+    ], function (err) {
+      if (callback) {
+        if (err) {
+          callback(err)
+        } else {
+          callback(null, map.getGraph())
+        }
       }
-    } else {
-      self.__isFetchingGraph = true
-      async.series([
-        client.fetchOriginBlock,
-        client.fetchAllBlocks,
-        client.fetchNeighborBlocks,
-        fetchAllBlockNeighbors
-      ], function (err) {
-        var callbacks = self.__pendingFetchGraphCallbacks.slice(0).concat(callback ? [callback] : [])
-        self.__pendingFetchGraphCallbacks = []
-        self.__isFetchingGraph = false
-        __(callbacks).each(function (callback) {
-          if (err) {
-            callback(err)
-          } else {
-            callback(null, map.getGraph())
-          }
-        })
-      })
-    }
+    })
   }
 
   function sortBlocksByHopCount(unsortedBlocks) {
@@ -346,6 +317,7 @@ function ImagoStrategy(protocol, client) {
     }
 
     function onRequestError(err) {
+      clearTimeout(timer)
       client.removeListener('event', waitForBlockResponse)
       if (callback) {
         callback(err)
@@ -360,6 +332,22 @@ function ImagoStrategy(protocol, client) {
         onRequestError(new Error('Failed to write block message with result: ' + response.result))
       }
     })
+  }
+
+  this.handleEvent = function (e) {
+    if (e instanceof messages.BlockRemovedEvent) {
+      map.remove(e.blockId)
+    }
+    if (e instanceof messages.BlockAddedEvent) {
+      var block = map.upsert({
+        blockId: e.blockId,
+        hopCount: e.hopCount,
+        blockType: Block.blockTypeForId(e.blockTypeId)
+      })
+      if (block) {
+        client.fetchBlockNeighbors([ block ])
+      }
+    }
   }
 }
 

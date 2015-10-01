@@ -93,6 +93,7 @@ function Factory(Scanner, Connection) {
       parser.on('message', function (message) {
         if (protocol.isEvent(message)) {
           client.emit('event', message)
+          strategy.handleEvent(message)
         }
         if (protocol.isResponse(message)) {
           client.emit('response', message)
