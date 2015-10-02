@@ -40,7 +40,7 @@ function start(client) {
 		client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function(err, response) {
 			if (err) {
 				exitWithError(err)
-			}		
+			}
 
 			var blocks = []
 			__.each(response.blocks, function(block) {
@@ -75,9 +75,8 @@ function askToChangeCubeletType(block, callback) {
 	promptYesOrNo('Would you like to change the block type for ' + block.getBlockId() + '?', true, function(val) {
 		if (val) {
 			askForResponse("\nEnter the first three characters of the new type: ", function(response) {
-				console.log("Begin validating response: " + response)
 				if (response.length < 3) {
-					console.log("Invalid Cubelet type.")
+					console.log("\nInvalid Cubelet type.")
 					if (callback) {
 						callback()
 					}
@@ -91,6 +90,11 @@ function askToChangeCubeletType(block, callback) {
 					})
 					if (convertType) {
 						convertBlockToType(block, convertType, callback)
+					} else {
+						console.log("\nInvalid Cubelet type.")
+						if (callback) {
+							callback()
+						}
 					}
 				}
 			})
@@ -122,7 +126,7 @@ function convertBlockToType(block, convertType, callback) {
 				if (err) {
 					exitWithError(err)
 				} else if (callback) {
-					console.log("\nSuccessfully flashed "+convertType.name+" firmware to "+block.getBlockId()+".")
+					console.log("\nSuccessfully flashed " + convertType.name + " firmware to " + block.getBlockId() + ".")
 					client.sendCommand(new ImagoProtocol.messages.ResetCommand())
 					callback()
 				}
@@ -203,7 +207,7 @@ function promptYesOrNo(message, _default, callback) {
 				} else if (resp === 'no' || resp == 'n') {
 					callback(false)
 				} else {
-					callback(_default)
+					callback(false)
 				}
 			}
 		} else if (key === ' ') {
