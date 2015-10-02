@@ -261,7 +261,7 @@ function promptYesOrNo(message, _default, callback) {
 				} else if (resp === 'no' || resp == 'n') {
 					callback(false)
 				} else {
-					callback(_default)
+					callback(false)
 				}
 			}
 		} else if (key === ' ') {
