@@ -16,13 +16,13 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      test.skip('set classic protocol', function (t) {
+      test('set classic protocol', function (t) {
         t.plan(1)
         client.setProtocol(ClassicProtocol)
         t.pass('set protocol')
       })
 
-      test('set imago protocol', function (t) {
+      test.skip('set imago protocol', function (t) {
         t.plan(1)
         client.setProtocol(ImagoProtocol)
         t.pass('set protocol')

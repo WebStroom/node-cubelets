@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:imago')
 var util = require('util')
 var Strategy = require('../strategy')
 var Version = require('../../version')
@@ -37,6 +38,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchConfiguration = function (callback) {
+    debug('fetch configuration')
     async.seq(
       client.sendRequest,
       onFetchConfiguration
@@ -53,6 +55,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchOriginBlock = function (callback) {
+    debug('fetch origin block')
     client.fetchConfiguration(function (err) {
       if (callback) {
         callback(err, map.getOriginBlock())
@@ -61,6 +64,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchNeighborBlocks = function (callback) {
+    debug('fetch neighbor blocks')
     async.seq(
       client.sendRequest,
       onFetchNeighborBlocks
@@ -88,6 +92,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchAllBlocks = function (callback) {
+    debug('fetch all blocks')
     async.seq(
       client.sendRequest,
       onFetchAllBlocks
@@ -108,6 +113,7 @@ function ImagoStrategy(protocol, client) {
   }
 
   this.fetchGraph = function (callback) {
+    debug('fetch graph')
     async.series([
       client.fetchOriginBlock,
       client.fetchAllBlocks,
@@ -336,9 +342,11 @@ function ImagoStrategy(protocol, client) {
 
   this.handleEvent = function (e) {
     if (e instanceof messages.BlockRemovedEvent) {
+      debug('block removed', e.blockId)
       map.remove(e.blockId)
     }
     if (e instanceof messages.BlockAddedEvent) {
+      debug('block added', e.blockId, 'type', e.blockTypeId)
       var block = map.upsert({
         blockId: e.blockId,
         hopCount: e.hopCount,

@@ -6,7 +6,7 @@ function Strategy(protocol, client) {
   // when a pong response is received,
   // calls the callback with the response.
   this.ping = function (callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   var keepAliveTimer = null
@@ -41,11 +41,11 @@ function Strategy(protocol, client) {
   }
 
   this.echo = function (data, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.getBlockMap = function () {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.getOriginBlock = function () {
@@ -73,75 +73,75 @@ function Strategy(protocol, client) {
   }
 
   this.getConfiguration = function () {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchConfiguration = function (callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchOriginBlock = function (callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchNeighborBlocks = function (callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchAllBlocks = function (callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchBlockTypes = function (blocks, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchBlockConfigurations = function (blocks, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchBlockNeighbors = function (blocks, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.fetchGraph = function () {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.setBlockValue = function (blockId, value, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.setManyBlockValues = function (blocks, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.clearBlockValue = function (blockId, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.clearManyBlockValues = function (blocks, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.clearAllBlockValues = function (callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.registerBlockValueEvent = function (blockId, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.unregisterBlockValueEvent = function (blockId, callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.unregisterAllBlockValueEvents = function (callback) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.sendBlockRequest = function (blockRequest, callback, timeout) {
-    throw new Error('not implemented')
+    requiredMethod()
   }
 
   this.flash = function (options) {
@@ -149,8 +149,11 @@ function Strategy(protocol, client) {
   }
 
   this.handleEvent = function (event) {
-    throw new Error('not implemented')
+    optionalMethod()
   }
 }
 
 module.exports = Strategy
+
+function optionalMethod() {}
+function requiredMethod() { throw new Error('not implemented') }

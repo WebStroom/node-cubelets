@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:blockMap')
 var util = require('util')
 var events = require('events')
 var Block = require('./block')
@@ -27,6 +28,7 @@ function BlockMap() {
   // Sets the origin block, given a blockId and blockType.
   // @see BlockTypes.BLUETOOTH
   self.setOriginBlock = function (blockId, blockType) {
+    debug('set origin block', blockId, blockType)
     origin = self.upsert({
       blockId: blockId,
       hopCount: 0,
@@ -89,10 +91,14 @@ function BlockMap() {
     var faceIndex = info.faceIndex
     var blockType = info.blockType
 
+    debug('upsert', blockId, hopCount, faceIndex, blockType, neighbors)
+
     var block = getBlock(blockId)
     var updated = false
 
     if (block) {
+      // Block already exists, so update it if necessary.
+      debug('block exists', blockId)
       if (updateHopCount(block, hopCount)) {
         updated = true
       }
@@ -107,6 +113,7 @@ function BlockMap() {
       }
     } else {
       // Since block doesn't exist, add it to the block construction.
+      debug('block is new', blockId)
       block = new Block(blockId, hopCount, blockType)
       addBlock(blockId, block)
       updateBlockType(block, blockType)

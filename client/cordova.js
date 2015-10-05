@@ -10,18 +10,22 @@ var BluetoothScanner = function () {
 
   this._getDevices = function (callback) {
     var result = []
-    bluetooth.getDevices(function (devices) {
-      devices.forEach(function (device) {
-        var name = device.name
-        var deviceId = device.deviceId
-        if (name.indexOf('Cubelet') === 0) {
-          result.push({
-            deviceId: deviceId,
-            name: name
-          })
-        }
-      })
-      callback(result)
+    bluetooth.getDevices(function (err, devices) {
+      if (err) {
+        callback(result)
+      } else {
+        devices.forEach(function (device) {
+          var name = device.name
+          var deviceId = device.deviceId
+          if (name.indexOf('Cubelet') === 0) {
+            result.push({
+              deviceId: deviceId,
+              name: name
+            })
+          }
+        })
+        callback(result)
+      }
     })
   }
 
@@ -104,11 +108,17 @@ var BluetoothConnection = function (device, opts) {
         callback(null)
       }
     } else {
-      bluetooth.connect(device.deviceId, function () {
-        isOpen = true
-        addListeners()
-        if (callback) {
-          callback(null)
+      bluetooth.connect(device.deviceId, function (err) {
+        if (err) {
+          if (callback) {
+            callback(err)
+          }
+        } else {
+          isOpen = true
+          addListeners()
+          if (callback) {
+            callback(null)
+          }
         }
       })
     }
@@ -123,9 +133,9 @@ var BluetoothConnection = function (device, opts) {
       removeListeners()
       if (isOpen) {
         isOpen = false
-        bluetooth.disconnect(device.deviceId, function () {
+        bluetooth.disconnect(device.deviceId, function (err) {
           if (callback) {
-            callback(null)
+            callback(err)
           }
         })
       } else {

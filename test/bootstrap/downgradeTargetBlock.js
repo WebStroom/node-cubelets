@@ -145,8 +145,6 @@ var client = cubelets.connect(config.device, function (err) {
         }, 1000)
       })
 
-      var targetBlock
-
       test('find os4 target block and flash bootloader', function (t) {
         t.plan(4)
         client.setProtocol(ImagoProtocol)
@@ -176,7 +174,8 @@ var client = cubelets.connect(config.device, function (err) {
 
       test('jump to discovery mode', function (t) {
         t.plan(1)
-        client.sendCommand(new ImagoProtocol.messages.ResetCommand())
+        var protocol = client.getProtocol()
+        client.sendCommand(new protocol.messages.ResetCommand())
         setTimeout(function () {
           client.setProtocol(BootstrapProtocol)
           var timer = setTimeout(function () {

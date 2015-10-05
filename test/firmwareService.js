@@ -10,6 +10,8 @@ var Version = require('../version')
 
 var firmwareService = new FirmwareService()
 
+testDownloadLatestFirmware(166417)
+
 test.skip('download bluetooth firmware', function (t) {
   t.plan(3)
   var version = new Version(3, 3)
@@ -61,7 +63,6 @@ function testDownloadLatestFirmware(blockId) {
           fs.writeFile('./.tmp/hex/latest/' + block.getBlockType().name + '.hex', hex, t.ifError)
         })
       })
-
     })
   })
 }
