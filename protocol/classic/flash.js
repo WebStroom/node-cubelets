@@ -72,9 +72,11 @@ function Flash(protocol, client, opts) {
         // Set a timeout for receiving the data
         var timer = setTimeout(function () {
           parser.removeListener('raw', waitForRaw)
-          callback(new Error([
+          var error = new Error([
             "Timed out waiting for '" + code + "'.",
-              errorMessageForCode(code)].join(' ')))
+              errorMessageForCode(code)].join(' '))
+          error.code = code
+          callback(error)
         }, timeout)
 
         function waitForRaw(data) {

@@ -580,6 +580,9 @@ var Upgrade = function (client) {
       flash.programToBlock(program, targetBlock, function (err) {
         flash.removeListener('progress', onProgress)
         callback(err)
+        if ('Y' === err.code) {
+          self.emit('fatalError', err)
+        }
       })
       flash.on('progress', onProgress)
       function onProgress(e) {
