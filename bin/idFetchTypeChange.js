@@ -32,24 +32,21 @@ var client = cubelets.connect(device, function(err) {
 client.on('disconnect', function() {
 	console.log('Disconnected.')
 })
+
 function start(client) {
 	console.log('')
 	console.log('')
 	console.log('')
 	promptForAnyKey('To detect a Cubelets press any key.\n', function() {
-		client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function(err, response) {
+
+		fetchBlocks(function(err, blocks) {
 			if (err) {
 				exitWithError(err)
 			}
-
-			var blocks = []
-			__.each(response.blocks, function(block) {
-				blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType)))
-			})
 			printBlocksFound(blocks)
-
 			if (blocks.length === 0) {
 				console.log("No Cubelets were detected.")
+				start(client)
 			} else if (blocks.length === 1) {
 				askToChangeCubeletType(blocks[0], function() {
 					start(client)
@@ -59,6 +56,20 @@ function start(client) {
 				start(client)
 			}
 		})
+	})
+}
+
+function fetchBlocks(callback) {
+	client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function(err, response) {
+		if (err) {
+			callback(err)
+			return
+		}
+		var blocks = []
+		__.each(response.blocks, function(block) {
+			blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType)))
+		})
+		callback(null, blocks)
 	})
 }
 
@@ -106,6 +117,7 @@ function askToChangeCubeletType(block, callback) {
 	})
 }
 
+
 function convertBlockToType(block, convertType, callback) {
 	var converterHex = fs.readFileSync('./upgrade/hex/pic_type_switch/' + convertType.name + ".hex")
 	var program = new ImagoProgram(converterHex)
@@ -116,27 +128,48 @@ function convertBlockToType(block, convertType, callback) {
 		if (err) {
 			exitWithError(err)
 		} else {
-			var applicationHex = fs.readFileSync('./upgrade/hex/application/' + convertType.name + ".hex")
-			var program = new ImagoProgram(applicationHex)
-			flash = new ImagoFlash(client)
-			flash.on('progress', function(e) {
-				console.log('progress', '(' + e.progress + '/' + e.total + ')')
-			})
-			flash.programToBlock(program, block, function(err) {
-				if (err) {
-					exitWithError(err)
-				} else if (callback) {
-					console.log("\nSuccessfully flashed " + convertType.name + " firmware to " + block.getBlockId() + ".")
-					client.sendCommand(new ImagoProtocol.messages.ResetCommand())
-					callback()
-				}
-			})
+
+			client.sendCommand(new ImagoProtocol.messages.ResetCommand())
+			//Wait a bit
+			setTimeout(function() {
+				fetchBlocks(function(err, blocks) {
+					console.log(err)
+					console.log()
+					if (err) {
+						exitWithError(err)
+						return;
+					}
+
+					if (blocks.length === 1) {
+						
+						block = blocks[0];
+						block._mcuType = MCUTypes.PIC						
+						
+						var applicationHex = fs.readFileSync('./upgrade/hex/application/' + convertType.name + ".hex")
+						var program = new ImagoProgram(applicationHex)
+						flash = new ImagoFlash(client)
+						flash.on('progress', function(e) {
+							console.log('progress', '(' + e.progress + '/' + e.total + ')')
+						})
+						flash.programToBlock(program, block, function(err) {
+							if (err) {
+								exitWithError(err)
+							} else if (callback) {
+								console.log("\nSuccessfully flashed " + convertType.name + " firmware to " + block.getBlockId() + ".")
+								client.sendCommand(new ImagoProtocol.messages.ResetCommand())
+								callback()
+							}
+						})
+					}
+				})
+			}, 200);
 		}
 	})
 	flash.on('progress', function(e) {
 		console.log('progress', '(' + e.progress + '/' + e.total + ')')
 	})
 }
+
 
 function askForResponse(message, callback) {
 	stdin.setRawMode(true)
