@@ -109,7 +109,7 @@ function checkForBadBlocks (blocks, callback) {
         }
       })
     } else if (hasbadId) {
-      console.log(formatBlockName(block) + ' needs to be reflashed.')
+      console.log(formatBlockName(block) + ' needs to be reflashed. \n If you've already reflashed this block, please set it aside.')
       badCount++
       count--
     } else {
@@ -131,7 +131,7 @@ function blockHasBadId (blockId) {
 	var ID1 = ((blockId & 0x00FF00) >> 8);
 	var ID2 = ((blockId & 0xFF0000) >> 16);
 	
-	if(ID2 === ID1 && ID2 === 0x03)
+	if(ID2 === ID0 && ID2 === 0x03)
 	{
 		return true;
 	}
@@ -231,7 +231,7 @@ function kitVerificationFailure (type, blocks, missing, extra) {
   console.log('')
   console.log('Invalid ' + type.name + ' Kit:')
   if (missing.length > 0) {
-    console.log('  Misssing:')
+    console.log('  Missing:')
     __.each(missing, function (block) {
       console.log('    ' + block.name.capitalizeFirstLetter())
     })
