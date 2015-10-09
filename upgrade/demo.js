@@ -92,7 +92,15 @@ var Upgrade = function (client) {
         })
       } else {
         clearInterval(timer)
-        callback(null)
+        setTimeout(function () {
+          self.emit('needToDisconnect')
+          setTimeout(function () {
+            self.emit('needToConnect')
+            setTimeout(function () {
+              callback(null)
+            }, 2000)
+          }, 2000)
+        }, 500)
       }
     }, 10)
   }
@@ -185,7 +193,7 @@ var Upgrade = function (client) {
         clearInterval(timer)
         callback(null)
       }
-    }, 100)
+    }, 10)
   }
 }
 
