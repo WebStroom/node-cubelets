@@ -109,7 +109,7 @@ function checkForBadBlocks (blocks, callback) {
         }
       })
     } else if (hasbadId) {
-      console.log(formatBlockName(block) + ' needs to be reflashed. \n If you've already reflashed this block, please set it aside.')
+      console.log(formatBlockName(block) + " needs to be reflashed. \n If you've already reflashed this block, please set it aside.")
       badCount++
       count--
     } else {
