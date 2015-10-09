@@ -126,12 +126,26 @@ function checkForBadBlocks (blocks, callback) {
 }
 
 function blockHasBadId (blockId) {
-  var badBlocks = [196611, 196867, 197123, 197379, 197635, 197891, 198147, 198403, 198659, 198915, 199171, 199427, 199683, 199939, 200195, 200451, 200707, 200963, 201219, 201475, 201731, 201987, 202243, 202499, 202755, 203011, 203267, 203523]
+	
+	var ID0 = ((blockId & 0x0000FF));
+	var ID1 = ((blockId & 0x00FF00) >> 8);
+	var ID2 = ((blockId & 0xFF0000) >> 16);
+	
+	if(ID2 === ID1 && ID2 === 0x03)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+	
+  /*var badBlocks = [196611, 196867, 197123, 197379, 197635, 197891, 198147, 198403, 198659, 198915, 199171, 199427, 199683, 199939, 200195, 200451, 200707, 200963, 201219, 201475, 201731, 201987, 202243, 202499, 202755, 203011, 203267, 203523]
   if (blockId > BAD_ID_THRESHOLD || __.indexOf(badBlocks, blockId) >= 0) {
     return true
   } else {
     return false
-  }
+  }*/
 }
 
 // Checks for IDs that may suffer from
