@@ -38,6 +38,7 @@ var Upgrade = function (client) {
   var targetBlock = null
   var step = [0,1]
   var skipReadyCommand = false
+  var skipNotCompatibleBlock = false
 
   this.getClient = function () {
     return client
@@ -475,20 +476,33 @@ var Upgrade = function (client) {
     var nextBlock = dequeuePendingBlock()
     if (nextBlock) {
       setTargetBlock(nextBlock)
-      async.series([
-        setNextStep([0,4]),
-        flashBootstrapToTargetBlock,
-        jumpToDiscovery,
-        discoverTargetImagoBlock,
-        jumpToImago,
-        setNextStep([2,4]),
-        flashUpgradeToTargetBlock,
-        checkTargetBlockComplete
-      ], callback)
+      if (MCUTypes.PIC === nextBlock.getMCUType()) {
+        async.series([
+          setNextStep([0,4]),
+          flashBootstrapToTargetBlock,
+          jumpToDiscovery,
+          discoverTargetImagoBlock,
+          jumpToImago,
+          setNextStep([2,4]),
+          flashUpgradeToTargetBlock,
+          checkTargetBlockComplete
+        ], callback)
+      } else {
+        skipNotCompatibleBlock = false
+        self.emit('notCompatible', nextBlock)
+        async.until(function () {
+          return skipNotCompatibleBlock
+        }, wait(250), callback)
+      }
     } else {
       setTargetBlock(null)
       callback(null)
     }
+  }
+
+  this.skipNotCompatibleBlock = function () {
+    setTargetBlock(null)
+    skipNotCompatibleBlock = true
   }
 
   function enqueuePendingImagoBlocks(callback) {
@@ -580,7 +594,7 @@ var Upgrade = function (client) {
       flash.programToBlock(program, targetBlock, function (err) {
         flash.removeListener('progress', onProgress)
         callback(err)
-        if ('Y' === err.code) {
+        if (err && 'Y' === err.code) {
           self.emit('fatalError', err)
         }
       })
