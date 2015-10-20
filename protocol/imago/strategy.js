@@ -116,8 +116,8 @@ function ImagoStrategy(protocol, client) {
     debug('fetch graph')
     async.series([
       client.fetchOriginBlock,
-      client.fetchAllBlocks,
       client.fetchNeighborBlocks,
+      client.fetchAllBlocks,
       fetchAllBlockNeighbors
     ], function (err) {
       if (callback) {

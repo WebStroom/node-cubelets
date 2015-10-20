@@ -169,10 +169,14 @@ function BlockMap() {
   }
 
   function addLink(sourceId, targetId) {
-    links.push({
-      source: getBlock(sourceId),
-      target: getBlock(targetId)
-    })
+    var source = getBlock(sourceId)
+    var target = getBlock(targetId)
+    if (source && target) {
+      links.push({
+        source: source,
+        target: target
+      })
+    }
   }
 
   function updateHopCount(block, hopCount) {
