@@ -8,7 +8,7 @@ function device() {
   return process.browser ? {
     "address": "00:04:3e:31:c7:3e"
   } : {
-    "path": "COM61",
+    "path": "COM75",
     "address": "00:04:3e:31:c7:3e",
     "channelID": 1
   }
