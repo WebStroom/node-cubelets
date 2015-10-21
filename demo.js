@@ -4,6 +4,7 @@ var BlockTypes = require('./blockTypes')
 var Protocol = require('./protocol/imago')
 var Message = Protocol.Message
 var __ = require('underscore')
+var debug = require('debug')('cubelets:demo')
 
 var blockId = 1337
 
@@ -48,7 +49,7 @@ function Demo(socket, opts) {
 
   reply(messages.GetConfigurationRequest, function (req) {
     var res = new messages.GetConfigurationResponse()
-    console.log('get configuration?', req)
+    debug('get configuration?', req)
     res.blockId = blockId
     res.hardwareVersion = hardwareVersion
     res.bootloaderVersion = bootloaderVersion
@@ -59,17 +60,17 @@ function Demo(socket, opts) {
   })
 
   reply(messages.GetModeRequest, function (req) {
-    console.log('get mode?', req)
+    debug('get mode?', req)
     send(new messages.GetModeResponse(mode))
   })
 
   reply(messages.EchoRequest, function (req) {
-    console.log('echo?', req)
+    debug('echo?', req)
     send(new messages.EchoResponse(req.echo))
   })
 
   reply(messages.GetNeighborBlocksRequest, function (req) {
-    console.log('get neighbor blocks?', req)
+    debug('get neighbor blocks?', req)
     var neighborIds = getOriginBlock().neighborIds
     var neighbors = __(neighborIds).reduce(function (memo, blockId, faceIndex) {
       if (null !== blockId) {
@@ -81,13 +82,13 @@ function Demo(socket, opts) {
   })
 
   reply(messages.GetAllBlocksRequest, function (req) {
-    console.log('get all blocks?', req)
+    debug('get all blocks?', req)
     var blocks = getBlocks()
     send(new messages.GetAllBlocksResponse(blocks))
   })
 
   reply(messages.RegisterBlockValueEventRequest, function (req) {
-    console.log('register block value event?', req)
+    debug('register block value event?', req)
     var blockId = req.blockId
     valueEvents[blockId] = true
     startEventQueue()
@@ -95,21 +96,21 @@ function Demo(socket, opts) {
   })
 
   reply(messages.UnregisterBlockValueEventRequest, function (req) {
-    console.log('unregister block value event?', req)
+    debug('unregister block value event?', req)
     var blockId = req.blockId
     delete valueEvents[blockId]
     send(new messages.UnregisterBlockValueEventResponse(0))
   })
 
   reply(messages.UnregisterAllBlockValueEventsRequest, function (req) {
-    console.log('unregister all block value events?', req)
+    debug('unregister all block value events?', req)
     var blockId = req.blockId
     valueEvents = {}
     send(new messages.UnregisterAllBlockValueEventsResponse(0))
   })
 
   reply(messages.WriteBlockMessageRequest, function (req) {
-    console.log('write block message?')
+    debug('write block message?')
     send(new messages.WriteBlockMessageResponse(0))
 
     var b = Protocol.Block.messages
@@ -169,7 +170,7 @@ function Demo(socket, opts) {
   })
 
   reply(messages.UploadToMemoryRequest, function (req) {
-    console.log('upload to memory?', req)
+    debug('upload to memory?', req)
     // TODO: send progress events
     // var lineSize = 18
     // var progress = 0
@@ -177,13 +178,13 @@ function Demo(socket, opts) {
     // parser.setRawMode(true)
     // parser.on('raw', function listener(data) {
     //   progress += data.length
-    //   console.log('progress', progress)
+    //   debug('progress', progress)
     //   if (progress >= slotSize) {
     //     parser.removeListener('raw', listener)
     //     parser.setRawMode(false)
     //     var extra = progress - slotSize
     //     parser.parse(data.slice(data.length - extra))
-    //     console.log('parsing', extra, 'extra bytes')
+    //     debug('parsing', extra, 'extra bytes')
     //   }
     // })
     send(new messages.UploadToMemoryResponse(0))
@@ -193,7 +194,7 @@ function Demo(socket, opts) {
   })
 
   reply(messages.FlashMemoryToBlockRequest, function (req) {
-    console.log('flash memory to block?', req)
+    debug('flash memory to block?', req)
     // TODO: add flashing mutex
     var blockId = req.blockId
     var delay = 1000
