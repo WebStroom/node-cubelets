@@ -9,7 +9,11 @@ module.exports = function RequestQueue(client) {
     var timer = setTimeout(function () {
       client.removeListener('response', waitForResponse)
       if (callback) {
-        callback(new Error('Timed out waiting for response to request: ' + request.code()))
+        var code = request.code()
+        var err = new Error('Timed out waiting for response to request: ' + code)
+        err.friendlyMessage = 'Bluetooth Cubelet is not responding. It may need to be reset.'
+        err.code = code
+        callback(err)
       }
     }, timeout)
 

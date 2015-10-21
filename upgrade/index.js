@@ -594,8 +594,11 @@ var Upgrade = function (client) {
       flash.programToBlock(program, targetBlock, function (err) {
         flash.removeListener('progress', onProgress)
         callback(err)
-        if (err && 'Y' === err.code) {
-          self.emit('fatalError', err)
+        if (err) {
+          setTargetBlock(null)
+          if (isFatalError(err)) {
+            self.emit('error', err)
+          }
         }
       })
       flash.on('progress', onProgress)
@@ -613,6 +616,7 @@ var Upgrade = function (client) {
     assert(targetBlock, 'Target block must be set.')
     var timer = setTimeout(function () {
       client.removeListener('event', onBlockFoundEvent)
+      setTargetBlock(null)
       callback(new Error('Failed to discover target OS4 block.'))
     }, 5000)
     client.on('event', onBlockFoundEvent)
@@ -642,6 +646,9 @@ var Upgrade = function (client) {
       flash.programToBlock(program, targetBlock, function (err) {
         flash.removeListener('progress', onProgress)
         callback(err)
+        if (err) {
+          setTargetBlock(null)
+        }
       })
       flash.on('progress', onProgress)
       function onProgress(e) {
@@ -701,6 +708,13 @@ var Upgrade = function (client) {
     return function (callback) {
       async.retry({ times: times, interval: 500 }, fun, callback)
     }
+  }
+
+  function isFatalError(err) {
+    return err && (
+      ('?' === err.code) ||
+      ('Y' === err.code)
+    )
   }
 
   function findPendingBlockById(blockId) {

@@ -51,12 +51,12 @@ function Flash(protocol, client, opts) {
       return
     }
 
-    function errorMessageForCode(code) {
+    function friendlyMessageForErrorCode(code) {
       switch (code) {
-        case '?': return 'Bluetooth cubelet may need a hard reset.'
-        case '4': return 'Target cubelet is not ready. Try flashing again in a moment. The target may need to be reset.'
-        case 'Y': return 'Program upload to bluetooth cubelet failed. Make sure connection is still active and try again.'
-        case 'Z': return 'Could not communicate with target cubelet after flashing. The target may need to be reset.'
+        case '?': return 'Bluetooth Cubelet could not initialize flashing and may need to be reset.'
+        case '4': return 'Target Cubelet is not ready to be flashed. Try flashing again in a moment. The target may need to be reset.'
+        case 'Y': return 'Program upload to Bluetooth Cubelet failed. Make sure connection is still active and try again.'
+        case 'Z': return 'Could not communicate with target Cubelet after flashing. The target may need to be reset.'
         default:
           return 'Reason unknown.'
       }
@@ -72,9 +72,8 @@ function Flash(protocol, client, opts) {
         // Set a timeout for receiving the data
         var timer = setTimeout(function () {
           parser.removeListener('raw', waitForRaw)
-          var error = new Error([
-            "Timed out waiting for '" + code + "'.",
-              errorMessageForCode(code)].join(' '))
+          var error = new Error("Timed out waiting for '" + code + "'.")
+          error.friendlyMessage = friendlyMessageForErrorCode(code)
           error.code = code
           callback(error)
         }, timeout)

@@ -305,7 +305,11 @@ function ImagoStrategy(protocol, client) {
     var timer = setTimeout(function () {
       client.removeListener('event', waitForBlockResponse)
       if (callback) {
-        callback(new Error('Timed out waiting for block response to block request: ' + blockRequest.code()))
+        var code = blockRequest.code()
+        var err = new Error('Timed out waiting for block response to block request: ' + code)
+        err.friendlyMessage = 'Target Cubelet is not responding. It may need to be reattached.'
+        err.code = code
+        callback(err)
       }
     }, timeout)
 
