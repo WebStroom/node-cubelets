@@ -25,14 +25,14 @@ var ClassicFlash = ClassicProtocol.Flash
 var BootstrapProtocol = require('../protocol/bootstrap')
 var FirmwareService = require('../services/firmware')
 var Version = require('../version')
-
+var Os3LatestVersions = require('../downgrade/config.json')['latestOS3Versions']
 
 var FirmwareType = {
   CLASSIC: 0,
   IMAGO: 1,
   BOOTSTRAP: 2
 }
-
+var firmwareService = new FirmwareService()
 var UpdateService = require('../services/update')
 
 // TODO: Service for marking a block as upgraded
@@ -287,12 +287,47 @@ function jumptoOs3Mode(targetBlock, callback) {
 	})
 }
 
-function downloadTargetHex(targetBlock, callback)
-{
+function downloadTargetHex(targetBlock, callback) {
 	//TODO read version from config and manually fetch from the correct url
-	var hex = "";//TODO
-	callback(null, targetBlock, hex)	
+	//http://cubelets-programming.appspot.com/static/firmware/pic/2.6/46.hex
+
+	var infoService = new InfoService()
+	infoService.fetchBlockInfo([targetBlock], function(err, infos) {
+		if (err) {
+			callback(err)
+			return
+		}
+		var info = infos[0]
+		var version = info.latestFirmwareVersion
+		var blockType = Block.blockTypeForId(info.blockTypeId)
+		targetBlock._blockType = blockType
+		targetBlock._mcuType = Block.mcuTypeForId(info.mcuTypeId)
+
+		console.log(version)
+		console.log(Os3LatestVersions);
+		console.log(targetBlock.getBlockType())
+
+		var textVersion= Os3LatestVersions[targetBlock.getBlockType().name.toUpperCase()].version
+		
+		version = parseVersion(parseFloat(textVersion))
+		console.log(version)		
+		
+		var typeId = targetBlock.getBlockType().typeId
+
+		//var hexUrl = "http://cubelets-programming.appspot.com/static/firmware/pic/" + version + "/" + typeId + ".hex";
+
+
+		firmwareService.downloadVersion(targetBlock, version, function(err, hex) {
+			if(err)
+			{
+				callback(new Error("Failed to fetch hex file."))
+				return
+			}
+			callback(null, targetBlock, hex)
+		})
+	})
 }
+
 
 function flashOs3Application(targetBlock, targetHex, callback) {
 	var blockId = targetBlock.getBlockId()
@@ -421,7 +456,11 @@ function verifyOs3(callback) {
 
 
 
-
+function parseVersion(floatValue) {
+  var major = Math.floor(floatValue)
+  var minor = Math.floor(10 * (floatValue - major))
+  return new Version(major, minor)
+}
 
 function askYesOrNo (text, yesCallback, noCallback) {
   prompt(text + ' [Y/n] ', function (val) {
