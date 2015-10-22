@@ -26,6 +26,7 @@ var BootstrapProtocol = require('../protocol/bootstrap')
 var FirmwareService = require('../services/firmware')
 var Version = require('../version')
 var Os3LatestVersions = require('../downgrade/config.json')['latestOS3Versions']
+var IdService = require('../services/id')
 
 var FirmwareType = {
   CLASSIC: 0,
@@ -34,9 +35,7 @@ var FirmwareType = {
 }
 var firmwareService = new FirmwareService()
 var UpdateService = require('../services/update')
-
-// TODO: Service for marking a block as upgraded
-var updateService = new UpdateService()
+var idService = new IdService()
 
 // Console output colors
 var error = clc.bgRed.white.bold
@@ -78,6 +77,7 @@ function start (client) {
 		jumptoOs3Mode,
 		downloadTargetHex,
 		flashOs3Application,
+		updateDataStore,
 		wait,
 		jumpToDiscoveryFromOs3,
 		verifyOs3
@@ -288,9 +288,6 @@ function jumptoOs3Mode(targetBlock, callback) {
 }
 
 function downloadTargetHex(targetBlock, callback) {
-	//TODO read version from config and manually fetch from the correct url
-	//http://cubelets-programming.appspot.com/static/firmware/pic/2.6/46.hex
-
 	var infoService = new InfoService()
 	infoService.fetchBlockInfo([targetBlock], function(err, infos) {
 		if (err) {
@@ -303,19 +300,10 @@ function downloadTargetHex(targetBlock, callback) {
 		targetBlock._blockType = blockType
 		targetBlock._mcuType = Block.mcuTypeForId(info.mcuTypeId)
 
-		console.log(version)
-		console.log(Os3LatestVersions);
-		console.log(targetBlock.getBlockType())
-
 		var textVersion= Os3LatestVersions[targetBlock.getBlockType().name.toUpperCase()].version
 		
 		version = parseVersion(parseFloat(textVersion))
-		console.log(version)		
-		
 		var typeId = targetBlock.getBlockType().typeId
-
-		//var hexUrl = "http://cubelets-programming.appspot.com/static/firmware/pic/" + version + "/" + typeId + ".hex";
-
 
 		firmwareService.downloadVersion(targetBlock, version, function(err, hex) {
 			if(err)
@@ -347,11 +335,19 @@ function flashOs3Application(targetBlock, targetHex, callback) {
 		console.log('progress', '(' + e.progress + '/' + e.total + ')')
 	})
 	flash.on('success', function(e) {
-		callback(e, 1000)
+		callback(e, targetBlock)
 	})
 	flash.on('error', function(e) {
 		callback(err)
 	})
+}
+
+function updateDataStore(targetBlock, callback)
+{
+	//Update datastore with new version
+	var version = Os3LatestVersions[targetBlock.getBlockType().name.toUpperCase()].version
+	idService.addId(targetBlock, version, function (err) {})
+	callback(null, 1000)
 }
 
 function jumpToDiscoveryFromOs3(callback)

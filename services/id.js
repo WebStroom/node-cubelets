@@ -11,7 +11,7 @@ function IdService() {
 	var service = this
 	var baseUrl = config['urls']['kit']
 
-	service.addId = function(block, callback) {
+	service.addId = function(block, version, callback) {
 		var requestUrl = baseUrl + '/api/assembly_add?'
 
 		var data = {
@@ -22,7 +22,7 @@ function IdService() {
 			'core_version' : 1,
 			'cubelet_version' : 1,
 			'allow_overwrite' : 1,
-			'firm_ver' : '5.0',
+			'firm_ver' : version,
 			'block_type' : block.getBlockType().typeId
 		}
 
