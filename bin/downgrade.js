@@ -24,6 +24,8 @@ var ClassicProgram = ClassicProtocol.Program
 var ClassicFlash = ClassicProtocol.Flash
 var BootstrapProtocol = require('../protocol/bootstrap')
 var FirmwareService = require('../services/firmware')
+var Version = require('../version')
+
 
 var FirmwareType = {
   CLASSIC: 0,
@@ -94,16 +96,19 @@ function checkBluetoothOperatingMode(callback)
   client.sendRequest(new ClassicProtocol.messages.KeepAliveRequest(), function (err, response) {
   	if(err)
   	{
+  		console.log("Bluetooth block is running OS4 application.")
   		callback(null, FirmwareType.IMAGO)
   	}
   	else if(response.payload.length > 0)
   	{
+  		console.log("Bluetooth block is running OS4 bootstrap application.")
   		// The bootstrap protocol will differentiate itself by
       // sending an extra byte in the response.
       callback(null, FirmwareType.BOOTSTRAP)
   	}
   	else
   	{
+  		console.log("Bluetooth block is running OS3 application/bootloader.")
   		callback(null, FirmwareType.CLASSIC)
   	}
   })
@@ -111,21 +116,24 @@ function checkBluetoothOperatingMode(callback)
 
 function flashBootstrapIfNeeded(fromMode, callback) {
 	if (fromMode == FirmwareType.BOOTSTRAP) {//Already in bootstrap mode
+		console.log("Bluetooth already in bootstrap mode, no need to update.")
 		callback(null)
-	} else if (fromMode == FirmwareType.CLASSIC) {//Classic
+	} else if (fromMode == FirmwareType.CLASSIC) {//Classic		
 		client.setProtocol(ClassicProtocol)
-		client.sendData(new Buffer(['L'.charCodeAt(0)]), function(err) {
+		/*client.sendData(new Buffer(['L'.charCodeAt(0)]), function(err) {
 			if (err) {
 				callback(err)
 				return
-			}
+			}*/
+			console.log("Begin flashing bluetooth bootstrap code from OS3 mode.")
 			flashBootstrapFromBootloader(callback)
-		})
+		//})
 	} else {//Imago
 		client.setProtocol(ImagoProtocol)
 		var req = new ImagoProtocol.messages.SetModeRequest(0)
 		client.sendRequest(req, function(err, res) {
-			flashBootstrapFromBootloader(callback)
+			console.log("Begin flashing bluetooth bootstrap code from OS4 mode.")			
+			setTimeout(function(){flashBootstrapFromBootloader(callback)}, 4000);			
 		}, 200)
 	}
 }
@@ -146,8 +154,7 @@ function flashBootstrapFromBootloader(callback) {
 				hostBlock = new Block(originBlockId, 0, BlockTypes.BLUETOOTH)
 				hostBlock._mcuType = MCUTypes.AVR
 				var flash = new ClassicFlash(client, {
-					skipSafeCheck : true,
-					skipReadyCommand: true
+					skipSafeCheck : true
 				})				
 				flash.programToBlock(program, hostBlock, function(err) {
 					callback(err)
@@ -209,7 +216,7 @@ function findOs4AndFlashBootloader(callback)
 			callback(err)
 			return
 		}	
-		if(!neighborsBlocks || neighborBlocks.length <= 0)
+		if(!neighborBlocks || neighborBlocks.length <= 0)
 		{
 			callback(new Error("Failed to find OS4 block"))
 			return
