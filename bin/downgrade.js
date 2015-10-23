@@ -180,6 +180,8 @@ function flashBootstrapFromBootloader (callback) {
 }
 
 function waitForOs4Block (callback) {
+	console.log("")
+	console.log("Please attach the OS4 block you wish to downgrade.")
   client.setProtocol(BootstrapProtocol)
   function waitForBlockEvent (e) {
     if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
