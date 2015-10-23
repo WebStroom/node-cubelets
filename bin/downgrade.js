@@ -95,7 +95,12 @@ function start (client, firstRun) {
     if (err) {
       exitWithError(err)
     }
-    console.timeEnd("Downgraded in");
+    try
+    {
+    	console.timeEnd("Downgraded in");
+    }
+    catch(err){}
+    
     start(client, false)
     return
   })
