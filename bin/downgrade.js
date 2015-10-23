@@ -39,7 +39,11 @@ var idService = new IdService()
 
 // Console output colors
 var error = clc.bgRed.white.bold
-// var success = clc.bgGreen.white.bold
+var success = clc.bgGreen.white.bold
+
+//Holds the block info for the Cubelet being downgraded
+var downgradeBlock
+
 
 if (args.length === 3) {
   // Default color of the terminal window
@@ -57,19 +61,41 @@ var client = cubelets.connect(device, function (err) {
     exitWithError(err)
   } else {
     console.log('Connected. Starting upgrade...')
-    start(client)
+    start(client, true)
   }
 })
 
 client.on('disconnect', function () {
   console.log('Disconnected.')
 })
-function start (client) {
-  async.waterfall([checkBluetoothOperatingMode, flashBootstrapIfNeeded, waitForOs4Block, jumpToOs4Mode, wait, findOs4AndFlashBootloader, jumpToDiscoveryWaitForOs3, jumptoOs3Mode, downloadTargetHex, flashOs3Application, updateDataStore, wait, jumpToDiscoveryFromOs3, verifyOs3], function (err, result) {
+function start (client, firstRun) {
+	
+	var tasks = [
+  	waitForOs4Block, 
+  	jumpToOs4Mode, 
+  	wait, 
+  	findOs4AndFlashBootloader, 
+  	jumpToDiscoveryWaitForOs3, 
+  	jumptoOs3Mode, 
+  	downloadTargetHex, 
+  	flashOs3Application, 
+  	updateDataStore, 
+  	wait, 
+  	jumpToDiscoveryFromOs3, 
+  	verifyOs3
+  ]
+  
+  if(firstRun)
+  {
+  	tasks.unshift(flashBootstrapIfNeeded)
+  	tasks.unshift(checkBluetoothOperatingMode)
+  }
+	
+  async.waterfall(tasks, function (err, result) {
     if (err) {
       exitWithError(err)
     }
-    start(client)
+    start(client, false)
     return
   })
 }
@@ -158,6 +184,7 @@ function waitForOs4Block (callback) {
   function waitForBlockEvent (e) {
     if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
       if (e.firmwareType === FirmwareType.IMAGO) {
+      	console.log("Found an OS4 block on face " + e.faceIndex)
         client.removeListener('event', waitForBlockEvent)
         callback(null)
         return
@@ -200,13 +227,15 @@ function findOs4AndFlashBootloader (callback) {
     }
     var targetBlock
     targetBlock = neighborBlocks[0]
-    targetBlock._mcuType = MCUTypes.PIC
-
+    targetBlock._mcuType = MCUTypes.PIC		
+		
     flashOs3BootloaderFromOs4(targetBlock, callback)
   })
 }
 
 function flashOs3BootloaderFromOs4 (targetBlock, callback) {
+	
+	console.log("Begin flashing OS3 bootloader to " + formatBlockName(targetBlock))
   var hex = fs.readFileSync('./downgrade/pic_downgrader.hex')
   var program = new ImagoProgram(hex)
   var flash = new ImagoFlash(client, {
@@ -286,7 +315,10 @@ function downloadTargetHex (targetBlock, callback) {
 }
 
 function flashOs3Application (targetBlock, targetHex, callback) {
+	console.log("Begin flashing OS3 application to " + formatBlockName(targetBlock))
   var program = new ClassicProgram(targetHex)
+  
+  downgradeBlock = targetBlock
 
   // XXX(donald): hack to not send reset command
   targetBlock._applicationVersion = new Version(0, 0, 0)
@@ -338,6 +370,9 @@ function verifyOs3 (callback) {
       if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
         clearTimeout(timer)
         client.removeListener('event', waitForBlockEvent)
+        
+        printSuccessMessage('Successfully downgraded block ' + formatBlockName(downgradeBlock) + ' to OS3.')
+        console.log("")
         callback(null, 'done')
       }
     }
@@ -350,6 +385,24 @@ function parseVersion (floatValue) {
   var major = Math.floor(floatValue)
   var minor = Math.floor(10 * (floatValue - major))
   return new Version(major, minor)
+}
+
+function formatBlockName (block) {
+  return block.getBlockType().name.capitalizeFirstLetter() + ' (' + block.getBlockId() + ')'
+}
+
+String.prototype.capitalizeFirstLetter = function () {
+  return this.charAt(0).toUpperCase() + this.slice(1)
+}
+
+function printSuccessMessage (msg) {
+  //80 blanks spaces to fill a complete line
+  var fullLine = '                                                                                '
+  // process.stdout.write(success(fullLine))
+  process.stdout.write(success(fullLine))
+  process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length))))
+  process.stdout.write(success(fullLine))
+  process.stdout.write(defaultColor)
 }
 
 function exitWithError (err) {
