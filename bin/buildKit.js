@@ -187,7 +187,7 @@ function validateKit (blocks, expectedKit, callback) {
 
 function addAllBlocks (blocks, callback) {
   __.each(blocks, function (block) {
-    idService.addId(block, function (err) {})
+    idService.addId(block, '5.0', function (err) {})
   })
   callback()
 }

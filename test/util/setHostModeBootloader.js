@@ -13,7 +13,7 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      test.skip('jump to bootloader from bootstrap', function (t) {
+      test('jump to bootloader from bootstrap', function (t) {
         t.plan(3)
         client.setProtocol(BootstrapProtocol)
         var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(1)
@@ -35,7 +35,7 @@ var client = cubelets.connect(config.device, function (err) {
         })
       })
 
-      test('jump to bootloader from imago', function (t) {
+      test.skip('jump to bootloader from imago', function (t) {
         t.plan(1)
         client.setProtocol(ImagoProtocol)
         var req = new ImagoProtocol.messages.SetModeRequest(0)
