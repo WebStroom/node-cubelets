@@ -95,6 +95,7 @@ function start (client, firstRun) {
     if (err) {
       exitWithError(err)
     }
+    console.timeEnd("Downgraded in");
     start(client, false)
     return
   })
@@ -198,6 +199,7 @@ function waitForOs4Block (callback) {
 }
 
 function jumpToOs4Mode (callback) {
+	console.time("Downgraded in");
   client.setProtocol(BootstrapProtocol)
   client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(FirmwareType.IMAGO), function (err, response) {
     if (err) {
