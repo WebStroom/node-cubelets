@@ -307,7 +307,7 @@ function ImagoStrategy(protocol, client) {
       if (callback) {
         var code = blockRequest.code()
         var err = new Error('Timed out waiting for block response to block request: ' + code)
-        err.friendlyMessage = 'Target Cubelet is not responding. It may need to be reattached.'
+        err.friendlyMessage = 'A Cubelet in the map is not responding. It may need to be reattached.'
         err.code = code
         callback(err)
       }
