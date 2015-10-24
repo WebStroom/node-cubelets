@@ -1,3 +1,4 @@
+var debug = require('debug')('cubelets:bluetoothSerial')
 var util = require('util')
 var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort
 var Scanner = require('../scanner')
@@ -50,6 +51,7 @@ var BluetoothSerialConnection = function (device, opts) {
 
   this._write = function (chunk, enc, next) {
     if (serialPort) {
+      debug('<<', chunk)
       serialPort.write(chunk, next)
     }
   }
@@ -75,6 +77,7 @@ var BluetoothSerialConnection = function (device, opts) {
           isOpen = true
 
           serialPort.on('data', function (chunk) {
+            debug('>>', chunk)
             stream.push(chunk)
           })
 
