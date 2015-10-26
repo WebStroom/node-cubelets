@@ -67,7 +67,7 @@ function start (client, firstRun) {
 	
 	//TODO
 	//Check what BT firmware is running
-	//Flash the super special (CRC toggleable) firmware if necessary
+	//Flash the super special (CRC toggleable) OS4 bt firmware if necessary
 	//Wait for a (non-crc) cubelet
 	//Determine the ID of the connected Cubelet
 	//If the ID could be bad, keep a log of it (ie: if it suffered from the memory location problem. the lfsr will be fixed automagically), we will need to compare later.
@@ -79,23 +79,27 @@ function start (client, firstRun) {
 	
 	
 	var tasks = [
-  	waitForOs4Block, 
-  	jumpToOs4Mode, 
-  	wait, 
-  	findOs4AndFlashBootloader, 
-  	jumpToDiscoveryWaitForOs3, 
-  	jumptoOs3Mode, 
-  	downloadTargetHex, 
-  	flashOs3Application, 
-  	updateDataStore, 
-  	wait, 
-  	jumpToDiscoveryFromOs3, 
-  	verifyOs3
+		disableCrcs,
+  	waitForOs4Block,
+  	verifyTargetNeedsUpgrade,
+  	logIfBadId,
+  	flashUpgradeBootloader,
+  	resetBT,
+  	enableCrcs,
+  	verify,
+  	flashModifiedPicBootstrap,
+  	resetBT,
+  	enableCrcs,
+  	verify, 
+  	checkForBadID, 
+  	flashOs4Application, 
+  	verify,
+  	resetBT,
   ]
   
   if(firstRun)
   {
-  	tasks.unshift(flashBootstrapIfNeeded)
+  	tasks.unshift(flashHostIfNeeded)
   	tasks.unshift(checkBluetoothOperatingMode)
   }
 	
@@ -105,7 +109,7 @@ function start (client, firstRun) {
     }
     try
     {
-    	console.timeEnd("Downgraded in");
+    	console.timeEnd("Upgraded in");
     }
     catch(err){}
     
@@ -206,7 +210,7 @@ function waitForOs4Block (callback) {
 }
 
 function jumpToOs4Mode (callback) {
-	console.time("Downgraded in");
+	console.time("Upgraded in");
   client.setProtocol(BootstrapProtocol)
   client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(FirmwareType.IMAGO), function (err, response) {
     if (err) {
