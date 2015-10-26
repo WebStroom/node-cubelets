@@ -65,7 +65,6 @@ client.on('disconnect', function () {
 })
 function start (client, firstRun) {
 	
-	//TODO
 	//Check what BT firmware is running
 	//Flash the super special (CRC toggleable) OS4 bt firmware if necessary
 	//Wait for a (non-crc) cubelet
@@ -75,7 +74,7 @@ function start (client, firstRun) {
 	//Enable CRCs (stored in eeprom enabling CRCs before comm starts)
 	//Restart BT
 	//Verify the Cubelet is there (it may have a different ID)
-	//If it possibly had a bad ID, and the ID didn't change
+	//If it possibly had a bad ID, and the ID didn't change, notify operator that the block needs wanded
 	
 	
 	var tasks = [
@@ -86,15 +85,16 @@ function start (client, firstRun) {
   	flashUpgradeBootloader,
   	resetBT,
   	enableCrcs,
-  	verify,
+  	verifyOS4,
   	flashModifiedPicBootstrap,
   	resetBT,
   	enableCrcs,
-  	verify, 
+  	verifyOS4, 
   	checkForBadID, 
   	flashOs4Application, 
-  	verify,
+  	verifyOS4,
   	resetBT,
+  	done
   ]
   
   if(firstRun)
@@ -137,264 +137,95 @@ function checkBluetoothOperatingMode (callback) {
   })
 }
 
-function flashBootstrapIfNeeded (fromMode, callback) {
+function flashHostIfNeeded (fromMode, callback) {
   if (fromMode === FirmwareType.BOOTSTRAP) { // Already in bootstrap mode
-    console.log('Bluetooth already in bootstrap mode, no need to update.')
-    callback(null)
+    console.log('Bluetooth seems to be in bootstrap mode, flashing to OS4 mode. TODO')
+    callback(new Error("Flashing from bootstrap to OS4 isn't implemented"))
   } else if (fromMode === FirmwareType.CLASSIC) { // Classic
     client.setProtocol(ClassicProtocol)
-    console.log('Begin flashing bluetooth bootstrap code from OS3 mode.')
-    flashBootstrapFromBootloader(callback)
+    console.log('Begin flashing bluetooth bootstrap code from OS3 mode. TODO')
+    callback(new Error("Flashing from OS3 to OS4 isn't implemented"))
   } else { // Imago
     client.setProtocol(ImagoProtocol)
-    var req = new ImagoProtocol.messages.SetModeRequest(0)
-    client.sendRequest(req, function (err, res) {
-      if (err) {
-        callback(err)
-      }
-      console.log('Begin flashing bluetooth bootstrap code from OS4 mode.')
-      setTimeout(function () {
-        flashBootstrapFromBootloader(callback)
-      }, 4000)
-    }, 200)
-  }
-}
-
-function flashBootstrapFromBootloader (callback) {
-  var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
-  var program = new ClassicProgram(hex)
-  client.setProtocol(ClassicProtocol)
-
-  // Determine Host ID
-  var req = new ClassicProtocol.messages.GetNeighborBlocksRequest()
-  client.sendRequest(req, function (err, res) {
-    if (err) {
-      callback(err)
-    } else {
-      var originBlockId = res.originBlockId
-      if (originBlockId > 0) {
-        var hostBlock = new Block(originBlockId, 0, BlockTypes.BLUETOOTH)
-        hostBlock._mcuType = MCUTypes.AVR
-        var flash = new ClassicFlash(client, {
-          skipSafeCheck: true
-        })
-        flash.programToBlock(program, hostBlock, function (err) {
-          callback(err)
-        })
-        flash.on('progress', function (e) {
-          console.log('progress', '(' + e.progress + '/' + e.total + ')')
-        })
-      } else {
-        callback(new Error('Host block not found.'))
-      }
-    }
-  })
-}
-
-function waitForOs4Block (callback) {
-	console.log("")
-	console.log("Please attach the OS4 block you wish to downgrade.")
-  client.setProtocol(BootstrapProtocol)
-  function waitForBlockEvent (e) {
-    if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
-      if (e.firmwareType === FirmwareType.IMAGO) {
-      	console.log("Found an OS4 block on face " + e.faceIndex)
-        client.removeListener('event', waitForBlockEvent)
-        callback(null)
-        return
-      }
-    }
-  }
-
-  client.on('event', waitForBlockEvent)
-}
-
-function jumpToOs4Mode (callback) {
-	console.time("Upgraded in");
-  client.setProtocol(BootstrapProtocol)
-  client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(FirmwareType.IMAGO), function (err, response) {
-    if (err) {
-      callback(err)
-    } else if (response.mode === FirmwareType.IMAGO) {
-      callback(null, 1000)
-    } else {
-      callback(new Error('Failed to set host into OS4 mode'))
-    }
-  })
-}
-
-function wait (howLong, callback) {
-  setTimeout(function () {
     callback(null)
-  }, howLong)
+  }
 }
 
-function findOs4AndFlashBootloader (callback) {
-  client.setProtocol(ImagoProtocol)
-  client.fetchNeighborBlocks(function (err, neighborBlocks) {
-    if (err) {
-      callback(err)
-      return
-    }
-    if (!neighborBlocks || neighborBlocks.length <= 0) {
-      callback(new Error('Failed to find OS4 block'))
-      return
-    }
-    var targetBlock
-    targetBlock = neighborBlocks[0]
-    targetBlock._mcuType = MCUTypes.PIC		
-		
-    flashOs3BootloaderFromOs4(targetBlock, callback)
-  })
+function disableCrcs(callback)
+{
+	client.sendRequest(new Protocol.messages.SetCrcsRequest(0), function(err, response) {
+		callback(err);
+	})
 }
 
-function flashOs3BootloaderFromOs4 (targetBlock, callback) {
+function waitForOs4Block(callback)
+{
+	//TODO
+	//Check if there is already an OS4 block
+		//if yes, callback(block)
+		//Make sure there is only a single block, warn user if not
+		//else
+			//Register for block added events
+}
+
+function verifyTargetNeedsUpgrade(callback, block)
+{
+	//Send get config to block
+	//Read version
+		//If < 4.1.0 then continue
+		//Else
+			//Tell the user to remove the block, it's already been upgraded
+}
+
+function logIfBadId(callback, block)
+{
+		//if the ID matches the bad ID pattern, store the ID to compare to later
+}
+
+function flashUpgradeBootloader(callback, block)
+{
+	//Flash the deep memory bootloader
+}
+
+function flashOs4Application(callback, block)
+{
+	//Flash the usual application
+}
+
+function resetBT(callback)
+{
+	client.sendCommand(new ImagoProtocol.messages.ResetCommand())
+	callback(null)
+}
+
+function enableCrcs(callback)
+{
+	client.sendRequest(new Protocol.messages.SetCrcsRequest(1), function(err, response) {
+		callback(err);
+	})
+}
+
+function verifyOS4(callback)
+{
+	//Make sure we see an OS4 block
+}
+
+function flashModifiedPicBootstrap(callback, block)
+{
+	//TODO: Flash the pic bootloader + verification app
 	
-	console.log("Begin flashing OS3 bootloader to " + formatBlockName(targetBlock))
-  var hex = fs.readFileSync('./downgrade/pic_downgrader.hex')
-  var program = new ImagoProgram(hex)
-  var flash = new ImagoFlash(client, {
-    skipSafeCheck: true
-  })
-  flash.programToBlock(program, targetBlock, function (err) {
-    callback(err, targetBlock)
-  })
-  flash.on('progress', function (e) {
-    console.log('progress', '(' + e.progress + '/' + e.total + ')')
-  })
 }
 
-function jumpToDiscoveryWaitForOs3 (targetBlock, callback) {
-  client.sendCommand(new ImagoProtocol.messages.ResetCommand())
-  setTimeout(function () {
-    client.setProtocol(BootstrapProtocol)
-    var timer = setTimeout(function () {
-      client.removeListener('event', waitForBlockEvent)
-      callback(new Error('Failed to discover OS3 bootloader block'))
-      return
-    }, 3000)
-    function waitForBlockEvent (e) {
-      if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
-        clearTimeout(timer)
-        if (e.firmwareType === FirmwareType.CLASSIC) {
-          client.removeListener('event', waitForBlockEvent)
-          callback(null, targetBlock)
-          return
-        }
-      }
-    }
-
-    client.on('event', waitForBlockEvent)
-  })
+function checkForBadID(callback, block)
+{
+	//TODO: Check to see if the block could still have a bad ID, bail if so
 }
 
-function jumptoOs3Mode (targetBlock, callback) {
-  client.setProtocol(BootstrapProtocol)
-  client.sendRequest(new BootstrapProtocol.messages.SetBootstrapModeRequest(FirmwareType.CLASSIC), function (err, response) {
-    client.setProtocol(ClassicProtocol)
-    if (err) {
-      callback(err)
-    } else if (response.mode === FirmwareType.CLASSIC) {
-      callback(null, targetBlock)
-    } else {
-      callback(new Error('Failed to jump from bootstrap to OS3 mode'))
-    }
-  })
+function done(callback)
+{
+	callback(null, 'done')
 }
 
-function downloadTargetHex (targetBlock, callback) {
-  var infoService = new InfoService()
-  infoService.fetchBlockInfo([targetBlock], function (err, infos) {
-    if (err) {
-      callback(err)
-      return
-    }
-    var info = infos[0]
-    var version = info.latestFirmwareVersion
-    var blockType = Block.blockTypeForId(info.blockTypeId)
-    targetBlock._blockType = blockType
-    targetBlock._mcuType = Block.mcuTypeForId(info.mcuTypeId)
-
-    var textVersion = Os3LatestVersions[targetBlock.getBlockType().name.toUpperCase()].version
-
-    version = parseVersion(parseFloat(textVersion))
-
-    firmwareService.downloadVersion(targetBlock, version, function (err, hex) {
-      if (err) {
-        callback(new Error('Failed to fetch hex file.'))
-        return
-      }
-      callback(null, targetBlock, hex)
-    })
-  })
-}
-
-function flashOs3Application (targetBlock, targetHex, callback) {
-	console.log("Begin flashing OS3 application to " + formatBlockName(targetBlock))
-  var program = new ClassicProgram(targetHex)
-  
-  downgradeBlock = targetBlock
-
-  // XXX(donald): hack to not send reset command
-  targetBlock._applicationVersion = new Version(0, 0, 0)
-
-  var flash = new ClassicFlash(client, {
-    skipSafeCheck: false
-  })
-  flash.programToBlock(program, targetBlock, function (err) {
-    if (err) {
-      callback(err)
-    }
-  })
-  flash.on('progress', function (e) {
-    console.log('progress', '(' + e.progress + '/' + e.total + ')')
-  })
-  flash.on('success', function (e) {
-    callback(e, targetBlock)
-  })
-  flash.on('error', function (e) {
-    callback(e)
-  })
-}
-
-function updateDataStore (targetBlock, callback) {
-  // Update datastore with new version
-  var version = Os3LatestVersions[targetBlock.getBlockType().name.toUpperCase()].version
-  idService.addId(targetBlock, version, function (err) {
-    if (err) {
-      console.log(err)
-    }
-  })
-  callback(null, 1000)
-}
-
-function jumpToDiscoveryFromOs3 (callback) {
-  client.sendCommand(new ClassicProtocol.messages.ResetCommand())
-  callback(null)
-}
-
-function verifyOs3 (callback) {
-  setTimeout(function () {
-    client.setProtocol(BootstrapProtocol)
-    var timer = setTimeout(function () {
-      client.removeListener('event', waitForBlockEvent)
-      callback(new Error('Failed to find OS3 application block'))
-      return
-    }, 3000)
-    function waitForBlockEvent (e) {
-      if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
-        clearTimeout(timer)
-        client.removeListener('event', waitForBlockEvent)
-        
-        printSuccessMessage('Successfully downgraded block ' + formatBlockName(downgradeBlock) + ' to OS3.')
-        console.log("")
-        callback(null, 'done')
-      }
-    }
-
-    client.on('event', waitForBlockEvent)
-  })
-}
 
 function parseVersion (floatValue) {
   var major = Math.floor(floatValue)
