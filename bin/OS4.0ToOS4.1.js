@@ -40,8 +40,8 @@ var idService = new IdService()
 var error = clc.bgRed.white.bold
 var success = clc.bgGreen.white.bold
 
-//Holds the block info for the Cubelet being downgraded
-var downgradeBlock
+var possiblyHasBadId = false;
+var possiblyBadId = 0;
 
 if (args.length === 3) {
   // Default color of the terminal window
@@ -156,7 +156,8 @@ function flashHostIfNeeded (fromMode, callback) {
 
 function disableCrcs(callback)
 {
-	client.sendRequest(new Protocol.messages.SetCrcsRequest(0), function(err, response) {
+	//TODO THis is currently enabling CRCs to test 1 -> 0
+	client.sendRequest(new Protocol.messages.SetCrcsRequest(1), function(err, response) {
 		callback(err);
 	})
 }
@@ -181,12 +182,14 @@ function waitForOs4Block(callback)
 		}
 		else
 		{
+			console.log("Waiting for a Cubelet that needs to be updated.")
 			client.once('event', function(message)
-			{
-				//TODO verify its a block added event
-				console.log(message);
-				waitForOs4Block(callback)
-				return
+			{				
+				if(message instanceof Protocol.messages.BlockAddedEvent)
+				{
+					waitForOs4Block(callback)
+					return
+				}
 			})
 		}		
 	})
@@ -216,32 +219,56 @@ function getAllBlocks(callback)
 }
 
 
-function verifyTargetNeedsUpgrade(callback, block)
+function verifyTargetNeedsUpgrade(block, callback)
 {
-	//Send get config to block
-	//Read version
-		//If < 4.1.0 then continue
-		//Else
-			//Tell the user to remove the block, it's already been upgraded
-			
-	callback(new Error("Not yet implemented"))
+	console.log("Verifying that the "+formatBlockName(block) +" cubelet needs upgraded.")
+	var request = new ImagoProtocol.Block.messages.GetConfigurationRequest(block.getBlockId())
+	client.sendBlockRequest(request, function (err, response) {
+		if(err)
+		{
+			callback(err)
+			return
+		}
+		
+		if(response.bootloaderVersion.isLessThan(new Version(4,1,0)))
+		{
+			callback(null, block)
+		}
+		else
+		{
+			callback(new Error("This cubelet, "+formatBlockName(block)+" does not need to be updated"))
+		}
+	})	
 }
 
-function logIfBadId(callback, block)
+function logIfBadId(block, callback)
 {
 		//if the ID matches the bad ID pattern, store the ID to compare to later
+		if(blockHasBadId(block.getBlockId()))
+		{
+			console.log("This block may have a corrupted ID. We will attempt to repair it.")
+			possiblyHasBadId = true
+			possiblyBadId = block.getBlockId()
+			
+		}
+		else
+		{
+			//Clear the log of potentially bad IDs
+			possiblyHasBadId = false
+		}		
 		
-		callback(new Error("Not yet implemented"))
+		callback(null, block)
 }
 
-function flashUpgradeBootloader(callback, block)
+function flashUpgradeBootloader(block, callback)
 {
 	//Flash the deep memory bootloader
+	console.log("Begin flashing the deep-memory temporary bootloader.")
 	
 	callback(new Error("Not yet implemented"))
 }
 
-function flashOs4Application(callback, block)
+function flashOs4Application(block, callback)
 {
 	//Flash the usual application
 	
@@ -268,7 +295,7 @@ function verifyOS4(callback)
 	callback(new Error("Not yet implemented"))
 }
 
-function flashModifiedPicBootstrap(callback, block)
+function flashModifiedPicBootstrap(block, callback)
 {
 	//TODO: Flash the pic bootloader + verification app
 	
@@ -276,7 +303,7 @@ function flashModifiedPicBootstrap(callback, block)
 	callback(new Error("Not yet implemented"))
 }
 
-function checkForBadID(callback, block)
+function checkForBadID(block, callback)
 {
 	//TODO: Check to see if the block could still have a bad ID, bail if so
 	
@@ -288,6 +315,22 @@ function done(callback)
 	callback(null, 'done')
 }
 
+
+function blockHasBadId (blockId) {
+	
+	var ID0 = ((blockId & 0x0000FF));
+	var ID1 = ((blockId & 0x00FF00) >> 8);
+	var ID2 = ((blockId & 0xFF0000) >> 16);
+	
+	if(ID2 === ID0 && ID2 === 0x03)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 function parseVersion (floatValue) {
   var major = Math.floor(floatValue)
