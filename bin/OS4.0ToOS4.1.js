@@ -87,16 +87,18 @@ function start (client, firstRun) {
   	logIfBadId,
   	flashUpgradeBootloader,
   	resetBT,
+  	wait,
   	enableCrcs,
-  	verifyOS4,
+  	waitForOs4Block,
   	flashModifiedPicBootstrap,
   	resetBT,
+  	wait,
   	enableCrcs,
-  	verifyOS4, 
+  	waitForOs4Block, 
   	checkForBadID, 
   	flashOs4Application, 
-  	verifyOS4,
   	resetBT,
+  	wait,
   	done
   ]
   
@@ -156,8 +158,7 @@ function flashHostIfNeeded (fromMode, callback) {
 
 function disableCrcs(callback)
 {
-	//TODO THis is currently enabling CRCs to test 1 -> 0
-	client.sendRequest(new Protocol.messages.SetCrcsRequest(1), function(err, response) {
+	client.sendRequest(new Protocol.messages.SetCrcsRequest(0), function(err, response) {
 		callback(err);
 	})
 }
@@ -207,7 +208,9 @@ function getAllBlocks(callback)
 		{
 			var blocks = []
       __.each(response.blocks, function (block) {
-        blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType)))
+      	var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType))      	
+      	b._mcuType = MCUTypes.PIC
+        blocks.push(b)
       })	
       callback(null, blocks)
 		}
@@ -265,14 +268,81 @@ function flashUpgradeBootloader(block, callback)
 	//Flash the deep memory bootloader
 	console.log("Begin flashing the deep-memory temporary bootloader.")
 	
+	var hex = fs.readFileSync('./upgrade/hex/application/' + blockType.name + '.hex')//TODO wrong hex path
+  var program = new ImagoProgram(hex)
+  
+	var flash = new ImagoFlash(client, {
+		skipSafeCheck : true
+	})//TODO: Determine if skipSafeCheck is needed
+	
+	flash.programToBlock(program, block, function(err) {
+		if(err)
+		{
+			callback(err)
+			return
+		}
+		callback(null)		
+	})
+	
+	flash.on('progress', function(e) {
+		console.log('progress', '(' + e.progress + '/' + e.total + ')')
+	})
+}
+
+
+function flashModifiedPicBootstrap(block, callback) {
+	//TODO: Flash the pic bootloader + verification app
+	//TODO wrong hex
+	var converterHex = fs.readFileSync('./upgrade/hex/pic_type_switch/' + convertType.name + ".hex")
+	var program = new ImagoProgram(converterHex)
+	var flash = new ImagoFlash(client, {
+		skipSafeCheck : true
+	})
+	flash.programToBlock(program, block, function(err) {
+		if (err) {
+			callback(err)
+			return
+		}
+		callback(null)
+	})
+}
+function checkForBadID(block, callback)
+{
+	//Check to see if the block could still have a bad ID, bail if so
+	if(possiblyHasBadId)
+	{
+		if(possiblyBadId === block.getBlockId())
+		{
+			callback(new Error("Was unable to fix the ID corruption. This Cubelet will need to be wanded"))
+			return
+		}
+	}	
+	callback(null, block)
+}
+
+function flashOs4Application(block, callback) {
+	//Flash the usual application
+	//TODO wrong hex path
+	var applicationHex = fs.readFileSync('./upgrade/hex/application/' + convertType.name + ".hex")//TODO
+	var program = new ImagoProgram(applicationHex)
+	flash = new ImagoFlash(client)
+	flash.on('progress', function(e) {
+		console.log('progress', '(' + e.progress + '/' + e.total + ')')
+	})
+	flash.programToBlock(program, block, function(err) {
+		if (err) {
+			callback(err)
+			return
+		} 
+		console.log("\nSuccessfully flashed " + convertType.name + " firmware to " + block.getBlockId() + ".")
+		callback(null)
+	})
 	callback(new Error("Not yet implemented"))
 }
 
-function flashOs4Application(block, callback)
-{
-	//Flash the usual application
+function wait()
+{//TODO add how long and callback
 	
-	callback(new Error("Not yet implemented"))
 }
 
 function resetBT(callback)
@@ -286,28 +356,6 @@ function enableCrcs(callback)
 	client.sendRequest(new Protocol.messages.SetCrcsRequest(1), function(err, response) {
 		callback(err);
 	})
-}
-
-function verifyOS4(callback)
-{
-	//Make sure we see an OS4 block
-	
-	callback(new Error("Not yet implemented"))
-}
-
-function flashModifiedPicBootstrap(block, callback)
-{
-	//TODO: Flash the pic bootloader + verification app
-	
-	
-	callback(new Error("Not yet implemented"))
-}
-
-function checkForBadID(block, callback)
-{
-	//TODO: Check to see if the block could still have a bad ID, bail if so
-	
-	callback(new Error("Not yet implemented"))
 }
 
 function done(callback)
