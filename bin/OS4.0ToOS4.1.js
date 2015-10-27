@@ -47,7 +47,7 @@ var success = clc.bgGreen.white.bold
 
 var possiblyHasBadId = false;
 var possiblyBadId = 0;
-var flashTypeId;
+var flashTypeId = null;
 
 if (args.length === 3) {
 	// Default color of the terminal window
@@ -110,6 +110,8 @@ function start(client, firstRun) {
 			console.timeEnd("Upgraded in");
 		} catch(err) {
 		}
+		
+		flashTypeId = null;
 
 		start(client, false)
 		return
@@ -167,6 +169,10 @@ function waitForOs4Block(callback) {
 			return
 		} else if (blocks.length == 1) {
 			console.log("Found: " + formatBlockName(blocks[0]))
+			if( flashTypeId === null && blocks[0].getBlockType() !== BlockTypes.UNKNOWN)
+			{
+				flashTypeId = blocks[0].getBlockType().typeId
+			}
 			callback(null, blocks[0])
 			return
 		} else {
@@ -211,7 +217,10 @@ function verifyTargetNeedsUpgrade(block, callback) {
 		}
 		else
 		{	
-			flashTypeId = response.blockTypeId
+			if(flashTypeId === null)
+			{
+				flashTypeId = response.blockTypeId
+			}		
 	
 			//We only want to upgrade 4.0.x blocks
 			if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
@@ -340,6 +349,10 @@ function checkForBadID(block, callback) {
 			callback(new Error("Was unable to fix the ID corruption. This Cubelet will need to be re-flashed using the wand."))
 			return
 		}
+		else
+		{
+			console.log("Successfully repaired a bad ID.")
+		}
 	}
 	callback(null, block)
 }
@@ -389,16 +402,17 @@ function flashOs4Application(block, callback) {
 	})
 }
 
-function waitForBlockRemoved(block, callback) {
-	//process.stdout.write(clc.erase.screen);
-	printSuccessMessage("Successfully upgraded " + formatBlockName(block) + " to v4.1.0")
-	console.log("\n\nPlease remove " + formatBlockName(block) + " and attach the next block to be updated.\n\n\n")
+function waitForBlockRemoved(block, callback) {	
 	client.once('event', function(message) {
 		if ( message instanceof Protocol.messages.BlockRemovedEvent) {
 			callback(null)
 			return
 		}
 	})
+	
+	//process.stdout.write(clc.erase.screen);
+	printSuccessMessage("Successfully upgraded " + formatBlockName(block) + " to v4.1.0")
+	console.log("\n\nPlease remove " + formatBlockName(block) + " and attach the next block to be updated.\n\n\n")
 }
 
 function wait(howLong, callback) {
