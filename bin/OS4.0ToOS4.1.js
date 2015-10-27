@@ -206,38 +206,13 @@ function verifyTargetNeedsUpgrade(block, callback) {
 	var request = new ImagoProtocol.Block.messages.GetConfigurationRequest(block.getBlockId())
 	client.sendBlockRequest(request, function(err, response) {
 		if (err) {
-			//Try enabling CRCs and try again to see if it has already been updated.
-			enableCrcs(function(err)
-			{
-				if(err)
-				{
-					callback(err)
-					return
-				}
-				console.log("No response from get configuration, try enabling CRCs and try again.")
-				client.sendBlockRequest(request, function(err, response) {					
-					if(err)
-					{
-						callback(err)
-						return
-					}
-					flashTypeId = response.blockTypeId
-
-					//We only want to upgrade 4.0.x blocks
-					if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
-						callback(null, block)
-					} else {
-						callback(new Error("This cubelet, " + formatBlockName(block) + " does not need to be updated"))
-					}
-					
-				})
-				
-			})
+			callback(new Error("Failed to fetch the block configuration. "+formatBlockName(block)+" may have already been upgraded."))
+			return
 		}
 		else
-		{
+		{	
 			flashTypeId = response.blockTypeId
-
+	
 			//We only want to upgrade 4.0.x blocks
 			if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
 				callback(null, block)
@@ -447,8 +422,6 @@ function enableCrcs(callback) {
 
 function done(callback) {
 	callback(null, 'done')
-
-	//TODO: Wait for block to be removed?
 }
 
 function blockHasBadId(blockId) {
