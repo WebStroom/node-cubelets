@@ -1,6 +1,6 @@
 var args = process.argv
 if (args.length < 3) {
-	console.log('Usage: node bin/downgrade PATH {{DEFAULT_COLOR}}')
+	console.log('Usage: node bin/OS4.0ToOS4.1 PATH {{DEFAULT_COLOR}}')
 	process.exit(1)
 }
 
@@ -206,17 +206,44 @@ function verifyTargetNeedsUpgrade(block, callback) {
 	var request = new ImagoProtocol.Block.messages.GetConfigurationRequest(block.getBlockId())
 	client.sendBlockRequest(request, function(err, response) {
 		if (err) {
-			callback(err)
-			return
+			//Try enabling CRCs and try again to see if it has already been updated.
+			enableCrcs(function(err)
+			{
+				if(err)
+				{
+					callback(err)
+					return
+				}
+				console.log("No response from get configuration, try enabling CRCs and try again.")
+				client.sendBlockRequest(request, function(err, response) {					
+					if(err)
+					{
+						callback(err)
+						return
+					}
+					flashTypeId = response.blockTypeId
+
+					//We only want to upgrade 4.0.x blocks
+					if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
+						callback(null, block)
+					} else {
+						callback(new Error("This cubelet, " + formatBlockName(block) + " does not need to be updated"))
+					}
+					
+				})
+				
+			})
 		}
+		else
+		{
+			flashTypeId = response.blockTypeId
 
-		flashTypeId = response.blockTypeId
-
-		//We only want to upgrade 4.0.x blocks
-		if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
-			callback(null, block)
-		} else {
-			callback(new Error("This cubelet, " + formatBlockName(block) + " does not need to be updated"))
+			//We only want to upgrade 4.0.x blocks
+			if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
+				callback(null, block)
+			} else {
+				callback(new Error("This cubelet, " + formatBlockName(block) + " does not need to be updated"))
+			}
 		}
 	})
 }
