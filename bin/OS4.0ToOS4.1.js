@@ -41,6 +41,7 @@ var success = clc.bgGreen.white.bold
 
 var possiblyHasBadId = false;
 var possiblyBadId = 0;
+var flashTypeId;
 
 if (args.length === 3) {
   // Default color of the terminal window
@@ -93,7 +94,7 @@ function start (client, firstRun) {
   	resetBT,
   	wait,
   	enableCrcs,
-  	waitForOs4Block, 
+  	waitForOs4Block,
   	checkForBadID, 
   	flashOs4Application, 
   	resetBT,
@@ -234,6 +235,8 @@ function verifyTargetNeedsUpgrade(block, callback)
 			return
 		}
 		
+		flashTypeId = response.blockTypeId
+		
 		//We only want to upgrade 4.0.x blocks 
 		if(response.bootloaderVersion.isLessThan(new Version(4,1,0)))
 		{
@@ -282,6 +285,7 @@ function flashUpgradeBootloader(block, callback)
 			callback(err)
 			return
 		}
+		console.log("Successfully flashes the deep-memory bootloader.")
 		callback(null)		
 	})
 	
@@ -293,6 +297,12 @@ function flashUpgradeBootloader(block, callback)
 
 function flashModifiedPicBootstrap(block, callback) {
 	//TODO: Flash the pic bootloader + verification app
+	
+	console.log("Flashing the 4.1.0 bootloader and Bootloader verification application.")
+	
+	var blockType = Block.blockTypeForId(flashTypeId)
+  block._blockType = blockType  
+  
 	var hex = fs.readFileSync('./crc_upgrade/hex/boot_id_fix/' + block.getBlockType().name + "_bootstrap.hex")
 	var program = new ImagoProgram(hex)
 	var flash = new ImagoFlash(client, {
@@ -303,7 +313,12 @@ function flashModifiedPicBootstrap(block, callback) {
 			callback(err)
 			return
 		}
+		console.log("Successfully flashed the 4.1.0 bootloader")
 		callback(null)
+	})
+	
+	flash.on('progress', function(e) {
+		console.log('progress', '(' + e.progress + '/' + e.total + ')')
 	})
 }
 function checkForBadID(block, callback)
@@ -321,6 +336,8 @@ function checkForBadID(block, callback)
 }
 
 function flashOs4Application(block, callback) {
+	var blockType = Block.blockTypeForId(flashTypeId)
+  block._blockType = blockType  
 	//Flash the usual application
 	var applicationHex = fs.readFileSync('./upgrade/hex/application/' + block.getBlockType().name + ".hex")
 	var program = new ImagoProgram(applicationHex)
@@ -340,21 +357,25 @@ function flashOs4Application(block, callback) {
 
 function wait(howLong, callback)
 {
-	setTimeout(howLong, function()
+	console.log("Waiting....")
+	setTimeout(function()
 	{
+		console.log("\t...done.")
 		callback(null)
-	})
+	}, howLong)
 }
 
 function resetBT(callback)
 {
+	console.log("Reset Bluetooth")
 	client.sendCommand(new ImagoProtocol.messages.ResetCommand())
-	callback(null, 200)
+	callback(null, 1000)
 }
 
 function enableCrcs(callback)
 {
 	client.sendRequest(new Protocol.messages.SetCrcsRequest(1), function(err, response) {
+		console.log("Enable CRCs")
 		callback(err);
 	})
 }
@@ -362,6 +383,8 @@ function enableCrcs(callback)
 function done(callback)
 {
 	callback(null, 'done')
+	
+	//TODO: Wait for block to be removed?
 }
 
 
