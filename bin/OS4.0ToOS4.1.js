@@ -1,12 +1,18 @@
 var args = process.argv
 if (args.length < 3) {
-  console.log('Usage: node bin/downgrade PATH {{DEFAULT_COLOR}}')
-  process.exit(1)
+	console.log('Usage: node bin/downgrade PATH {{DEFAULT_COLOR}}')
+	process.exit(1)
 }
 
 var fs = require('fs')
 var async = require('async')
 var clc = require('cli-color')
+var ProgressBar = require('progress');
+
+var bar = new ProgressBar('uploading [:bar] :percent', {
+	width : 40,
+	total : 100
+});
 
 var __ = require('underscore')
 var cubelets = require('../index')
@@ -28,9 +34,9 @@ var Os3LatestVersions = require('../downgrade/config.json')['latestOS3Versions']
 var IdService = require('../services/id')
 
 var FirmwareType = {
-  CLASSIC: 0,
-  IMAGO: 1,
-  BOOTSTRAP: 2
+	CLASSIC : 0,
+	IMAGO : 1,
+	BOOTSTRAP : 2
 }
 var firmwareService = new FirmwareService()
 var idService = new IdService()
@@ -44,397 +50,423 @@ var possiblyBadId = 0;
 var flashTypeId;
 
 if (args.length === 3) {
-  // Default color of the terminal window
-  defaultColor = '\x1b[37;40m'
+	// Default color of the terminal window
+	defaultColor = '\x1b[37;40m'
 } else {
-  var defaultColor = args[3]
+	var defaultColor = args[3]
 }
 
 var device = {
-  path: args[2]
+	path : args[2]
 }
 
-var client = cubelets.connect(device, function (err) {
-  if (err) {
-    exitWithError(err)
-  } else {
-    console.log('Connected. Starting upgrade...')
-    start(client, true)
-  }
+var client = cubelets.connect(device, function(err) {
+	if (err) {
+		exitWithError(err)
+	} else {
+		console.log('Connected. Starting upgrade...\n\n')
+		start(client, true)
+	}
 })
 
-client.on('disconnect', function () {
-  console.log('Disconnected.')
+client.on('disconnect', function() {
+	console.log('Disconnected.')
 })
-function start (client, firstRun) {
-	
-	//Check what BT firmware is running
-	//Flash the super special (CRC toggleable) OS4 bt firmware if necessary
-	//Wait for a (non-crc) cubelet
-	//Determine the ID of the connected Cubelet
-	//If the ID could be bad, keep a log of it (ie: if it suffered from the memory location problem. the lfsr will be fixed automagically), we will need to compare later.
-	//Flash the deep-memory CRC supported OS4 Bootloader
-	//Enable CRCs (stored in eeprom enabling CRCs before comm starts)
-	//Restart BT
-	//Verify the Cubelet is there (it may have a different ID)
-	//If it possibly had a bad ID, and the ID didn't change, notify operator that the block needs wanded
-	
-	
-	var tasks = [
-		disableCrcs,
-  	waitForOs4Block,
-  	verifyTargetNeedsUpgrade,
-  	logIfBadId,
-  	flashUpgradeBootloader,
-  	resetBT,
-  	wait,
-  	enableCrcs,
-  	waitForOs4Block,
-  	flashModifiedPicBootstrap,
-  	resetBT,
-  	wait,
-  	enableCrcs,
-  	waitForOs4Block,
-  	checkForBadID, 
-  	flashOs4Application, 
-  	resetBT,
-  	wait,
-  	done
-  ]
-  
-  if(firstRun)
-  {
-  	tasks.unshift(flashHostIfNeeded)
-  	tasks.unshift(checkBluetoothOperatingMode)
-  }
-	
-  async.waterfall(tasks, function (err, result) {
-    if (err) {
-      exitWithError(err)
-    }
-    try
-    {
-    	console.timeEnd("Upgraded in");
-    }
-    catch(err){}
-    
-    start(client, false)
-    return
-  })
+function start(client, firstRun) {
+
+	var tasks = [	disableCrcs,//4.0.0 blocks don't have CRCs turn them off' 
+								waitForOs4Block,//Wait for a block to be attached (if it isn't already) 
+								verifyTargetNeedsUpgrade,//Check that the firmware running is something less than 4.1.0
+								logIfBadId,//Keep track of IDs that may have suffered from the ID snaffu
+								flashUpgradeBootloader,//Flash the 'deep-memory bootloader'
+								resetBT,//Reset the BT block to clear the RT table
+								wait,//Allow time for the BT to boot
+								enableCrcs,//The new bootloader should have CRCs now, so turn them on
+								waitForOs4Block,//Make sure the block shows up
+								flashModifiedPicBootstrap,//Flash the OS 4.1.0 bootloader and verification hex 
+								resetBT,//Reset to clear routing table
+								wait, 
+								enableCrcs,
+								waitForOs4Block, 
+								checkForBadID,//If the block got labeled as having a bad ID, and it still does, bail
+								flashOs4Application,//Flash the 4.1.0 application
+								resetBT, 
+								wait, 
+								enableCrcs, 
+								waitForOs4Block, 
+								waitForBlockRemoved,//Don't continue the process until the user takes off the block 
+								done]
+
+	if (firstRun) {
+		tasks.unshift(flashHostIfNeeded)
+		tasks.unshift(checkBluetoothOperatingMode)
+	}
+
+	async.waterfall(tasks, function(err, result) {
+		if (err) {
+			exitWithError(err)
+		}
+		try {
+			console.timeEnd("Upgraded in");
+		} catch(err) {
+		}
+
+		start(client, false)
+		return
+	})
 }
 
-function checkBluetoothOperatingMode (callback) {
-  // Switch to the classic protocol
-  client.setProtocol(ClassicProtocol)
-  client.sendRequest(new ClassicProtocol.messages.KeepAliveRequest(), function (err, response) {
-    if (err) {
-      console.log('Bluetooth block is running OS4 application.')
-      callback(null, FirmwareType.IMAGO)
-    } else if (response.payload.length > 0) {
-      console.log('Bluetooth block is running OS4 bootstrap application.')
-      // The bootstrap protocol will differentiate itself by
-      // sending an extra byte in the response.
-      callback(null, FirmwareType.BOOTSTRAP)
-    } else {
-      console.log('Bluetooth block is running OS3 application/bootloader.')
-      callback(null, FirmwareType.CLASSIC)
-    }
-  })
+function checkBluetoothOperatingMode(callback) {
+	// Switch to the classic protocol
+	client.setProtocol(ClassicProtocol)
+	client.sendRequest(new ClassicProtocol.messages.KeepAliveRequest(), function(err, response) {
+		if (err) {
+			//console.log('Bluetooth block is running OS4 application.')
+			callback(null, FirmwareType.IMAGO)
+		} else if (response.payload.length > 0) {
+			console.log('Bluetooth block is running OS4 bootstrap application.')
+			// The bootstrap protocol will differentiate itself by
+			// sending an extra byte in the response.
+			callback(null, FirmwareType.BOOTSTRAP)
+		} else {
+			console.log('Bluetooth block is running OS3 application/bootloader.')
+			callback(null, FirmwareType.CLASSIC)
+		}
+	})
 }
 
-function flashHostIfNeeded (fromMode, callback) {
-  if (fromMode === FirmwareType.BOOTSTRAP) { // Already in bootstrap mode
-    console.log('Bluetooth seems to be in bootstrap mode, flashing to OS4 mode. TODO')
-    callback(new Error("Flashing from bootstrap to OS4 isn't implemented"))
-  } else if (fromMode === FirmwareType.CLASSIC) { // Classic
-    client.setProtocol(ClassicProtocol)
-    console.log('Begin flashing bluetooth bootstrap code from OS3 mode. TODO')
-    callback(new Error("Flashing from OS3 to OS4 isn't implemented"))
-  } else { // Imago
-    client.setProtocol(ImagoProtocol)
-    callback(null)
-  }
+function flashHostIfNeeded(fromMode, callback) {
+	if (fromMode === FirmwareType.BOOTSTRAP) {// Already in bootstrap mode
+		console.log('Bluetooth seems to be in bootstrap mode, flashing to OS4 mode. TODO')
+		callback(new Error("Flashing from bootstrap to OS4 isn't implemented"))
+	} else if (fromMode === FirmwareType.CLASSIC) {// Classic
+		client.setProtocol(ClassicProtocol)
+		console.log('Begin flashing bluetooth bootstrap code from OS3 mode. TODO')
+		callback(new Error("Flashing from OS3 to OS4 isn't implemented"))
+	} else {// Imago
+		client.setProtocol(ImagoProtocol)
+		callback(null)
+	}
 }
 
-function disableCrcs(callback)
-{
+function disableCrcs(callback) {
 	client.sendRequest(new Protocol.messages.SetCrcsRequest(0), function(err, response) {
-		console.log("Disabling CRCs")
 		callback(err);
 	})
 }
 
-function waitForOs4Block(callback)
-{
+function waitForOs4Block(callback) {
 	getAllBlocks(function(err, blocks) {
 		if (err) {
 			callback(err)
 			return
 		}
-		
-		if(blocks.length > 1)
-		{
+
+		if (blocks.length > 1) {
 			callback(new Error("Please attach just one Cubelet to update"));
 			return
-		}
-		else if(blocks.length == 1)
-		{
+		} else if (blocks.length == 1) {
 			console.log("Found: " + formatBlockName(blocks[0]))
 			callback(null, blocks[0])
 			return
-		}
-		else
-		{
+		} else {
 			console.log("Waiting for a Cubelet that needs to be updated.")
-			client.once('event', function(message)
-			{				
-				if(message instanceof Protocol.messages.BlockAddedEvent)
-				{
+			client.once('event', function(message) {
+				if ( message instanceof Protocol.messages.BlockAddedEvent) {
 					waitForOs4Block(callback)
 					return
 				}
 			})
-		}		
+		}
 	})
 }
 
-function getAllBlocks(callback)
-{
-	client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
-		if(err)
-		{
+function getAllBlocks(callback) {
+	client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function(err, response) {
+		if (err) {
 			callback(err)
 			return
 		}
-		if(response.blocks)
-		{
+		if (response.blocks) {
 			var blocks = []
-      __.each(response.blocks, function (block) {
-      	var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType))      	
-      	b._mcuType = MCUTypes.PIC
-        blocks.push(b)
-      })	
-      callback(null, blocks)
-		}
-		else
-		{
+			__.each(response.blocks, function(block) {
+				var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType))
+				b._mcuType = MCUTypes.PIC
+				blocks.push(b)
+			})
+			callback(null, blocks)
+		} else {
 			callback(null, [])
-		}		
+		}
 	})
 }
 
-
-function verifyTargetNeedsUpgrade(block, callback)
-{
-	console.log("Verifying that the "+formatBlockName(block) +" cubelet needs upgraded.")
+function verifyTargetNeedsUpgrade(block, callback) {
+	console.log("Verifying that the " + formatBlockName(block) + " cubelet needs upgraded.")
 	var request = new ImagoProtocol.Block.messages.GetConfigurationRequest(block.getBlockId())
-	client.sendBlockRequest(request, function (err, response) {
-		if(err)
-		{
+	client.sendBlockRequest(request, function(err, response) {
+		if (err) {
 			callback(err)
 			return
 		}
-		
+
 		flashTypeId = response.blockTypeId
-		
-		//We only want to upgrade 4.0.x blocks 
-		if(response.bootloaderVersion.isLessThan(new Version(4,1,0)))
-		{
+
+		//We only want to upgrade 4.0.x blocks
+		if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
 			callback(null, block)
+		} else {
+			callback(new Error("This cubelet, " + formatBlockName(block) + " does not need to be updated"))
 		}
-		else
-		{
-			callback(new Error("This cubelet, "+formatBlockName(block)+" does not need to be updated"))
-		}
-	})	
+	})
 }
 
-function logIfBadId(block, callback)
-{
-		//if the ID matches the bad ID pattern, store the ID to compare to later
-		if(blockHasBadId(block.getBlockId()))
-		{
-			console.log("This block may have a corrupted ID. We will attempt to repair it.")
-			possiblyHasBadId = true
-			possiblyBadId = block.getBlockId()			
-		}
-		else
-		{
-			//Clear the log of potentially bad IDs
-			possiblyHasBadId = false
-		}		
-		
-		callback(null, block)
+function logIfBadId(block, callback) {
+	//if the ID matches the bad ID pattern, store the ID to compare to later
+	if (blockHasBadId(block.getBlockId())) {
+		console.log("This block may have a corrupted ID. We will attempt to repair it.")
+		possiblyHasBadId = true
+		possiblyBadId = block.getBlockId()
+	} else {
+		//Clear the log of potentially bad IDs
+		possiblyHasBadId = false
+	}
+
+	callback(null, block)
 }
 
-function flashUpgradeBootloader(block, callback)
-{
+function flashUpgradeBootloader(block, callback) {
 	//Flash the deep memory bootloader
-	console.log("Begin flashing the deep-memory temporary bootloader.")
-	
+	console.log("\nBegin flashing the deep-memory temporary bootloader.")
+
 	var hex = fs.readFileSync('./crc_upgrade/hex/crc_update_bootloader/crc_update_bootloader.hex')
-  var program = new ImagoProgram(hex)
-  
+	var program = new ImagoProgram(hex)
+
 	var flash = new ImagoFlash(client, {
 		skipSafeCheck : true
-	})//TODO: Determine if skipSafeCheck is needed
-	
+	})
+
+	var totalSize = program.data.length
+	var listener = function(e) {
+		if ( e instanceof Protocol.messages.FlashProgressEvent) {
+			bar.update(e.progress / totalSize)
+		}
+	}
+
+	client.on('event', listener);
+
 	flash.programToBlock(program, block, function(err) {
-		if(err)
-		{
+		client.removeListener('event', listener);
+		if (err) {
 			callback(err)
 			return
 		}
-		console.log("Successfully flashes the deep-memory bootloader.")
-		callback(null)		
+		console.log("Successfully flashed the deep-memory bootloader.")
+		console.log()
+		console.log()
+		callback(null)
 	})
-	
+
 	flash.on('progress', function(e) {
-		console.log('progress', '(' + e.progress + '/' + e.total + ')')
+		//console.log('progress', '(' + e.progress + '/' + e.total + ')')
+		var i = ((e.progress / e.total))
+		bar.update(i)
+		if (i === 1) {
+			bar = new ProgressBar('flashing [:bar] :percent', {
+				width : 40,
+				total : 100
+			});
+		}
+
 	})
 }
 
-
 function flashModifiedPicBootstrap(block, callback) {
-	//TODO: Flash the pic bootloader + verification app
-	
-	console.log("Flashing the 4.1.0 bootloader and Bootloader verification application.")
-	
+	//Flash the pic bootloader + verification app
+	console.log("\n\nFlashing the 4.1.0 Bootloader and Bootloader Verification application.")
+
 	var blockType = Block.blockTypeForId(flashTypeId)
-  block._blockType = blockType  
-  
+	block._blockType = blockType
+
 	var hex = fs.readFileSync('./crc_upgrade/hex/boot_id_fix/' + block.getBlockType().name + "_bootstrap.hex")
 	var program = new ImagoProgram(hex)
 	var flash = new ImagoFlash(client, {
 		skipSafeCheck : true
 	})
+
+	var totalSize = program.data.length
+	var listener = function(e) {
+		if ( e instanceof Protocol.messages.FlashProgressEvent) {
+			bar.update(e.progress / totalSize)
+		}
+	}
+
+	client.on('event', listener);
+
 	flash.programToBlock(program, block, function(err) {
+		client.removeListener('event', listener);
 		if (err) {
 			callback(err)
 			return
 		}
 		console.log("Successfully flashed the 4.1.0 bootloader")
+		console.log()
+		console.log()
 		callback(null)
 	})
-	
+	bar = new ProgressBar('uploading [:bar] :percent', {
+		width : 40,
+		total : 100
+	});
 	flash.on('progress', function(e) {
-		console.log('progress', '(' + e.progress + '/' + e.total + ')')
+		var i = e.progress / e.total;
+		bar.update(i)
+		if (i === 1) {
+			bar = new ProgressBar('flashing [:bar] :percent', {
+				width : 40,
+				total : 100
+			});
+		}
+		//console.log('progress', '(' + e.progress + '/' + e.total + ')')
 	})
 }
-function checkForBadID(block, callback)
-{
+
+function checkForBadID(block, callback) {
 	//Check to see if the block could still have a bad ID, bail if so
-	if(possiblyHasBadId)
-	{
-		if(possiblyBadId === block.getBlockId())
-		{
+	if (possiblyHasBadId) {
+		if (possiblyBadId === block.getBlockId()) {
 			callback(new Error("Was unable to fix the ID corruption. This Cubelet will need to be re-flashed using the wand."))
 			return
 		}
-	}	
+	}
 	callback(null, block)
 }
 
 function flashOs4Application(block, callback) {
 	var blockType = Block.blockTypeForId(flashTypeId)
-  block._blockType = blockType  
+	block._blockType = blockType
 	//Flash the usual application
 	var applicationHex = fs.readFileSync('./upgrade/hex/application/' + block.getBlockType().name + ".hex")
 	var program = new ImagoProgram(applicationHex)
 	flash = new ImagoFlash(client)
+
+	bar = new ProgressBar('uploading [:bar] :percent', {
+		width : 40,
+		total : 100
+	});
+
+	var totalSize = program.data.length
+	var listener = function(e) {
+		if ( e instanceof Protocol.messages.FlashProgressEvent) {
+			bar.update(e.progress / totalSize)
+		}
+	}
+	client.on('event', listener);
+
 	flash.on('progress', function(e) {
-		console.log('progress', '(' + e.progress + '/' + e.total + ')')
+		var i = e.progress / e.total;
+		bar.update(i)
+		if (i === 1) {
+			bar = new ProgressBar('flashing [:bar] :percent', {
+				width : 40,
+				total : 100
+			});
+		}
+		//console.log('progress', '(' + e.progress + '/' + e.total + ')')
 	})
 	flash.programToBlock(program, block, function(err) {
+		client.removeListener('event', listener);
 		if (err) {
 			callback(err)
 			return
-		} 
+		}
 		console.log("\nSuccessfully flashed " + block.getBlockType().name + " firmware to " + block.getBlockId() + ".")
+		console.log()
+		console.log()
 		callback(null)
 	})
 }
 
-function wait(howLong, callback)
-{
-	console.log("Waiting....")
-	setTimeout(function()
-	{
-		console.log("\t...done.")
+function waitForBlockRemoved(block, callback) {
+	//process.stdout.write(clc.erase.screen);
+	printSuccessMessage("Successfully upgraded " + formatBlockName(block) + " to v4.1.0")
+	console.log("\n\nPlease remove " + formatBlockName(block) + " and attach the next block to be updated.\n\n\n")
+	client.once('event', function(message) {
+		if ( message instanceof Protocol.messages.BlockRemovedEvent) {
+			callback(null)
+			return
+		}
+	})
+}
+
+function wait(howLong, callback) {
+	process.stdout.write("Waiting....")
+	setTimeout(function() {
+		console.log("done.")
 		callback(null)
 	}, howLong)
 }
 
-function resetBT(callback)
-{
-	console.log("Reset Bluetooth")
+function resetBT(callback) {
 	client.sendCommand(new ImagoProtocol.messages.ResetCommand())
 	callback(null, 1000)
 }
 
-function enableCrcs(callback)
-{
+function enableCrcs(callback) {
 	client.sendRequest(new Protocol.messages.SetCrcsRequest(1), function(err, response) {
-		console.log("Enable CRCs")
 		callback(err);
 	})
 }
 
-function done(callback)
-{
+function done(callback) {
 	callback(null, 'done')
-	
+
 	//TODO: Wait for block to be removed?
 }
 
+function blockHasBadId(blockId) {
 
-function blockHasBadId (blockId) {
-	
 	var ID0 = ((blockId & 0x0000FF));
 	var ID1 = ((blockId & 0x00FF00) >> 8);
 	var ID2 = ((blockId & 0xFF0000) >> 16);
-	
-	if(ID2 === ID0 && ID2 === 0x03)
-	{
+
+	if (ID2 === ID0 && ID2 === 0x03) {
 		return true;
-	}
-	else
-	{
+	} else {
 		return false;
 	}
 }
 
-function parseVersion (floatValue) {
-  var major = Math.floor(floatValue)
-  var minor = Math.floor(10 * (floatValue - major))
-  return new Version(major, minor)
+function parseVersion(floatValue) {
+	var major = Math.floor(floatValue)
+	var minor = Math.floor(10 * (floatValue - major))
+	return new Version(major, minor)
 }
 
-function formatBlockName (block) {
-  return block.getBlockType().name.capitalizeFirstLetter() + ' (' + block.getBlockId() + ')'
+function formatBlockName(block) {
+	return block.getBlockType().name.capitalizeFirstLetter() + ' (' + block.getBlockId() + ')'
 }
 
-String.prototype.capitalizeFirstLetter = function () {
-  return this.charAt(0).toUpperCase() + this.slice(1)
+String.prototype.capitalizeFirstLetter = function() {
+	return this.charAt(0).toUpperCase() + this.slice(1)
+}
+function printSuccessMessage(msg) {
+	//80 blanks spaces to fill a complete line
+	var fullLine = '                                                                                '
+	// process.stdout.write(success(fullLine))
+	process.stdout.write(success(fullLine))
+	process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length))))
+	process.stdout.write(success(fullLine))
+	process.stdout.write(defaultColor)
 }
 
-function printSuccessMessage (msg) {
-  //80 blanks spaces to fill a complete line
-  var fullLine = '                                                                                '
-  // process.stdout.write(success(fullLine))
-  process.stdout.write(success(fullLine))
-  process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length))))
-  process.stdout.write(success(fullLine))
-  process.stdout.write(defaultColor)
-}
-
-function exitWithError (err) {
-  console.error(error(err))
-  if (client) {
-    client.disconnect(function () {
-      process.exit(1)
-    })
-  } else {
-    process.exit(1)
-  }
+function exitWithError(err) {
+	console.error(error(err))
+	if (client) {
+		client.disconnect(function() {
+			process.exit(1)
+		})
+	} else {
+		process.exit(1)
+	}
 }

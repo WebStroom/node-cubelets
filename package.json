@@ -24,6 +24,7 @@
     "cli-color": "^1.0.0",
     "cli-prompt": "^0.4.2",
     "debug": "^2.2.0",
+    "progress": "^1.1.8",
     "readable-stream": "^1.0.33",
     "request": "^2.57.0",
     "respawn": "^2.0.0",
