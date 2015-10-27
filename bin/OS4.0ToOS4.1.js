@@ -8,7 +8,6 @@ var fs = require('fs')
 var async = require('async')
 var clc = require('cli-color')
 
-
 var __ = require('underscore')
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
@@ -233,6 +232,7 @@ function verifyTargetNeedsUpgrade(block, callback)
 			return
 		}
 		
+		//We only want to upgrade 4.0.x blocks 
 		if(response.bootloaderVersion.isLessThan(new Version(4,1,0)))
 		{
 			callback(null, block)
@@ -251,8 +251,7 @@ function logIfBadId(block, callback)
 		{
 			console.log("This block may have a corrupted ID. We will attempt to repair it.")
 			possiblyHasBadId = true
-			possiblyBadId = block.getBlockId()
-			
+			possiblyBadId = block.getBlockId()			
 		}
 		else
 		{
@@ -268,7 +267,7 @@ function flashUpgradeBootloader(block, callback)
 	//Flash the deep memory bootloader
 	console.log("Begin flashing the deep-memory temporary bootloader.")
 	
-	var hex = fs.readFileSync('./upgrade/hex/application/' + blockType.name + '.hex')//TODO wrong hex path
+	var hex = fs.readFileSync('./crc_upgrade/hex/crc_update_bootloader/crc_update_bootloader.hex')
   var program = new ImagoProgram(hex)
   
 	var flash = new ImagoFlash(client, {
@@ -292,9 +291,8 @@ function flashUpgradeBootloader(block, callback)
 
 function flashModifiedPicBootstrap(block, callback) {
 	//TODO: Flash the pic bootloader + verification app
-	//TODO wrong hex
-	var converterHex = fs.readFileSync('./upgrade/hex/pic_type_switch/' + convertType.name + ".hex")
-	var program = new ImagoProgram(converterHex)
+	var hex = fs.readFileSync('./crc_upgrade/hex/boot_id_fix/' + block.getBlockType().name + "_bootstrap.hex")
+	var program = new ImagoProgram(hex)
 	var flash = new ImagoFlash(client, {
 		skipSafeCheck : true
 	})
@@ -313,7 +311,7 @@ function checkForBadID(block, callback)
 	{
 		if(possiblyBadId === block.getBlockId())
 		{
-			callback(new Error("Was unable to fix the ID corruption. This Cubelet will need to be wanded"))
+			callback(new Error("Was unable to fix the ID corruption. This Cubelet will need to be re-flashed using the wand."))
 			return
 		}
 	}	
@@ -322,8 +320,7 @@ function checkForBadID(block, callback)
 
 function flashOs4Application(block, callback) {
 	//Flash the usual application
-	//TODO wrong hex path
-	var applicationHex = fs.readFileSync('./upgrade/hex/application/' + convertType.name + ".hex")//TODO
+	var applicationHex = fs.readFileSync('./upgrade/hex/application/' + block.getBlockType().name + ".hex")
 	var program = new ImagoProgram(applicationHex)
 	flash = new ImagoFlash(client)
 	flash.on('progress', function(e) {
@@ -334,21 +331,23 @@ function flashOs4Application(block, callback) {
 			callback(err)
 			return
 		} 
-		console.log("\nSuccessfully flashed " + convertType.name + " firmware to " + block.getBlockId() + ".")
+		console.log("\nSuccessfully flashed " + block.getBlockType().name + " firmware to " + block.getBlockId() + ".")
 		callback(null)
 	})
-	callback(new Error("Not yet implemented"))
 }
 
-function wait()
-{//TODO add how long and callback
-	
+function wait(howLong, callback)
+{
+	setTimeout(howLong, function()
+	{
+		callback(null)
+	})
 }
 
 function resetBT(callback)
 {
 	client.sendCommand(new ImagoProtocol.messages.ResetCommand())
-	callback(null)
+	callback(null, 200)
 }
 
 function enableCrcs(callback)
