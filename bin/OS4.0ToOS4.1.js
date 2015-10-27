@@ -158,6 +158,7 @@ function flashHostIfNeeded (fromMode, callback) {
 function disableCrcs(callback)
 {
 	client.sendRequest(new Protocol.messages.SetCrcsRequest(0), function(err, response) {
+		console.log("Disabling CRCs")
 		callback(err);
 	})
 }
@@ -177,6 +178,7 @@ function waitForOs4Block(callback)
 		}
 		else if(blocks.length == 1)
 		{
+			console.log("Found: " + formatBlockName(blocks[0]))
 			callback(null, blocks[0])
 			return
 		}
