@@ -169,8 +169,7 @@ function flashBootstrapIfNeeded (fromMode, callback) {
 	      setTimeout(function () {
 	        flashBootstrapFromBootloader(hostId, true, callback)
 	      }, 4000)
-	    }, 200)
-    
+	    }, 200)    
     })
   }
 }
