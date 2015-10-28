@@ -33,7 +33,8 @@ var client = cubelets.connect(config.device, function (err) {
         var block = new Block(bluetoothBlockId, 0, BlockTypes.BLUETOOTH)
         block._mcuType = MCUTypes.AVR
         var flash = new ClassicFlash(client, {
-          skipSafeCheck: true
+          skipSafeCheck: true,
+          skipReadyCommand: true
         })
         flash.programToBlock(program, block, function (err) {
           t.ifError(err, 'flash err')
