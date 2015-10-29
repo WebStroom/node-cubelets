@@ -36,7 +36,8 @@ var IdService = require('../services/id')
 var FirmwareType = {
 	CLASSIC : 0,
 	IMAGO : 1,
-	BOOTSTRAP : 2
+	BOOTSTRAP : 2,
+	TOGGLEABLE_CRCS : 3
 }
 var firmwareService = new FirmwareService()
 var idService = new IdService()
@@ -150,17 +151,84 @@ function checkBluetoothOperatingMode(callback) {
 
 function flashHostIfNeeded(fromMode, callback) {
 	if (fromMode === FirmwareType.BOOTSTRAP) {// Already in bootstrap mode
-		console.log('Bluetooth seems to be in bootstrap mode, flashing to OS4 mode. TODO')
-		callback(new Error("Flashing from bootstrap to OS4 isn't implemented"))
+		console.log('Bluetooth seems to be in bootstrap mode, flashing to OS4 mode.')
+		client.setProtocol(BootstrapProtocol)
+		//Set host into bootloader from bootstrap
+    client.setProtocol(BootstrapProtocol)
+    var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(1)
+    client.sendRequest(req, function (err, res) {
+      if(err)
+      {
+      	callback(err)
+      	return
+      }  
+       
+      client.setProtocol(ImagoProtocol)
+      var req = new ImagoProtocol.messages.SetModeRequest(0)
+      client.sendRequest(req, function (err, res) {
+      })
+      setTimeout(function()
+      {
+      	flashHostCrcFirmware(callback)        	
+      }, 1000)
+    })
+    
 	} else if (fromMode === FirmwareType.CLASSIC) {// Classic
 		client.setProtocol(ClassicProtocol)
-		console.log('Begin flashing bluetooth bootstrap code from OS3 mode. TODO')
-		callback(new Error("Flashing from OS3 to OS4 isn't implemented"))
+		//determine host id 
+		//flash like normal
+		console.log('Begin flashing bluetooth OS4 code from OS3 mode.')
+		flashHostCrcFirmware(callback)
 	} else {// Imago
 		client.setProtocol(ImagoProtocol)
-		callback(null)
+		//get mode to make sure it's running the firmware with toggleable CRCs
+		client.sendRequest(new Protocol.messages.GetModeRequest(), function(err, response) {
+			if(err)
+			{
+				callback(err)
+				return
+			}
+			
+			if(response.mode === 3)
+			{//BT is running the correct firmware that has toggleable CRCs
+				callback(null)
+				return
+			}
+			else
+			{
+				client.setProtocol(ImagoProtocol)
+				var req = new ImagoProtocol.messages.SetModeRequest(0)
+        client.sendRequest(req, function (err, res) {
+        }, 200)
+        setTimeout(function()
+        {
+        	flashHostCrcFirmware(callback)        	
+        }, 1000)
+			}
+		})		
 	}
 }
+
+
+function flashHostCrcFirmware(callback) {
+	client.setProtocol(ClassicProtocol)
+	var hex = fs.readFileSync('./crc_upgrade/hex/bt_app_crc_toggle/bluetooth_application.hex')
+	var program = new ClassicProgram(hex)
+	var block = new Block(99, 0, BlockTypes.BLUETOOTH)
+	block._mcuType = MCUTypes.AVR
+	var flash = new ClassicFlash(client, {
+		skipSafeCheck : true,
+		skipReadyCommand : true
+	})
+	flash.programToBlock(program, block, function(err) {
+		client.setProtocol(ImagoProtocol)
+		callback(err)
+	})
+	flash.on('progress', function(e) {
+		printProgress('flashing', (e.progress/e.total))
+	})
+}
+
 
 function disableCrcs(callback) {
 	client.sendRequest(new Protocol.messages.SetCrcsRequest(0), function(err, response) {
@@ -509,6 +577,15 @@ function printSuccessMessage(msg) {
 function exitWithError(err) {
 	console.error(error(err))
 	if (client) {
+		try{
+			client.disconnect(function() {
+				process.exit(1)
+			})
+		}
+		catch(err)
+		{
+			process.exit(1)
+		}
 		client.disconnect(function() {
 			process.exit(1)
 		})
