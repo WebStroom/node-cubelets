@@ -59,9 +59,7 @@ if (args.length === 3) {
 var useProgressBar
 if(args.length > 4)
 {
-	console.log("ARGGG: "+ args[4])
 	useProgressBar = parseInt(args[4]) ? true : false;
-	console.log(useProgressBar)
 }
 else
 {
