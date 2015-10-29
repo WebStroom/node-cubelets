@@ -42,7 +42,7 @@ switch (theme) {
 
 var respawn = require('respawn')
 
-var monitor = respawn(['node', 'bin/OS4.0ToOS4.1.js', args[2], defaultColors], {
+var monitor = respawn(['node', 'bin/OS4.0ToOS4.1.js', args[2], defaultColors, 0], {
   env: {}, // set env vars
   cwd: '.', // set cwd
   maxRestarts: 10, // how many restarts are allowed within 60s

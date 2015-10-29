@@ -1,6 +1,6 @@
 var args = process.argv
 if (args.length < 3) {
-	console.log('Usage: node bin/OS4.0ToOS4.1 PATH {{DEFAULT_COLOR}}')
+	console.log('Usage: node bin/OS4.0ToOS4.1 PATH {{DEFAULT_COLOR}} {{USE_PROGRESS_BAR}}')
 	process.exit(1)
 }
 
@@ -55,6 +55,19 @@ if (args.length === 3) {
 } else {
 	var defaultColor = args[3]
 }
+
+var useProgressBar
+if(args.length > 4)
+{
+	console.log("ARGGG: "+ args[4])
+	useProgressBar = parseInt(args[4]) ? true : false;
+	console.log(useProgressBar)
+}
+else
+{
+	useProgressBar = true
+}
+
 
 var device = {
 	path : args[2]
@@ -260,7 +273,7 @@ function flashUpgradeBootloader(block, callback) {
 	var totalSize = program.data.length
 	var listener = function(e) {
 		if ( e instanceof Protocol.messages.FlashProgressEvent) {
-			bar.update(e.progress / totalSize)
+			printProgress('flashing', e.progress / totalSize)
 		}
 	}
 
@@ -308,7 +321,7 @@ function flashModifiedPicBootstrap(block, callback) {
 	var totalSize = program.data.length
 	var listener = function(e) {
 		if ( e instanceof Protocol.messages.FlashProgressEvent) {
-			bar.update(e.progress / totalSize)
+			printProgress('flashing', e.progress / totalSize)
 		}
 	}
 
@@ -330,14 +343,7 @@ function flashModifiedPicBootstrap(block, callback) {
 		total : 100
 	});
 	flash.on('progress', function(e) {
-		var i = e.progress / e.total;
-		bar.update(i)
-		if (i === 1) {
-			bar = new ProgressBar('flashing [:bar] :percent', {
-				width : 40,
-				total : 100
-			});
-		}
+		printProgress('uploading', e.progress / e.total)
 		//console.log('progress', '(' + e.progress + '/' + e.total + ')')
 	})
 }
@@ -346,7 +352,7 @@ function checkForBadID(block, callback) {
 	//Check to see if the block could still have a bad ID, bail if so
 	if (possiblyHasBadId) {
 		if (possiblyBadId === block.getBlockId()) {
-			callback(new Error("Was unable to fix the ID corruption. This Cubelet will need to be re-flashed using the wand."))
+			callback(new Error("Was unable to fix the ID corruption.\nThis Cubelet will need to be re-flashed using the wand."))
 			return
 		}
 		else
@@ -373,20 +379,13 @@ function flashOs4Application(block, callback) {
 	var totalSize = program.data.length
 	var listener = function(e) {
 		if ( e instanceof Protocol.messages.FlashProgressEvent) {
-			bar.update(e.progress / totalSize)
+			printProgress('flashing', e.progress / totalSize)
 		}
 	}
 	client.on('event', listener);
 
 	flash.on('progress', function(e) {
-		var i = e.progress / e.total;
-		bar.update(i)
-		if (i === 1) {
-			bar = new ProgressBar('flashing [:bar] :percent', {
-				width : 40,
-				total : 100
-			});
-		}
+		printProgress('uploading', e.progress / e.total)
 		//console.log('progress', '(' + e.progress + '/' + e.total + ')')
 	})
 	flash.programToBlock(program, block, function(err) {
@@ -436,6 +435,41 @@ function enableCrcs(callback) {
 
 function done(callback) {
 	callback(null, 'done')
+}
+
+function printProgress(type, progress)
+{
+	if(useProgressBar)
+	{
+		if(type === 'flashing')
+		{
+			bar.update(progress)
+		}
+		else if(type === 'uploading')
+		{
+			bar.update(progress)
+			if (progress === 1) {
+				bar = new ProgressBar('flashing [:bar] :percent', {
+					width : 40,
+					total : 100
+				});
+			}
+		}
+	}
+	else if (progress === 1)
+	{
+		console.log('done')
+	}
+	else
+	{
+		progress = parseInt(progress * 100)
+		if(type !== 'uploading' || (type === 'uploading' && (progress % 10) === 0 && progress !== 0))
+		{
+			console.log(""+ type+": " + progress + "%")
+		}
+		
+	}
+
 }
 
 function blockHasBadId(blockId) {
