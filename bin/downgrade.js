@@ -326,7 +326,7 @@ function downloadTargetHex (targetBlock, callback) {
 
     firmwareService.downloadVersion(targetBlock, version, function (err, hex) {
       if (err) {
-        callback(new Error('Failed to fetch hex file.'))
+        callback(new Error('Failed to fetch hex file for '+formatBlockName(targetBlock) + ' version: ' + version.toString()))
         return
       }
       callback(null, targetBlock, hex)
