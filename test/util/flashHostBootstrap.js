@@ -24,6 +24,20 @@ var client = cubelets.connect(config.device, function (err) {
         client.setProtocol(ClassicProtocol)
         t.pass('set protocol')
       })
+      
+      test('fetch host id', function(t){
+      	t.plan(3)
+      	// Determine Host ID
+  			var req = new ClassicProtocol.messages.GetNeighborBlocksRequest()
+  			client.sendRequest(req, function (err, res) {
+  				t.ifError(err, 'fetch id err')
+  				var originBlockId = res.originBlockId
+  				
+  				t.ok(originBlockId != 0, 'bt id valid')
+  				bluetoothBlockId = originBlockId
+  				t.pass("found bt id")
+  			})      	
+      })
 
       test('flash bluetooth bootstrap firmware', function (t) {
         t.plan(2)

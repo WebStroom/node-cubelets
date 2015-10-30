@@ -60,8 +60,9 @@ function start (client) {
         if (err) {
           exitWithError(err)
         } else {
-          var version = configuration.applicationVersion
-          exitWithSuccess('Already upgraded to OS4. (v' + version.toString() + ')')
+          runUpgrade()
+          //var version = configuration.applicationVersion
+          //exitWithSuccess('Already upgraded to OS4. (v' + version.toString() + ')')
         }
       })
     }

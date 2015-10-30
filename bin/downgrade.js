@@ -136,52 +136,63 @@ function flashBootstrapIfNeeded (fromMode, callback) {
      callback(err)
      return
      }*/
-    console.log('Begin flashing bluetooth bootstrap code from OS3 mode.')
-    flashBootstrapFromBootloader(callback)
+    // Determine Host ID
+  	var req = new ClassicProtocol.messages.GetNeighborBlocksRequest()
+  	client.sendRequest(req, function (err, res) {
+	    if (err) {
+	      callback(err)
+	    } else {
+	    	var originBlockId = res.originBlockId
+      	if (originBlockId > 0) {
+      		console.log('Begin flashing bluetooth bootstrap code from OS3 mode.')
+    			flashBootstrapFromBootloader(originBlockId, false, callback)
+      	}
+      	else
+      	{
+      		callback(new Error('Host block not found.'))
+      	}
+	    }
+    })    
   // })
   } else { // Imago
     client.setProtocol(ImagoProtocol)
-    var req = new ImagoProtocol.messages.SetModeRequest(0)
-    client.sendRequest(req, function (err, res) {
-      if (err) {
-        callback(err)
-      }
-      console.log('Begin flashing bluetooth bootstrap code from OS4 mode.')
-      setTimeout(function () {
-        flashBootstrapFromBootloader(callback)
-      }, 4000)
-    }, 200)
+    client.sendRequest(new ImagoProtocol.messages.GetConfigurationRequest(), function (err, res) {
+    	if(err)
+    	{
+    		callback(err)
+    		return
+    	}
+    	var hostId = res.blockId;
+    	var req = new ImagoProtocol.messages.SetModeRequest(0)
+    	client.sendRequest(req, function (err, res) {    	
+	      console.log('Begin flashing bluetooth bootstrap code from OS4 mode.')
+	      setTimeout(function () {
+	        flashBootstrapFromBootloader(hostId, true, callback)
+	      }, 4000)
+	    }, 200)    
+    })
   }
 }
 
-function flashBootstrapFromBootloader (callback) {
+function flashBootstrapFromBootloader (hostId, shouldSkipReady, callback) {
   var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
   var program = new ClassicProgram(hex)
   client.setProtocol(ClassicProtocol)
 
-  // Determine Host ID
-  var req = new ClassicProtocol.messages.GetNeighborBlocksRequest()
-  client.sendRequest(req, function (err, res) {
-    if (err) {
+  var hostBlock = new Block(hostId, 0, BlockTypes.BLUETOOTH)
+  hostBlock._mcuType = MCUTypes.AVR
+  
+  var flash = new ClassicFlash(client, {
+    skipSafeCheck: true,
+  	skipReadyCommand: shouldSkipReady
+  })      
+  
+  flash.programToBlock(program, hostBlock, function (err) {
       callback(err)
-    } else {
-      var originBlockId = res.originBlockId
-      if (originBlockId > 0) {
-        var hostBlock = new Block(originBlockId, 0, BlockTypes.BLUETOOTH)
-        hostBlock._mcuType = MCUTypes.AVR
-        var flash = new ClassicFlash(client, {
-          skipSafeCheck: true
-        })
-        flash.programToBlock(program, hostBlock, function (err) {
-          callback(err)
-        })
-        flash.on('progress', function (e) {
-          console.log('progress', '(' + e.progress + '/' + e.total + ')')
-        })
-      } else {
-        callback(new Error('Host block not found.'))
-      }
-    }
+  })
+  
+  flash.on('progress', function (e) {
+  	console.log('progress', '(' + e.progress + '/' + e.total + ')')
   })
 }
 
