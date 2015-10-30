@@ -321,8 +321,22 @@ function downloadTargetHex (targetBlock, callback) {
     targetBlock._mcuType = Block.mcuTypeForId(info.mcuTypeId)
 
     var textVersion = Os3LatestVersions[targetBlock.getBlockType().name.toUpperCase()].version
-
-    version = parseVersion(parseFloat(textVersion))
+    if(textVersion === '2.6')
+    {
+    	version = new Version(2, 6, 0)
+    }
+    else if(textVersion === '2.7')
+    {
+    	version = new Version(2, 7, 0)
+    }
+    else if (textVersion === '2.8')
+    {
+    	version = new Version(2, 8, 0)
+    }
+    else
+    {
+    	version = new Version(2, 6, 0)
+    }
 
     firmwareService.downloadVersion(targetBlock, version, function (err, hex) {
       if (err) {

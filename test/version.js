@@ -8,10 +8,12 @@ function parseVersion(floatValue) {
 }
 
 test('parse', function (t) {
-  t.plan(3)
+  t.plan(4)
   t.ok(parseVersion(3.1).isEqual(new Version(3, 1, 0)))
   t.ok(parseVersion(2.6000000000000001).isEqual(new Version(2, 6, 0)))
   t.ok(parseVersion(2.1000000000000001).isEqual(new Version(2, 1, 0)))
+  t.ok(parseVersion(parseFloat('2.7')).isEqual(new Version(2, 7, 0)))
+
 })
 
 test('logic', function (t) {
