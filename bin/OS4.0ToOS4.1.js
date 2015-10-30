@@ -358,16 +358,7 @@ function flashUpgradeBootloader(block, callback) {
 	})
 
 	flash.on('progress', function(e) {
-		//console.log('progress', '(' + e.progress + '/' + e.total + ')')
-		var i = ((e.progress / e.total))
-		bar.update(i)
-		if (i === 1) {
-			bar = new ProgressBar('flashing [:bar] :percent', {
-				width : 40,
-				total : 100
-			});
-		}
-
+		printProgress('uploading', e.progress / e.total)
 	})
 }
 
