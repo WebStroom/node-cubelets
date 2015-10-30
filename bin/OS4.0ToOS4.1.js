@@ -409,7 +409,11 @@ function checkForBadID(block, callback) {
 	//Check to see if the block could still have a bad ID, bail if so
 	if (possiblyHasBadId) {
 		if (possiblyBadId === block.getBlockId()) {
-			callback(new Error("Was unable to fix the ID corruption.\nThis Cubelet will need to be re-flashed using the wand."))
+			console.error(error("Was unable to fix the ID corruption.\nThis Cubelet will need to be re-flashed using the wand."))
+			setTimeout(function()
+			{
+				callback(new Error("Please make sure to remove the block with the bad ID"))
+			}, 10000)			
 			return
 		}
 		else
