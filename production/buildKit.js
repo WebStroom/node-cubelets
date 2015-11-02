@@ -1,5 +1,5 @@
 var args = process.argv
-if (args.length !== 4) {
+if (args.length !== 3) {
   console.log('Usage: node production/buildKit.js PATH')
   process.exit(1)
 }
