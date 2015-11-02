@@ -172,7 +172,11 @@ function convertBlockToType(block, convertType, callback) {
 
 
 function askForResponse(message, callback) {
-	stdin.setRawMode(true)
+	if(stdin.isTTY)
+	{
+		stdin.setRawMode(true)
+	}
+	
 	stdin.resume()
 	stdin.setEncoding('utf8')
 
@@ -198,7 +202,11 @@ function askForResponse(message, callback) {
 }
 
 function promptForAnyKey(message, callback) {
-	stdin.setRawMode(true)
+	if(stdin.isTTY)
+	{
+		stdin.setRawMode(true)
+	}
+	
 	stdin.resume()
 	stdin.setEncoding('utf8')
 
@@ -215,7 +223,11 @@ function promptForAnyKey(message, callback) {
 }
 
 function promptYesOrNo(message, _default, callback) {
-	stdin.setRawMode(true)
+	if(stdin.isTTY)
+	{
+		stdin.setRawMode(true)
+	}
+	
 	stdin.resume()
 	stdin.setEncoding('utf8')
 

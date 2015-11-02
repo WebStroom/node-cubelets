@@ -246,7 +246,10 @@ function kitVerificationFailure (type, blocks, missing, extra) {
 }
 
 function promptForAnyKey (message, callback) {
-  stdin.setRawMode(true)
+	if(stdin.isTTY)
+	{
+		stdin.setRawMode(true)
+	}  
   stdin.resume()
   stdin.setEncoding('utf8')
 
@@ -263,7 +266,11 @@ function promptForAnyKey (message, callback) {
 }
 
 function promptYesOrNo (message, _default, callback) {
-  stdin.setRawMode(true)
+	if(stdin.isTTY)
+	{
+		stdin.setRawMode(true)
+	}
+  
   stdin.resume()
   stdin.setEncoding('utf8')
 
