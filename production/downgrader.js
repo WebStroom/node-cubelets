@@ -1,6 +1,6 @@
 var args = process.argv
-if (args.length !== 4) {
-  console.log('Usage: node production/downgrader PATH THEME(0-5)')
+if (args.length !== 5) {
+  console.log('Usage: node production/downgrader PATH CRC_ENABLED THEME(0-5)')
   process.exit(1)
 }
 
@@ -8,7 +8,8 @@ var clc = require('cli-color')
 
 var error = clc.bgRed.white
 var success = clc.bgGreen.white
-var theme = parseInt(args[3])
+var crcEnabled = parseInt(args[3])
+var theme = parseInt(args[4])
 
 var defaultColors = ''
 switch (theme) {
@@ -42,7 +43,7 @@ switch (theme) {
 
 var respawn = require('respawn')
 
-var monitor = respawn(['node', 'bin/downgrade.js', args[2], defaultColors], {
+var monitor = respawn(['node', 'bin/downgrade.js', args[2], crcEnabled, defaultColors], {
   env: {}, // set env vars
   cwd: '.', // set cwd
   maxRestarts: 10, // how many restarts are allowed within 60s
