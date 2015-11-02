@@ -1,6 +1,6 @@
 var args = process.argv
 if (args.length < 3) {
-  console.log('Usage: node bin/downgrade PATH {{DEFAULT_COLOR}}')
+  console.log('Usage: node bin/downgrade PATH {{CRCS_ENABLED}} {{DEFAULT_COLOR}}')
   process.exit(1)
 }
 
@@ -46,10 +46,23 @@ var downgradeBlock
 
 
 if (args.length === 3) {
+	//No optional params passed
+	
+	//Default with CRCs on
+	crcsEnabled = 1;
   // Default color of the terminal window
   defaultColor = '\x1b[37;40m'
-} else {
-  var defaultColor = args[3]
+} 
+else if(args.length === 4)
+{
+	//CRCs Enabled was passed in, but no color
+	crcsEnabled = parseInt(args[3])
+	// Default color of the terminal window
+  defaultColor = '\x1b[37;40m'
+}
+else {
+	crcsEnabled = parseInt(args[3])
+  var defaultColor = args[4]
 }
 
 var device = {
@@ -72,7 +85,9 @@ function start (client, firstRun) {
 	
 	var tasks = [
   	waitForOs4Block, 
-  	jumpToOs4Mode, 
+  	jumpToOs4Mode,
+  	wait,
+  	setCRCMode, 
   	wait, 
   	findOs4AndFlashBootloader, 
   	jumpToDiscoveryWaitForOs3, 
@@ -175,7 +190,7 @@ function flashBootstrapIfNeeded (fromMode, callback) {
 }
 
 function flashBootstrapFromBootloader (hostId, shouldSkipReady, callback) {
-  var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
+  var hex = fs.readFileSync('./crc_upgrade/hex/bt_bootstrap_crc_toggle.hex')
   var program = new ClassicProgram(hex)
   client.setProtocol(ClassicProtocol)
 
@@ -212,6 +227,14 @@ function waitForOs4Block (callback) {
   }
 
   client.on('event', waitForBlockEvent)
+}
+
+function setCRCMode(callback)
+{
+ 	client.setProtocol(ImagoProtocol)
+	client.sendRequest(new ImagoProtocol.messages.SetCrcsRequest(crcsEnabled), function(err, response) {
+		callback(err, 1000);
+	})
 }
 
 function jumpToOs4Mode (callback) {
