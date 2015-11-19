@@ -1,6 +1,6 @@
 var args = process.argv
-if (args.length !== 3) {
-  console.log('Usage: node bin/upgrade PATH')
+if (args.length < 3) {
+  console.log('Usage: node bin/upgrade PATH {{DEFAULT_COLOR}}')
   process.exit(1)
 }
 
@@ -13,6 +13,22 @@ var Upgrade = require('../upgrade')
 var CompatibilityCheck = require('../upgrade/compatibilityCheck')
 var InfoService = cubelets.InfoService
 var __ = require('underscore')
+var clc = require('cli-color')
+var UpdateService = require('../services/update')
+
+//Service for marking a block as upgraded
+var updateService = new UpdateService()
+
+// Console output colors
+var error = clc.bgRed.white.bold
+var success = clc.bgGreen.white.bold
+
+if (args.length === 3) {
+  // Default color of the terminal window	
+  defaultColor = '\x1b[37;40m'
+} else {
+  var defaultColor = args[3]
+}
 
 var device = {
   path: args[2]
@@ -31,33 +47,28 @@ client.on('disconnect', function () {
   console.log('Disconnected.')
 })
 
-function start(client) {
+function start (client) {
   var upgrade = new Upgrade(client)
 
   upgrade.detectIfNeeded(function (err, needsUpgrade, firmwareType) {
     if (err) {
       exitWithError(err)
     } else if (needsUpgrade) {
-      if (firmwareType === Upgrade.FirmwareTypes.CLASSIC) {
-        askYesOrNo('Run compatibility check?',
-          runCompatibilityCheck,
-          runUpgrade)
-      } else {
         runUpgrade()
-      }
     } else {
       client.fetchConfiguration(function (err, configuration) {
         if (err) {
           exitWithError(err)
         } else {
-          var version = configuration.applicationVersion
-          exitWithSuccess('Already upgraded to OS4. (v' + version.toString() + ')')
+          runUpgrade()
+          //var version = configuration.applicationVersion
+          //exitWithSuccess('Already upgraded to OS4. (v' + version.toString() + ')')
         }
       })
     }
   })
 
-  function runCompatibilityCheck() {
+  function runCompatibilityCheck () {
     var check = new CompatibilityCheck(client)
     prompt('Attach all of your Cubelets. Then press ENTER.\n', function () {
       console.log('Please wait about 5 seconds for Cubelet Kit discovery...')
@@ -75,7 +86,7 @@ function start(client) {
         prompt([
           'Attach more Cubelets directly to the Bluetooth block,',
           'or press ENTER to finish the check.\n'
-        ].join('\n'), function enter() {
+        ].join('\n'), function enter () {
           check.finish()
           var compatible = check.getCompatibleBlocks().length
           var notCompatible = check.getNotCompatibleBlocks().length
@@ -89,18 +100,18 @@ function start(client) {
             askYesOrNo([
               'It looks like ' + formatNumber(notCompatible) + ' of your Cubelets are compatible with OS4.',
               'Do you want to continue the upgrade?'
-            ].join('\n'), function yes() {
+            ].join('\n'), function yes () {
               runUpgrade()
-            }, function no() {
+            }, function no () {
               exitWithSuccess('Upgrade canceled. Goodbye.')
             })
           } else {
             askYesOrNo([
               'All of your Cubelets are compatible with OS4!',
               'Ready to upgrade your Cubelets?'
-            ].join('\n'), function yes() {
+            ].join('\n'), function yes () {
               runUpgrade()
-            }, function no() {
+            }, function no () {
               exitWithSuccess('Upgrade canceled. Goodbye.')
             })
           }
@@ -109,7 +120,7 @@ function start(client) {
     })
   }
 
-  function runUpgrade() {
+  function runUpgrade () {
     upgrade.on('progress', function (e) {
       console.log(
         e.action ? e.action : '',
@@ -126,7 +137,7 @@ function start(client) {
       console.log('Attempting to reconnect to Cubelets...')
       setTimeout(tryReconnect, 5000)
     })
-    function tryReconnect() {
+    function tryReconnect () {
       async.retry({ times: 5, interval: 5000 }, function (callback) {
         client.connect(device, callback)
       }, function (err) {
@@ -142,7 +153,8 @@ function start(client) {
       console.log('Flashing Cubelets OS4 firmware to block', formatBlockName(block) + '...')
     })
     upgrade.on('completeTargetBlock', function (block) {
-      console.log('Successfully upgraded block', formatBlockName(block), 'to OS4.')
+      printSuccessMessage('Successfully upgraded block ' + formatBlockName(block) + ' to OS4.')
+      updateService.setBlockUpdated(block.getBlockId(), true);
     })
     upgrade.on('changePendingBlocks', function (pendingBlocks) {
       console.log('There are', formatNumber(pendingBlocks.length), 'pending blocks to upgrade.')
@@ -158,11 +170,11 @@ function start(client) {
     upgrade.on('completeHostBlock', function (hostBlock) {
       console.log('Successfully upgraded Bluetooth block.')
     })
-    upgrade.on('error', function onError(err) {
+    upgrade.on('error', function onError (err) {
       console.error('Upgrade failed:\n\t', err)
-      askYesOrNo('Retry?', function yes() {
+      askYesOrNo('Retry?', function yes () {
         process.nextTick(runUpgrade)
-      }, function no() {
+      }, function no () {
         exitWithError(err)
       })
     })
@@ -184,14 +196,14 @@ function start(client) {
   }
 }
 
-function askYesOrNo(text, yesCallback, noCallback) {
+function askYesOrNo (text, yesCallback, noCallback) {
   prompt(text + ' [Y/n] ', function (val) {
     (val.toLowerCase() === 'y' ?
       yesCallback : noCallback)()
   })
 }
 
-function formatNumber(n) {
+function formatNumber (n) {
   if (n === 0) return '0'
   else if (n === 1) return 'one'
   else if (n === 2) return 'two'
@@ -200,12 +212,22 @@ function formatNumber(n) {
   else return n
 }
 
-function formatBlockName(block) {
+function formatBlockName (block) {
   return block.getBlockType().name + ' (' + block.getBlockId() + ')'
 }
 
-function exitWithError(err) {
-  console.error(err)
+function printSuccessMessage (msg) {
+  //80 blanks spaces to fill a complete line
+  var fullLine = '                                                                                '
+  // process.stdout.write(success(fullLine))
+  process.stdout.write(success(fullLine))
+  process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length))))
+  process.stdout.write(success(fullLine))
+  process.stdout.write(defaultColor)
+}
+
+function exitWithError (err) {
+  console.error(error(err))
   if (client) {
     client.disconnect(function () {
       process.exit(1)
@@ -215,7 +237,7 @@ function exitWithError(err) {
   }
 }
 
-function exitWithSuccess(msg) {
+function exitWithSuccess (msg) {
   console.log(msg)
   process.exit(0)
 }

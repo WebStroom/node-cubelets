@@ -131,7 +131,28 @@ var Upgrade = function (client) {
             flashUpgradeToHostBlock
           ], onFinish)
         } else {
-          callback(new Error('Upgrade started with invalid firmware type.'))
+          async.series([
+            function(callback)
+            {
+            	client.setProtocol(ImagoProtocol)
+            	var req = new ImagoProtocol.messages.SetModeRequest(0)
+			        client.sendRequest(req, function (err, res) {
+			        }, 200)
+              setTimeout(function()
+			        {
+			        	client.setProtocol(ClassicProtocol)
+			        	hostBlock = new Block(99, 0, BlockTypes.BLUETOOTH)
+          			hostBlock._mcuType = MCUTypes.AVR
+          			shouldSkipReady = true
+			        	callback(null)      	
+			        }, 1000)
+            },            
+            flashBootstrapToHostBlock,
+            startBlockUpgrades,
+            jumpToDiscovery,
+            jumpToClassic,
+            flashUpgradeToHostBlock
+          ], onFinish)
         }
       })
       function onFinish(err) {

@@ -6,13 +6,18 @@ var __ = require('underscore')
 var config = require('./config')
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
+var ImagoProtocol = require('../protocol/imago')
+var ImagoProgram = ImagoProtocol.Program
+var ImagoFlash = ImagoProtocol.Flash
 var Block = cubelets.Block
 var BlockTypes = cubelets.BlockTypes
 var Version = cubelets.Version
 var Program = Protocol.Program
+var MCUTypes = require('../mcuTypes')
 
-var blockId = 163500
-var blockType = BlockTypes.DISTANCE
+var blockId = 162342
+var blockType = BlockTypes.BARGRAPH
+var block;
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
@@ -31,61 +36,37 @@ var client = cubelets.connect(config.device, function (err) {
           var target = __(response.blocks).find(function (block) {
             return block.blockId === blockId
           })
+          block = new Block(target.blockId, target.hopCount, Block.blockTypeForId(target.blockType));
+          block._mcuType = MCUTypes.PIC
           t.ok(target, 'found target')
         })
       })
 
       test('can flash a ' + blockType.name + ' hex', function (t) {
-        t.plan(9)
+        t.plan(3)
 
         // check the program is valid
         var hex = fs.readFileSync('./upgrade/hex/application/' + blockType.name + '.hex')
-        var program = new Program(hex)
+        var program = new ImagoProgram(hex)
         t.ok(program.valid, 'program valid')
+        
+        var flash = new ImagoFlash(client)
+        
+        flash.on('progress', function(e) {
+							console.log('progress', '(' + e.progress + '/' + e.total + ')')
+				})
 
-        var lineLength = 18
-        var slotIndex = 2
-        var slotData = program.data
-        var slotSize = Math.ceil(slotData.length / lineLength)
-        var blockTypeId = blockType.typeId
-        var version = new Version(4, 5, 6)
-        var isCustom = false
-        var crc = 0xcc
-
-        // send an upload request
-        var request = new Protocol.messages.UploadToMemoryRequest(slotIndex, slotSize, blockTypeId, version, isCustom, crc)
-        client.sendRequest(request, function (err, response) {
-          t.ifError(err, 'no upload response err')
-          t.ok(response, 'upload response ok')
-          t.equal(response.result, 0, 'upload result success')
-          // send the data
-          client.sendData(program.data, function (err) {
-            console.log('sent data')
-          })
-        })
-        // wait for an upload complete event
-        client.on('event', function listener (e) {
-          if (e instanceof Protocol.messages.UploadToMemoryCompleteEvent) {
-            client.removeListener('event', listener)
-            t.ok(e, 'event ok')
-            t.equal(e.result, 0, 'event result success')
-            testFlash()
-          }
-        })
-        // then test flashing
-        function testFlash() {
-          var request = new Protocol.messages.FlashMemoryToBlockRequest(blockId, slotIndex)
-          client.sendRequest(request, function (err, response) {
-            t.ifError(err, 'no flash response err')
-            t.ok(response, 'flash response ok')
-            t.equal(response.result, 0, 'flash result success')
-          }, 1000 * 30)
-        }
+				flash.programToBlock(program, block, function(err) {
+							t.notOk(err, err);
+							t.pass("Flashed program")
+							
+					})
       })
       
       test('disconnect', function (t) {
         t.plan(1)
-        client.disconnect(t.ifError)
+        client.disconnect()
+        t.pass()
       })
 
     }

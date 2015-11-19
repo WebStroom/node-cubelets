@@ -4,7 +4,6 @@ var cubelets = require('../../index')
 var BootstrapProtocol = require('../../protocol/bootstrap')
 var ClassicProtocol = require('../../protocol/classic')
 var ImagoProtocol = require('../../protocol/imago')
-var __ = require('underscore')
 
 var client = cubelets.connect(config.device, function (err) {
   test('connected', function (t) {
@@ -14,35 +13,36 @@ var client = cubelets.connect(config.device, function (err) {
     } else {
       t.pass('connected')
 
-      test.skip('jump to bootloader from bootstrap', function (t) {
-        t.plan(2)
+      test('jump to bootloader from bootstrap', function (t) {
+        t.plan(3)
         client.setProtocol(BootstrapProtocol)
-        var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(0)
+        var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(1)
         client.sendRequest(req, function (err, res) {
           t.ifError(err)
-          t.equal(res.mode, 0, 'jumped to classic')
+          t.equal(res.mode, 1, 'jumped to imago')
+          client.setProtocol(ImagoProtocol)
+          var req = new ImagoProtocol.messages.SetModeRequest(0)
+          client.sendRequest(req, function (err, res) {
+            t.pass()
+          })
         })
       })
 
       test.skip('jump to bootloader from classic', function (t) {
         t.plan(1)
-        client.sendData(new Buffer([
-          'L'.charCodeAt(0)
-        ]), function (err) {
+        client.sendData(new Buffer(['L'.charCodeAt(0)]), function (err) {
           t.ifError(err)
         })
       })
 
-      test('jump to bootloader from imago', function (t) {
-        t.plan(2)
+      test.skip('jump to bootloader from imago', function (t) {
+        t.plan(1)
         client.setProtocol(ImagoProtocol)
         var req = new ImagoProtocol.messages.SetModeRequest(0)
         client.sendRequest(req, function (err, res) {
-          t.ifError(err)
-          t.equal(res.mode, 0)
-        })
+        }, 200)
+        t.pass()
       })
-
       test('disconnect', function (t) {
         t.plan(1)
         client.disconnect(t.ifError)
