@@ -67,7 +67,7 @@ function fetchBlocks(callback) {
 		}
 		var blocks = []
 		__.each(response.blocks, function(block) {
-			blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType)))
+			blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId)))
 		})
 		callback(null, blocks)
 	})

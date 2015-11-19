@@ -275,7 +275,7 @@ function getAllBlocks(callback) {
 		if (response.blocks) {
 			var blocks = []
 			__.each(response.blocks, function(block) {
-				var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType))
+				var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId))
 				b._mcuType = MCUTypes.PIC
 				blocks.push(b)
 			})

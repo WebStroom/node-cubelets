@@ -36,7 +36,7 @@ var client = cubelets.connect(config.device, function (err) {
           var target = __(response.blocks).find(function (block) {
             return block.blockId === blockId
           })
-          block = new Block(target.blockId, target.hopCount, Block.blockTypeForId(target.blockType));
+          block = new Block(target.blockId, target.hopCount, Block.blockTypeForId(target.blockTypeId));
           block._mcuType = MCUTypes.PIC
           t.ok(target, 'found target')
         })

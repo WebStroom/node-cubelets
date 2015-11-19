@@ -48,7 +48,7 @@ function start (client) {
 
       var blocks = []
       __.each(response.blocks, function (block) {
-        blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockType)))
+        blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId)))
       })
       printBlocksFound(blocks)
 
