@@ -44,6 +44,7 @@ function start (client) {
     client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
       if (err) {
         exitWithError(err)
+        return
       }
 
       var blocks = []

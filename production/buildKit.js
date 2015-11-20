@@ -84,7 +84,7 @@ monitor.on('spawn', function (process) {
 monitor.on('warn', function (err) {})
 
 monitor.on('stdout', function (data) {
-  console.log(data.toString('utf-8'))
+  process.stdout.write(data.toString('utf-8'))
   process.stdout.write(defaultColors)
 })
 
