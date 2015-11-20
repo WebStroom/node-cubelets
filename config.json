@@ -114,6 +114,7 @@
     "info": "http://cubelets-programming.appspot.com",
     "compile": "http://compile.modrobotics.com",
     "firmware": "http://cubelets-programming.appspot.com",
+    "imagoFirmware": "firmware.modrobotics.com",
     "update": "http://cubelets-programming.appspot.com",
     "kit": "http://cubelets-programming.appspot.com"
   },
