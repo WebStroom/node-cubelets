@@ -8,6 +8,16 @@ What are Cubelets?
 
 Cubelets are magnetic blocks that can be snapped together to make an endless variety of robots. You can communicate with and program them in node.js with a Bluetooth Cubelet.
 
+Install (Windows)
+=================
+
+    - NodeJs v0.10.40: https://nodejs.org/dist/v0.10.40/node-v0.10.40-x86.msi
+    - Python 2.7
+    - Git
+    - Visual Studio 2013 Express: https://www.microsoft.com/en-us/download/details.aspx?id=44914
+    - npm update -g npm
+    - npm install --msvs_version=2013
+
 Connect
 =======
 
