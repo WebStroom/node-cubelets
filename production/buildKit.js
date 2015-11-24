@@ -73,7 +73,7 @@ monitor.on('stdout', function (data) {
 })
 
 monitor.on('stderr', function (data) {
-  console.log(error(data.toString('utf-8')))
+  console.log(data.toString('utf-8'))
   //process.stdout.write(defaultColors)
 
 })
