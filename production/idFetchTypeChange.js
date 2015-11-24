@@ -85,12 +85,12 @@ monitor.on('warn', function (err) {})
 
 monitor.on('stdout', function (data) {
   process.stdout.write(data.toString('utf-8'))
-  process.stdout.write(defaultColors)
+  //process.stdout.write(defaultColors)
 })
 
 monitor.on('stderr', function (data) {
   console.log(error(data.toString('utf-8')))
-  process.stdout.write(defaultColors)
+  //process.stdout.write(defaultColors)
 
 })
 monitor.start() // spawn and watch

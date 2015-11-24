@@ -1,6 +1,6 @@
 var args = process.argv
-if (args.length !== 3) {
-  console.log('Usage: node production/buildKit.js PATH')
+if (args.length < 3) {
+  console.log('Usage: node production/buildKit.js PATH THEME(0-1)')
   process.exit(1)
 }
 
@@ -19,24 +19,8 @@ switch (theme) {
     defaultColors = '\x1b[37;40m'
     break
   case 1:
-    // blue/white
-    defaultColors = '\x1b[37;44m'
-    break
-  case 2:
-    // white/black
-    defaultColors = '\x1b[30;47m'
-    break
-  case 3:
-    // magenta/white
-    defaultColors = '\x1b[37;45m'
-    break
-  case 4:
-    // cyan/white
-    defaultColors = '\x1b[1;37;46m'
-    break
-  case 5:
-    // yellow/white
-    defaultColors = '\x1b[1;37;43m'
+    // red/red
+    defaultColors = '\x1b[41;31;1;19m'
     break
 }
 
@@ -85,12 +69,12 @@ monitor.on('warn', function (err) {})
 
 monitor.on('stdout', function (data) {
   process.stdout.write(data.toString('utf-8'))
-  process.stdout.write(defaultColors)
+  //process.stdout.write(defaultColors)
 })
 
 monitor.on('stderr', function (data) {
   console.log(error(data.toString('utf-8')))
-  process.stdout.write(defaultColors)
+  //process.stdout.write(defaultColors)
 
 })
 monitor.start() // spawn and watch
