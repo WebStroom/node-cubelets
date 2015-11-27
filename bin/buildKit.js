@@ -33,6 +33,14 @@ var client = cubelets.connect(device, function (err) {
     exitWithError(err)
   } else {
     console.log('Connected.')
+    try
+	{
+		client.setMaxListeners(0);
+	}
+	catch(err)
+	{
+		
+	}
     start(client)
   }
 })
