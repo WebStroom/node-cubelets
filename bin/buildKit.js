@@ -102,7 +102,7 @@ function checkForBadBlocks (blocks, callback) {
       // Check if it's 4.0.1 or 4.0.0
       var request = new ImagoProtocol.Block.messages.GetConfigurationRequest(block.getBlockId())
       client.sendBlockRequest(request, function (err, response) {
-        if (response.applicationVersion.major == 4 && response.applicationVersion.minor == 0 && response.applicationVersion.patch == 0) {
+        if (!err && ('applicationVersion' in response) && response.applicationVersion.major == 4 && response.applicationVersion.minor == 0 && response.applicationVersion.patch == 0) {
           console.log(formatBlockName(block) + ' needs to be reflashed.')
           badCount++
         }
