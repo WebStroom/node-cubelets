@@ -43,7 +43,7 @@ var client = cubelets.connect(config.device, function (err) {
             var request = new ImagoProtocol.Block.messages.GetConfigurationRequest(block.getBlockId())
             client.sendBlockRequest(request, function (err, response) {
               t.ifError(err, 'fetched configuration')
-
+							console.log(response)
               var testBlock = (response.mode === 0) ?
                 testBootloaderBlock : testApplicationBlock
 
