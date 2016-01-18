@@ -219,9 +219,10 @@ function start (client) {
       // Get the pic bootloader+verification and application to flash
       var bootstrapHex = fs.readFileSync('./crc_upgrade/hex/boot_id_fix/' + targetBlock.getBlockType().name + '_bootstrap.hex')
       var applicationHex = fs.readFileSync('./upgrade/hex/application/' + targetBlock.getBlockType().name + '.hex')
+      var deepMemoryBootloaderHex = fs.readFileSync('./crc_upgrade/hex/crc_update_bootloader/crc_update_bootloader.hex')
 
       // Kick-off the 3-stage flashing process
-      upgradeBootloader.start(targetBlock, bootstrapHex, applicationHex)
+      upgradeBootloader.start(targetBlock, bootstrapHex, applicationHex, deepMemoryBootloaderHex)
     })
   })
 }

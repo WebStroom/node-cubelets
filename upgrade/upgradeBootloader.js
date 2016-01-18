@@ -19,11 +19,13 @@ var UpgradeBootloader = function (client) {
   var targetBlock = null
   var bootstrapHex = null
   var applicationHex = null
+  var deepMemoryBootloaderHex = null
   var flashTypeId = null
 
-  this.start = function (block, _bootstrapHex, _applicationHex) {
+  this.start = function (block, _bootstrapHex, _applicationHex, _deepMemoryBootloaderHex) {
     applicationHex = _applicationHex
     bootstrapHex = _bootstrapHex
+    deepMemoryBootloaderHex = _deepMemoryBootloaderHex
     targetBlock = block
     var tasks = [	flashUpgradeBootloader, // Flash the 'deep-memory bootloader'
       resetBT, // Reset the BT block to clear the RT table
@@ -50,13 +52,11 @@ var UpgradeBootloader = function (client) {
     })
   }
 
-  function flashUpgradeBootloader (callback) { // TODO
+  function flashUpgradeBootloader (callback) {
     // Emit starting flash deep memory bootloader
     self.emit('flashDeepMemoryBootloader', {'status': 'start'})
 
-    // TODO: Find better way to manage hex path: Maybe these should be passed in?
-    var hex = fs.readFileSync('./crc_upgrade/hex/crc_update_bootloader/crc_update_bootloader.hex')
-    var program = new ImagoProgram(hex)
+    var program = new ImagoProgram(deepMemoryBootloaderHex)
     var flash = new ImagoFlash(client, {
       skipSafeCheck: true
     })
