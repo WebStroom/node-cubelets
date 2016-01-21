@@ -67,3 +67,22 @@ test('Test fetch latest hex', function (t) {
   })
 })
 
+
+test('Test check for bootloader update', function(t) {
+	t.plan(4)
+	var block = new Block(1337, 4, BlockTypes.BARGRAPH)
+	block._mcuType = MCUTypes.PIC
+	block._bootloaderVersion = new Version(4, 0, 0)
+	block._hardwareVersion = new Version(2, 0, 0)
+
+	firmwareService.checkForBootloaderUpdate(block, function(err, res) {
+		t.error(err, "Should not be an error with valid data")
+		t.ok(res.updateAvailable, "There should be an update available")
+		var bootloaderProgram = new ImagoProgram(res.bootloaderHexBlob)
+		var applicationProgram = new ImagoProgram(res.applicationHexBlob)
+		t.ok(bootloaderProgram.valid, "Bootloader hex file should be a valid program")
+		t.ok(applicationProgram.valid, "Application hex file should be a valid program")
+	})
+})
+
+

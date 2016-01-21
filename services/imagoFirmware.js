@@ -50,6 +50,44 @@ function ImagoFirmwareService() {
 		});
   }
   
+  this.checkForBootloaderUpdate = function(block, callback)
+  {
+  	if(!block || !block.getBlockType() || block.getBlockType().name == "unknown")
+  	{
+  		callback(new Error("Invalid block type provided"))
+  		return
+  	}
+  	else if(!block.getHardwareVersion() || !block.getBootloaderVersion())
+  	{
+  		callback(new Error("Invalid versions provided"))
+  		return;
+  	} 
+  	
+  	var options = {
+		  host: baseUrl,
+		  path: '/getLatestBootloader?' + [
+		    'platform=cubelets',
+		    'product=cubelet-'+block.getBlockType().name,
+		    'hardwareVersion=' + block.getHardwareVersion().toString(),
+		    'bootloaderVersion=' + block.getBootloaderVersion().toString()
+		  ].join('&')
+		};
+		http.get(options, function(res) {
+			var body = '';
+			res.on('data', function(chunk) {
+				body += chunk;
+			});
+			res.on('end', function() {
+				try {
+					var json = JSON.parse(body);
+					callback(null, json)
+				} catch (e) {
+					callback(e)
+				}
+			});
+		});  	
+  }
+  
   this.fetchLatestHex = function(block, callback)
   {
   	block._applicationVersion = new Version(0, 0, 0)
