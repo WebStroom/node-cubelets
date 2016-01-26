@@ -95,6 +95,8 @@ var BluetoothSerialConnection = function (device, opts) {
             callback(null)
           }
         }
+      }, function(){
+      	callback(new Error("Failed to connect."))
       })
     }
   }
