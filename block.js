@@ -3,14 +3,14 @@ var MCUTypes = require('./mcuTypes')
 var Version = require('./version')
 var __ = require('underscore')
 
-var Block = function (blockId, hopCount, blockType) {
+var Block = function (blockId, hopCount, blockType, mcuType) {
   var _blockId = blockId
 
   // Protected values, updated by the client as it
   // receives more information about the block.
   this._hopCount = hopCount
   this._blockType = blockType || BlockTypes.UNKNOWN
-  this._mcuType = MCUTypes.UNKNOWN
+  this._mcuType = mcuType || MCUTypes.UNKNOWN
   this._neighbors = {}
   this._faceIndex = -1
   this._value = 0
