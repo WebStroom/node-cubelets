@@ -90,6 +90,7 @@ function findTargetAndFlash() {
 function flashTargetBlock(block) {
 	console.log("About to flash: ")
 	fetchLatestFirmware(block, function(err, block, application) {
+		console.log("Fetched Latest Firmware")
 		var flash = new ImagoFlash(client)
 		flash.on('progress', function(e) {
 			var progress = ((e.progress / e.total) * 100).toFixed(2)
@@ -103,16 +104,23 @@ function flashTargetBlock(block) {
 			}
 		}
 		client.on('event', listener);
-		flash.programToBlock(application, block, function(err) {
-			if (err) {
-				console.log(err)
-				console.log("Flashing failed")
-				process.exit();
-			} else {
-				console.log("Flashing Success")
-				process.exit();
-			}
-		})
+		setTimeout(function()
+		{
+				flash.programToBlock(application, block, function(err) {
+				if (err) {
+					client.disconnect();
+					console.log(err)
+					console.log("Flashing failed")
+					process.exit();
+				} else {
+					client.disconnect();
+					console.log("Flashing Success")
+					setTimeout(process.exit, 1000);
+					//process.exit();
+				}
+			})
+			}, 0)
+		
 	})
 }
 
