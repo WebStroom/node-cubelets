@@ -31,9 +31,13 @@ cubelets.getDevices(function(devices) {
 	})
 	prompt("Select the Cubelet: ", function(val) {
 		var device = devices[parseInt(val)];
+		console.log(device)
 		if (device.services) {
 			device.channelID = device.services[0].channelID;
 		}
+		
+			device.channelID = 1;
+		
 		client = cubelets.connect(device, function(err) {
 			if (err) {
 				console.log("Failed to connect.")
@@ -103,8 +107,10 @@ function flashTargetBlock(block) {
 			if (err) {
 				console.log(err)
 				console.log("Flashing failed")
+				process.exit();
 			} else {
 				console.log("Flashing Success")
+				process.exit();
 			}
 		})
 	})
