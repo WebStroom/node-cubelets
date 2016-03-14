@@ -39,10 +39,10 @@ function ImagoFirmwareService() {
 			path : '/firmware?' + ['platform=cubelets', 'product=cubelet-' + block.getBlockType().name, 'hardwareVersion=' + block.getHardwareVersion().toString(), 'bootloaderVersion=' + block.getBootloaderVersion().toString(), 'applicationVersion=' + block.getApplicationVersion().toString()].join('&')
 		};
 		var url = options.host+":"+options.port+options.path
-		makeRequest(url, callback, false)
+		makeRequest(cacheKey, url, callback, false)
 	}
 	
-	function makeRequest(url, callback, replace)
+	function makeRequest(cacheKey, url, callback, replace)
 	{
 		var request = new XMLHttpRequest()
 		url = "http://"+url;
@@ -94,7 +94,7 @@ function ImagoFirmwareService() {
 		};
 
 		var url = options.host+":"+options.port+options.path
-		makeRequest(url, callback, false)
+		makeRequest(cacheKey, url, callback, false)
 	}
 
 	this.fetchLatestHex = function(block, callback) {
@@ -134,7 +134,7 @@ function ImagoFirmwareService() {
 																					'bootloaderVersion=' + '0.0.0'].join('&')
 		};
 		var url = options.host+":"+options.port+options.path
-		makeRequest(url, callback, true)	
+		makeRequest(cacheKey, url, callback, true)	
 	}
 	function getCachedValue(cacheKey)
 	{
