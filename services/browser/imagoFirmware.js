@@ -1,9 +1,8 @@
 var debug = require('debug')('cubelets:firmwareService')
 var util = require('util')
 var request = require('request')
-var config = require('../config.json')
-var http = require('http');
-var Version = require('../version.js')
+var config = require('../../config.json')
+var Version = require('../../version.js')
 var NodeCache = require("node-cache");
 
 function ImagoFirmwareService() {
@@ -32,29 +31,39 @@ function ImagoFirmwareService() {
 			cachedResult.cacheHit = true;
 			callback(null, cachedResult)
 			return
-		}
-
+		}	
+		
 		var options = {
 			host : baseUrl,
 			port : 8080,
 			path : '/firmware?' + ['platform=cubelets', 'product=cubelet-' + block.getBlockType().name, 'hardwareVersion=' + block.getHardwareVersion().toString(), 'bootloaderVersion=' + block.getBootloaderVersion().toString(), 'applicationVersion=' + block.getApplicationVersion().toString()].join('&')
 		};
-
-		http.get(options, function(res) {
-			var body = '';
-			res.on('data', function(chunk) {
-				body += chunk;
-			});
-			res.on('end', function() {
+		var url = options.host+":"+options.port+options.path
+		makeRequest(cacheKey, url, callback, false)
+	}
+	
+	function makeRequest(cacheKey, url, callback, replace)
+	{
+		var request = new XMLHttpRequest()
+		url = "http://"+url;
+		request.open('GET', url, true)
+		request.onreadystatechange = function() {
+			if (request.readyState === 4 && request.status === 200) {
 				try {
-					var json = JSON.parse(body);
+					var json = JSON.parse(request.responseText);
+					if(replace)
+					{
+						json.hexBlob = json.bootloaderHexBlob;
+						delete json.bootloaderHexBlob;
+					}
 					setCachedValue(cacheKey, json);
 					callback(null, json)
 				} catch (e) {
 					callback(e)
 				}
-			});
-		});
+			}
+		}
+		request.send();
 	}
 
 	this.checkForBootloaderUpdate = function(block, callback) {
@@ -83,21 +92,9 @@ function ImagoFirmwareService() {
 			port : 8080,
 			path : '/getLatestBootloader?' + ['platform=cubelets', 'product=cubelet-' + block.getBlockType().name, 'hardwareVersion=' + block.getHardwareVersion().toString(), 'bootloaderVersion=' + block.getBootloaderVersion().toString()].join('&')
 		};
-		http.get(options, function(res) {
-			var body = '';
-			res.on('data', function(chunk) {
-				body += chunk;
-			});
-			res.on('end', function() {
-				try {
-					var json = JSON.parse(body);
-					setCachedValue(cacheKey, json);
-					callback(null, json)
-				} catch (e) {
-					callback(e)
-				}
-			});
-		});
+
+		var url = options.host+":"+options.port+options.path
+		makeRequest(cacheKey, url, callback, false)
 	}
 
 	this.fetchLatestHex = function(block, callback) {
@@ -136,23 +133,8 @@ function ImagoFirmwareService() {
 																					'hardwareVersion=' + hardwareVersion, 
 																					'bootloaderVersion=' + '0.0.0'].join('&')
 		};
-		http.get(options, function(res) {
-			var body = '';
-			res.on('data', function(chunk) {
-				body += chunk;
-			});
-			res.on('end', function() {
-				try {
-					var json = JSON.parse(body);
-					json.hexBlob = json.bootloaderHexBlob;
-					delete json.bootloaderHexBlob;
-					setCachedValue(cacheKey, json);
-					callback(null, json)
-				} catch (e) {
-					callback(e)
-				}
-			});
-		});		
+		var url = options.host+":"+options.port+options.path
+		makeRequest(cacheKey, url, callback, true)	
 	}
 	function getCachedValue(cacheKey)
 	{

@@ -23,6 +23,9 @@ var UpgradeBootloader = function (client) {
   var flashTypeId = null
 
   this.start = function (block, _bootstrapHex, _applicationHex, _deepMemoryBootloaderHex) {
+  	//TODO: Check if hex files where passed in
+  	//If so, save the hex and continue
+  	//If not, check cache or fetch and cache
     applicationHex = _applicationHex
     bootstrapHex = _bootstrapHex
     deepMemoryBootloaderHex = _deepMemoryBootloaderHex
