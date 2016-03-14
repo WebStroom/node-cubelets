@@ -85,4 +85,106 @@ test('Test check for bootloader update', function(t) {
 	})
 })
 
+//Test bootstraps
+test('Test get latest bootstrap', function(t) {
+	t.plan(3);
+	var block = new Block(1337, 4, BlockTypes.BARGRAPH)
+	block._mcuType = MCUTypes.PIC
+	block._bootloaderVersion = new Version(4, 0, 0)
+	block._hardwareVersion = new Version(2, 0, 0)
+		
+	firmwareService.fetchBootstrapFirmware(block, function(err, res) {
+		t.error(err, "Should not be an error with valid data")
+		t.ok(res.updateAvailable, "There should be an update available")
+		var bootloaderProgram = new ImagoProgram(res.hexBlob)
+		t.ok(bootloaderProgram.valid, "Bootstrap hex file should be a valid program")
+		
+	})
+})
+
+//Test typeswitchs
+test('Test get typeswitch', function(t) {
+	t.plan(2);
+	var block = new Block(1337, 4, BlockTypes.BARGRAPH)
+	block._mcuType = MCUTypes.PIC
+	block._bootloaderVersion = new Version(4, 0, 0)
+	block._hardwareVersion = new Version(2, 0, 0)
+		
+	firmwareService.fetchTypeSwitchApplication(block, function(err, res) {
+		t.error(err, "Should not be an error with valid data")
+		var bootloaderProgram = new ImagoProgram(res.hexBlob)
+		t.ok(bootloaderProgram.valid, "Type Switch hex file should be a valid program")
+		
+	})
+})
+
+//Test Deep Memory Bootloader
+test('Test get deep memory bootloader', function(t) {
+	t.plan(2);
+	var block = new Block(1337, 4, BlockTypes.BARGRAPH)
+	block._mcuType = MCUTypes.PIC
+	block._bootloaderVersion = new Version(4, 0, 0)
+	block._hardwareVersion = new Version(2, 0, 0)
+		
+	firmwareService.fetchDeepMemoryBootloader(block, function(err, res) {
+		t.error(err, "Should not be an error with valid data")
+		var bootloaderProgram = new ImagoProgram(res.hexBlob)
+		t.ok(bootloaderProgram.valid, "The hex file should be a valid program")
+		
+	})
+})
+
+//Test Modified bootstrap
+test('Test get major update bootstrap', function(t) {
+	t.plan(2);
+	var block = new Block(1337, 4, BlockTypes.BARGRAPH)
+	block._mcuType = MCUTypes.PIC
+	block._bootloaderVersion = new Version(4, 0, 0)
+	block._hardwareVersion = new Version(2, 0, 0)
+		
+	firmwareService.fetchMajorUpdateBootstrap(block, function(err, res) {
+		t.error(err, "Should not be an error with valid data")
+		var bootloaderProgram = new ImagoProgram(res.hexBlob)
+		t.ok(bootloaderProgram.valid, "Bootstrap hex file should be a valid program")
+		
+	})
+})
+
+//Check for cache miss
+test('Test cache miss', function(t) {
+	t.plan(3);
+	var block = new Block(1337, 4, BlockTypes.PASSIVE	)
+	block._mcuType = MCUTypes.PIC
+	block._bootloaderVersion = new Version(4, 0, 0)
+	block._hardwareVersion = new Version(2, 0, 0)
+		
+	firmwareService.fetchMajorUpdateBootstrap(block, function(err, res) {
+		t.error(err, "Should not be an error with valid data")
+		var bootloaderProgram = new ImagoProgram(res.hexBlob)
+		t.ok(bootloaderProgram.valid, "Bootstrap hex file should be a valid program")
+		t.notOk(res.cacheHit)		
+	})
+})
+
+//Check for cache hit
+test('Test for cache hit', function(t) {
+	t.plan(3);
+	var block = new Block(1337, 4, BlockTypes.PASSIVE	)
+	block._mcuType = MCUTypes.PIC
+	block._bootloaderVersion = new Version(4, 0, 0)
+	block._hardwareVersion = new Version(2, 0, 0)
+		
+	firmwareService.fetchMajorUpdateBootstrap(block, function(err, res) {
+		t.error(err, "Should not be an error with valid data")
+		var bootloaderProgram = new ImagoProgram(res.hexBlob)
+		t.ok(bootloaderProgram.valid, "Bootstrap hex file should be a valid program")
+		t.ok(res.cacheHit, "Should have hit cache")		
+	})
+})
+
+//Check for disk fallback
+test.skip('Test for disk fallback', function(t) {
+	t.plan(1);
+	
+})
 
