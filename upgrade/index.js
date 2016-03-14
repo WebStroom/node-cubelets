@@ -723,6 +723,7 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     
     hostBlock._bootloaderVersion = new Version(4, 1, 0);
+    hostBlock._hardwareVersion = new Version(2, 1, 0);
     firmwareService.fetchLatestHex(hostBlock, function(err, res)
     {
     	var program = new ClassicProgram(res.hexBlob)
