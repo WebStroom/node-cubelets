@@ -17,6 +17,7 @@ var BlockTypes = cubelets.BlockTypes
 var MCUTypes = cubelets.MCUTypes
 var InfoService = cubelets.InfoService
 var HexFiles = require('./hexFiles')
+var DefaultVersions = require('./defaultHardwareVersions')
 var Version = require('../version')
 var emptyFunction = function () {}
 var __ = require('underscore')
@@ -614,12 +615,12 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
-    var hex = HexFiles[blockType.name]['bootstrap']
-    console.log("Fetching target bootstrap")
+    targetBlock._hardwareVersion = new Version(	DefaultVersions[blockType.name].major, 
+    																						DefaultVersions[blockType.name].minor, 
+    																						DefaultVersions[blockType.name].patch)
     firmwareService.fetchBootstrapFirmware(targetBlock, function(err, res)
     {
     	var program = new ClassicProgram(res.hexBlob)
-    	var program = new ClassicProgram(hex)
 	    if (program.valid) {
 	      self.emit('flashBootstrapToTargetBlock', targetBlock)
 	      var flash = new ClassicFlash(client, {
@@ -671,27 +672,41 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ImagoProtocol, 'Must be in OS4 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
-    var hex = HexFiles[blockType.name]['application']
-    var program = new ImagoProgram(hex)
-    if (program.valid) {
-      self.emit('flashUpgradeToTargetBlock', targetBlock)
-      var flash = new ImagoFlash(client, {
-        skipSafeCheck: true
-      })
-      flash.programToBlock(program, targetBlock, function (err) {
-        flash.removeListener('progress', onProgress)
-        callback(err)
-        if (err) {
-          setTargetBlock(null)
-        }
-      })
-      flash.on('progress', onProgress)
-      function onProgress(e) {
-        emitProgressEvent(e)
-      }
-    } else {
-      callback(new Error('Program invalid.'))
-    }
+    
+    targetBlock._hardwareVersion = new Version(	DefaultVersions[blockType.name].major, 
+    																						DefaultVersions[blockType.name].minor, 
+    																						DefaultVersions[blockType.name].patch)
+    
+    targetBlock._bootloaderVersion = new Version(0,0,0);
+    
+    firmwareService.checkForBootloaderUpdate(targetBlock, function(err, res)
+    {
+    	if(err)
+    	{
+    		callback(err)
+    		return
+    	}
+  	 	var program = new ImagoProgram(res.applicationHexBlob)
+	    if (program.valid) {
+	      self.emit('flashUpgradeToTargetBlock', targetBlock)
+	      var flash = new ImagoFlash(client, {
+	        skipSafeCheck: true
+	      })
+	      flash.programToBlock(program, targetBlock, function (err) {
+	        flash.removeListener('progress', onProgress)
+	        callback(err)
+	        if (err) {
+	          setTargetBlock(null)
+	        }
+	      })
+	      flash.on('progress', onProgress)
+	      function onProgress(e) {
+	        emitProgressEvent(e)
+	      }
+	    } else {
+	      callback(new Error('Program invalid.'))
+	    }
+    });   
   }
 
   function checkTargetBlockComplete(callback) {
@@ -706,30 +721,34 @@ var Upgrade = function (client) {
     step = [0,1]
     debug('flashUpgradeToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    var hex = HexFiles['bluetooth']['application']
-    var program = new ClassicProgram(hex)
-    if (program.valid) {
-      self.emit('flashUpgradeToHostBlock', hostBlock)
-      var flash = new ClassicFlash(client, {
-        skipSafeCheck: true
-      })
-      flash.programToBlock(program, hostBlock, function (err) {
-        flash.removeListener('progress', onProgress)
-        if (err) {
-          callback(err)
-        } else {
-          client.setProtocol(ImagoProtocol)
-          self.emit('completeHostBlock', hostBlock)
-          callback(null)
-        }
-      })
-      flash.on('progress', onProgress)
-      function onProgress(e) {
-        emitProgressEvent(e)
-      }
-    } else {
-      callback(new Error('Program invalid.'))
-    }
+    
+    hostBlock._bootloaderVersion = new Version(4, 1, 0);
+    firmwareService.fetchLatestHex(hostBlock, function(err, res)
+    {
+    	var program = new ClassicProgram(res.hexBlob)
+	    if (program.valid) {
+	      self.emit('flashUpgradeToHostBlock', hostBlock)
+	      var flash = new ClassicFlash(client, {
+	        skipSafeCheck: true
+	      })
+	      flash.programToBlock(program, hostBlock, function (err) {
+	        flash.removeListener('progress', onProgress)
+	        if (err) {
+	          callback(err)
+	        } else {
+	          client.setProtocol(ImagoProtocol)
+	          self.emit('completeHostBlock', hostBlock)
+	          callback(null)
+	        }
+	      })
+	      flash.on('progress', onProgress)
+	      function onProgress(e) {
+	        emitProgressEvent(e)
+	      }
+	    } else {
+	      callback(new Error('Program invalid.'))
+	    }
+    })
   }
 
   function wait(timeout) {
