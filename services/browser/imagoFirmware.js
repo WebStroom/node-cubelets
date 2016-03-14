@@ -45,11 +45,12 @@ function ImagoFirmwareService() {
 	function makeRequest(url, callback, replace)
 	{
 		var request = new XMLHttpRequest()
+		url = "http://"+url;
 		request.open('GET', url, true)
 		request.onreadystatechange = function() {
 			if (request.readyState === 4 && request.status === 200) {
 				try {
-					var json = JSON.parse(request.reponseText);
+					var json = JSON.parse(request.responseText);
 					if(replace)
 					{
 						json.hexBlob = json.bootloaderHexBlob;
@@ -60,10 +61,6 @@ function ImagoFirmwareService() {
 				} catch (e) {
 					callback(e)
 				}
-			}
-			else
-			{
-				callback(new Error('Unable to fetch firmware'))
 			}
 		}
 	}
