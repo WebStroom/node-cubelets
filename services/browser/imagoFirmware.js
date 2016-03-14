@@ -1,8 +1,8 @@
 var debug = require('debug')('cubelets:firmwareService')
 var util = require('util')
 var request = require('request')
-var config = require('../config.json')
-var Version = require('../version.js')
+var config = require('../../config.json')
+var Version = require('../../version.js')
 var NodeCache = require("node-cache");
 
 function ImagoFirmwareService() {
