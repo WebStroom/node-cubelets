@@ -22,8 +22,6 @@ var Version = require('../version')
 var emptyFunction = function () {}
 var __ = require('underscore')
 
-var firmwareService = new ImagoFirmwareService()
-
 var FirmwareTypes = {
   CLASSIC: 0,
   IMAGO: 1,
@@ -34,6 +32,8 @@ var Upgrade = function (client) {
   var self = this
   events.EventEmitter.call(this)
 
+	var firmwareService = new ImagoFirmwareService()
+	
   var running = false
   var finished = false
   var hostBlock = null
