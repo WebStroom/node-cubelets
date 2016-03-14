@@ -7,6 +7,7 @@ var ClassicProtocol = require('../protocol/classic')
 var ClassicProgram = ClassicProtocol.Program
 var ClassicFlash = ClassicProtocol.Flash
 var ImagoProtocol = require('../protocol/imago')
+var ImagoFirmwareService = require('../services/imagoFirmware')
 var ImagoProgram = ImagoProtocol.Program
 var ImagoFlash = ImagoProtocol.Flash
 var BootstrapProtocol = require('../protocol/bootstrap')
@@ -16,8 +17,11 @@ var BlockTypes = cubelets.BlockTypes
 var MCUTypes = cubelets.MCUTypes
 var InfoService = cubelets.InfoService
 var HexFiles = require('./hexFiles')
+var Version = require('../version')
 var emptyFunction = function () {}
 var __ = require('underscore')
+
+var firmwareService = new ImagoFirmwareService()
 
 var FirmwareTypes = {
   CLASSIC: 0,
@@ -228,30 +232,35 @@ var Upgrade = function (client) {
     step = [0,1]
     debug('flashBootstrapToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    var hex = HexFiles['bluetooth']['bootstrap']
-    var program = new ClassicProgram(hex)
-    if (program.valid) {
-      self.emit('flashBootstrapToHostBlock', hostBlock)
-      var flash = new ClassicFlash(client, {
-        skipSafeCheck: true,
-        skipReadyCommand: skipReadyCommand
-      })
-      flash.programToBlock(program, hostBlock, function (err) {
-        flash.removeListener('progress', onProgress)
-        if (err) {
-          callback(err)
-        } else {
-          client.setProtocol(BootstrapProtocol)
-          detectReset(callback)
-        }
-      })
-      flash.on('progress', onProgress)
-      function onProgress(e) {
-        emitProgressEvent(e)
-      }
-    } else {
-      callback(new Error('Program invalid.'))
-    }
+    
+    hostBlock._hardwareVersion = new Version(2, 1, 0)
+    firmwareService.fetchBootstrapFirmware(hostBlock, function(err, res)
+    {    	
+    	var program = new ClassicProgram(res.hexBlob)
+	    if (program.valid) {
+	      self.emit('flashBootstrapToHostBlock', hostBlock)
+	      var flash = new ClassicFlash(client, {
+	        skipSafeCheck: true,
+	        skipReadyCommand: skipReadyCommand
+	      })
+	      flash.programToBlock(program, hostBlock, function (err) {
+	        flash.removeListener('progress', onProgress)
+	        if (err) {
+	          callback(err)
+	        } else {
+	          client.setProtocol(BootstrapProtocol)
+	          detectReset(callback)
+	        }
+	      })
+	      flash.on('progress', onProgress)
+	      function onProgress(e) {
+	        emitProgressEvent(e)
+	      }
+	    } else {
+	      callback(new Error('Program invalid.'))
+	    }
+    })
+
   }
 
   function detectReset(callback) {
@@ -606,29 +615,34 @@ var Upgrade = function (client) {
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
     var hex = HexFiles[blockType.name]['bootstrap']
-    var program = new ClassicProgram(hex)
-    if (program.valid) {
-      self.emit('flashBootstrapToTargetBlock', targetBlock)
-      var flash = new ClassicFlash(client, {
-        skipSafeCheck: true
-      })
-      flash.programToBlock(program, targetBlock, function (err) {
-        flash.removeListener('progress', onProgress)
-        callback(err)
-        if (err) {
-          setTargetBlock(null)
-          if (isFatalError(err)) {
-            self.emit('error', err)
-          }
-        }
-      })
-      flash.on('progress', onProgress)
-      function onProgress(e) {
-        emitProgressEvent(e)
-      }
-    } else {
-      callback(new Error('Program invalid.'))
-    }
+    console.log("Fetching target bootstrap")
+    firmwareService.fetchBootstrapFirmware(targetBlock, function(err, res)
+    {
+    	var program = new ClassicProgram(res.hexBlob)
+    	var program = new ClassicProgram(hex)
+	    if (program.valid) {
+	      self.emit('flashBootstrapToTargetBlock', targetBlock)
+	      var flash = new ClassicFlash(client, {
+	        skipSafeCheck: true
+	      })
+	      flash.programToBlock(program, targetBlock, function (err) {
+	        flash.removeListener('progress', onProgress)
+	        callback(err)
+	        if (err) {
+	          setTargetBlock(null)
+	          if (isFatalError(err)) {
+	            self.emit('error', err)
+	          }
+	        }
+	      })
+	      flash.on('progress', onProgress)
+	      function onProgress(e) {
+	        emitProgressEvent(e)
+	      }
+	    } else {
+	      callback(new Error('Program invalid.'))
+	    }
+  	})
   }
 
   function discoverTargetImagoBlock(callback) {
