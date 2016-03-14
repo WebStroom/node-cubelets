@@ -20,15 +20,25 @@ function ImagoFirmwareService() {
 			callback(new Error("Invalid versions provided"))
 			return;
 		}
+		
+		var product = 'cubelet-' + block.getBlockType().name;
+		var hardwareVersion = block.getHardwareVersion().toString();
+		var bootloaderVersion = block.getBootloaderVersion().toString();
+		var applicationVersion = block.getApplicationVersion().toString();
+		var cacheKey = product+'-'+hardwareVersion+'-'+hardwareVersion+'-'+applicationVersion;
+		var cachedResult = getCachedValue(cacheKey)
+		
+		if(cachedResult){
+			cachedResult.cacheHit = true;
+			callback(null, cachedResult)
+			return
+		}
 
 		var options = {
 			host : baseUrl,
 			port : 8080,
 			path : '/firmware?' + ['platform=cubelets', 'product=cubelet-' + block.getBlockType().name, 'hardwareVersion=' + block.getHardwareVersion().toString(), 'bootloaderVersion=' + block.getBootloaderVersion().toString(), 'applicationVersion=' + block.getApplicationVersion().toString()].join('&')
 		};
-
-		//TODO: Cache key would be: product_HardwareVersion_BootloaderVersion_ApplicationVersion
-		
 
 		http.get(options, function(res) {
 			var body = '';
@@ -38,6 +48,7 @@ function ImagoFirmwareService() {
 			res.on('end', function() {
 				try {
 					var json = JSON.parse(body);
+					setCachedValue(cacheKey, json);
 					callback(null, json)
 				} catch (e) {
 					callback(e)
@@ -55,7 +66,17 @@ function ImagoFirmwareService() {
 			return;
 		}
 
-		//TODO: Cache key would be: product-bootloader-_hardwareVersion_bootloaderVersion
+		var product = 'cubelet-' + block.getBlockType().name;
+		var hardwareVersion = block.getHardwareVersion().toString();
+		var bootloaderVersion = block.getBootloaderVersion().toString();
+		var cacheKey = product+'-bootloader'+'-'+hardwareVersion+'-'+hardwareVersion;
+		var cachedResult = getCachedValue(cacheKey)
+		
+		if(cachedResult){
+			cachedResult.cacheHit = true;
+			callback(null, cachedResult)
+			return
+		}
 
 		var options = {
 			host : baseUrl,
@@ -70,6 +91,7 @@ function ImagoFirmwareService() {
 			res.on('end', function() {
 				try {
 					var json = JSON.parse(body);
+					setCachedValue(cacheKey, json);
 					callback(null, json)
 				} catch (e) {
 					callback(e)

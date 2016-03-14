@@ -153,6 +153,7 @@ test('Test get major update bootstrap', function(t) {
 //Check for cache miss
 test('Test cache miss', function(t) {
 	t.plan(3);
+	console.time("cache-miss");
 	var block = new Block(1337, 4, BlockTypes.PASSIVE	)
 	block._mcuType = MCUTypes.PIC
 	block._bootloaderVersion = new Version(4, 0, 0)
@@ -162,13 +163,15 @@ test('Test cache miss', function(t) {
 		t.error(err, "Should not be an error with valid data")
 		var bootloaderProgram = new ImagoProgram(res.hexBlob)
 		t.ok(bootloaderProgram.valid, "Bootstrap hex file should be a valid program")
-		t.notOk(res.cacheHit)		
+		t.notOk(res.cacheHit)
+		console.timeEnd("cache-miss");		
 	})
 })
 
 //Check for cache hit
 test('Test for cache hit', function(t) {
 	t.plan(3);
+	console.time("cache-hit");
 	var block = new Block(1337, 4, BlockTypes.PASSIVE	)
 	block._mcuType = MCUTypes.PIC
 	block._bootloaderVersion = new Version(4, 0, 0)
@@ -179,6 +182,7 @@ test('Test for cache hit', function(t) {
 		var bootloaderProgram = new ImagoProgram(res.hexBlob)
 		t.ok(bootloaderProgram.valid, "Bootstrap hex file should be a valid program")
 		t.ok(res.cacheHit, "Should have hit cache")		
+		console.timeEnd("cache-hit");
 	})
 })
 
