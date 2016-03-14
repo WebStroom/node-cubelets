@@ -63,6 +63,7 @@ function ImagoFirmwareService() {
 				}
 			}
 		}
+		request.send();
 	}
 
 	this.checkForBootloaderUpdate = function(block, callback) {
