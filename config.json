@@ -94,11 +94,6 @@
       "typeId": 25,
       "name": "temperature",
       "category": "sense"
-    },
-    "FACETESTER": {
-      "typeId": 7,
-      "name": "facetester",
-      "category": "think"
     }
   },
   "mcuTypes": {
