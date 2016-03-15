@@ -126,7 +126,7 @@ test('Test get deep memory bootloader', function(t) {
 	block._bootloaderVersion = new Version(4, 0, 0)
 	block._hardwareVersion = new Version(2, 0, 0)
 		
-	firmwareService.fetchDeepMemoryBootloader(block, function(err, res) {
+	firmwareService.fetchDeepMemoryBootloader(function(err, res) {
 		t.error(err, "Should not be an error with valid data")
 		var bootloaderProgram = new ImagoProgram(res.hexBlob)
 		t.ok(bootloaderProgram.valid, "The hex file should be a valid program")
