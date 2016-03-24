@@ -213,7 +213,11 @@ function start (client) {
         console.log(err)
         process.exit()
       }
-      targetBlock._blockType = Block.blockTypeForId(response.blockTypeId)
+      if(Block.blockTypeForId(response.blockTypeId).name != "unknown")
+      {
+      	targetBlock._blockType = Block.blockTypeForId(response.blockTypeId) 
+      }
+      
       targetBlock._mcuType = MCUTypes.PIC
 
       // Get the pic bootloader+verification and application to flash
