@@ -43,7 +43,10 @@ var UpgradeBootloader = function (client) {
       wait,
       waitForOs4Block,
       done]
-
+    if(block && block.mode && block.mode == 4){
+      //Check if the block is already in deep memory bootloader. If so, skip DMB.
+      tasks.splice(0, 3)
+    }
     self.emit('upgradeBootloader', {'status': 'start'})
     async.waterfall(tasks, function (err, result) {
       if (err) {
