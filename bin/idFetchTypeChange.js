@@ -32,8 +32,8 @@ var client = cubelets.connect(device, function(err) {
 		}
 		catch(err)
 		{
-			
-		}		
+
+		}
 		start(client)
 	}
 })
@@ -74,10 +74,25 @@ function fetchBlocks(callback) {
 			return
 		}
 		var blocks = []
+		var count = 0;
 		__.each(response.blocks, function(block) {
-			blocks.push(new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId)))
+			//getConfig to retrieve versions
+			var request = new Protocol.Block.messages.GetConfigurationRequest(block.blockId)
+	    client.sendBlockRequest(request, function(err, blockInfo) {
+				var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId))
+				b.mode = blockInfo.mode
+				b._applicationVersion = blockInfo.applicationVersion
+				b._bootloaderVersion = blockInfo.bootloaderVersion
+				b._hardwareVersion = blockInfo.hardwareVersion
+				b._blockType = (Block.blockTypeForId(blockInfo.blockTypeId) != BlockTypes.UNKNOWN ? Block.blockTypeForId(blockInfo.blockTypeId) : block._blockType);
+
+	      blocks.push(b)
+				if(blocks.length == response.blocks.length){
+					callback(null, blocks)
+				}
+	    })
 		})
-		callback(null, blocks)
+
 	})
 }
 
@@ -85,6 +100,9 @@ function printBlocksFound(blocks) {
 	console.log('Blocks Found:')
 	__.each(blocks, function(block) {
 		console.log('  ' + formatBlockName(block))
+		console.log('    Application Version: v' + block._applicationVersion.toString())
+		console.log('    Bootloader Version: v' + block._bootloaderVersion.toString())
+		console.log('    Mode: ' + (block.mode ? 'Application' : 'Bootloader'))
 	})
 	console.log('')
 }
@@ -149,10 +167,10 @@ function convertBlockToType(block, convertType, callback) {
 					}
 
 					if (blocks.length === 1) {
-						
+
 						block = blocks[0];
-						block._mcuType = MCUTypes.PIC						
-						
+						block._mcuType = MCUTypes.PIC
+
 						var applicationHex = fs.readFileSync('./upgrade/hex/application/' + convertType.name + ".hex")
 						var program = new ImagoProgram(applicationHex)
 						flash = new ImagoFlash(client)
@@ -184,7 +202,7 @@ function askForResponse(message, callback) {
 	{
 		stdin.setRawMode(true)
 	}
-	
+
 	stdin.resume()
 	stdin.setEncoding('utf8')
 
@@ -214,7 +232,7 @@ function promptForAnyKey(message, callback) {
 	{
 		stdin.setRawMode(true)
 	}
-	
+
 	stdin.resume()
 	stdin.setEncoding('utf8')
 
@@ -235,7 +253,7 @@ function promptYesOrNo(message, _default, callback) {
 	{
 		stdin.setRawMode(true)
 	}
-	
+
 	stdin.resume()
 	stdin.setEncoding('utf8')
 
