@@ -64,9 +64,9 @@ var spawn_count = 0
 monitor.on('spawn', function (process) {
   spawn_count++
   if (spawn_count == 1) {
-    console.log('Starting the OS4.0->OS4.1 Upgrade CLI...')
+    console.log('Starting the Upgrade CLI...')
   } else {
-    console.log('Restarting the OS4.0->OS4.1 Upgrade CLI...')
+    console.log('Restarting the Upgrade CLI...')
   }
 })
 

@@ -53,7 +53,7 @@ var uploadDone = false
 if( args[2].indexOf('COM') > -1 )
 {
   port = args[2]
-  start(port)
+  connect(port)
 }
 else if(args[2].length == 3 && args[2].match(/[R,G,B,M,C,W,Y][R,G,B,M,C,W,Y][R,G,B,M,C,W,Y]/i))
 {//An LED pattern was passed in.
