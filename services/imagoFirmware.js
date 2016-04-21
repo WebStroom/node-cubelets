@@ -201,14 +201,8 @@ function ImagoFirmwareService() {
 	}
 
 	this.fetchDeepMemoryBootloader = function(block, callback) {
-
-		if(!verifyForBootloader(block, callback))
-		{
-			return;
-		}
-
 		var product = 'cubelet-deep-memory-bootloader';
-		var hardwareVersion = block.getHardwareVersion().toString();
+		var hardwareVersion = new Version(2,0,0)
 		var cacheKey = product+'-'+hardwareVersion;
 
 		getLatestHexBlob(product, hardwareVersion, cacheKey, callback)
