@@ -36,17 +36,6 @@ var client = null;
 var upgradeBootloader = null
 var finalCallback = null
 
-var ProgressBar = require('progress')
-
-var uploadBar = new ProgressBar('Uploading [:bar] :percent', {
-  width: 40,
-  total: 100
-})
-var flashBar = new ProgressBar('Flashing [:bar] :percent', {
-  width: 40,
-  total: 100
-})
-
 var uploadDone = false
 
 //Check if a COM port was supplied
@@ -253,7 +242,6 @@ function onFlashDeepMemoryBootloader(data)
       }
       break
     case 'success':
-      flashBar.update(1)
       console.log('Done.\n')
       break
   }
