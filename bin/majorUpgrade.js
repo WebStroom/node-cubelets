@@ -73,12 +73,12 @@ function connect(port){
       try {
         client.setMaxListeners(0)
       } catch (err) {}
-      start(client)
+      start(client, true)
     }
   })
 }
 
-function start(client){
+function start(client, firstRun){
   var tasks = [
     fetchTargetBlock,//Find the block we want to upgrade TODO wait for block to be added if not
     fetchBlockConfiguration,//Fetch its configuration
@@ -86,15 +86,25 @@ function start(client){
     waitForBlockRemoved,
     waitForBlockAdded
   ]
+  if(firstRun)
+  {
+    tasks.unshift(waitForBlockAdded)
+    tasks.unshift(resetBT)
+  }
 
   async.waterfall(tasks, function(err, result) {
     if (err) {
       console.error(err)
       exit(1)
     }
-    start(client)
+    start(client, false)
     return
   })
+}
+
+function resetBT(callback) {
+	client.sendCommand(new ImagoProtocol.messages.ResetCommand())
+	callback(null)
 }
 
 function startUpgrade(block, callback)
