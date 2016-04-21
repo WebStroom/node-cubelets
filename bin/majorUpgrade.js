@@ -442,10 +442,10 @@ function printUploadProgress(progress)
 
 function printSuccessMessage(msg) {
 	//80 blanks spaces to fill a complete line
-	var fullLine = '                                                                           '
+	var fullLine = '                                                   \r\n'
 	// process.stdout.write(success(fullLine))
 	process.stdout.write(success(fullLine))
-	process.stdout.write(success(msg + (fullLine.substring(fullLine.length - msg.length+21))))
+	process.stdout.write(success(msg + (fullLine.substring(0,fullLine.length - msg.length - 2))))
   process.stdout.write("\r\n")
 	process.stdout.write(success(fullLine))
 	process.stdout.write(defaultColor)
