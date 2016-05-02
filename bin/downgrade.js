@@ -47,12 +47,12 @@ var downgradeBlock
 
 if (args.length === 3) {
 	//No optional params passed
-	
+
 	//Default with CRCs on
 	crcsEnabled = 1;
   // Default color of the terminal window
   defaultColor = '\x1b[37;40m'
-} 
+}
 else if(args.length === 4)
 {
 	//CRCs Enabled was passed in, but no color
@@ -82,30 +82,30 @@ client.on('disconnect', function () {
   console.log('Disconnected.')
 })
 function start (client, firstRun) {
-	
+
 	var tasks = [
-  	waitForOs4Block, 
+  	waitForOs4Block,
   	jumpToOs4Mode,
+  	//wait,
+  	//setCRCMode,
   	wait,
-  	setCRCMode, 
-  	wait, 
-  	findOs4AndFlashBootloader, 
-  	jumpToDiscoveryWaitForOs3, 
-  	jumptoOs3Mode, 
-  	downloadTargetHex, 
-  	flashOs3Application, 
-  	updateDataStore, 
-  	wait, 
-  	jumpToDiscoveryFromOs3, 
+  	findOs4AndFlashBootloader,
+  	jumpToDiscoveryWaitForOs3,
+  	jumptoOs3Mode,
+  	downloadTargetHex,
+  	flashOs3Application,
+  	updateDataStore,
+  	wait,
+  	jumpToDiscoveryFromOs3,
   	verifyOs3
   ]
-  
+
   if(firstRun)
   {
   	tasks.unshift(flashBootstrapIfNeeded)
   	tasks.unshift(checkBluetoothOperatingMode)
   }
-	
+
   async.waterfall(tasks, function (err, result) {
     if (err) {
       exitWithError(err)
@@ -115,7 +115,7 @@ function start (client, firstRun) {
     	console.timeEnd("Downgraded in");
     }
     catch(err){}
-    
+
     start(client, false)
     return
   })
@@ -167,7 +167,7 @@ function flashBootstrapIfNeeded (fromMode, callback) {
       		callback(new Error('Host block not found.'))
       	}
 	    }
-    })    
+    })
   // })
   } else { // Imago
     client.setProtocol(ImagoProtocol)
@@ -179,33 +179,33 @@ function flashBootstrapIfNeeded (fromMode, callback) {
     	}
     	var hostId = res.blockId;
     	var req = new ImagoProtocol.messages.SetModeRequest(0)
-    	client.sendRequest(req, function (err, res) {    	
+    	client.sendRequest(req, function (err, res) {
 	      console.log('Begin flashing bluetooth bootstrap code from OS4 mode.')
 	      setTimeout(function () {
 	        flashBootstrapFromBootloader(hostId, true, callback)
 	      }, 4000)
-	    }, 200)    
+	    }, 200)
     })
   }
 }
 
 function flashBootstrapFromBootloader (hostId, shouldSkipReady, callback) {
-  var hex = fs.readFileSync('./crc_upgrade/hex/bt_bootstrap_crc_toggle.hex')
+  var hex = fs.readFileSync('./upgrade/hex/bluetooth_bootstrap.hex')
   var program = new ClassicProgram(hex)
   client.setProtocol(ClassicProtocol)
 
   var hostBlock = new Block(hostId, 0, BlockTypes.BLUETOOTH)
   hostBlock._mcuType = MCUTypes.AVR
-  
+
   var flash = new ClassicFlash(client, {
     skipSafeCheck: true,
   	skipReadyCommand: shouldSkipReady
-  })      
-  
+  })
+
   flash.programToBlock(program, hostBlock, function (err) {
       callback(err)
   })
-  
+
   flash.on('progress', function (e) {
   	console.log('progress', '(' + e.progress + '/' + e.total + ')')
   })
@@ -270,14 +270,14 @@ function findOs4AndFlashBootloader (callback) {
     }
     var targetBlock
     targetBlock = neighborBlocks[0]
-    targetBlock._mcuType = MCUTypes.PIC		
-		
+    targetBlock._mcuType = MCUTypes.PIC
+
     flashOs3BootloaderFromOs4(targetBlock, callback)
   })
 }
 
 function flashOs3BootloaderFromOs4 (targetBlock, callback) {
-	
+
 	console.log("Begin flashing OS3 bootloader to " + formatBlockName(targetBlock))
   var hex = fs.readFileSync('./downgrade/pic_downgrader.hex')
   var program = new ImagoProgram(hex)
@@ -374,7 +374,7 @@ function downloadTargetHex (targetBlock, callback) {
 function flashOs3Application (targetBlock, targetHex, callback) {
 	console.log("Begin flashing OS3 application to " + formatBlockName(targetBlock))
   var program = new ClassicProgram(targetHex)
-  
+
   downgradeBlock = targetBlock
 
   // XXX(donald): hack to not send reset command
@@ -427,7 +427,7 @@ function verifyOs3 (callback) {
       if (e instanceof BootstrapProtocol.messages.BlockFoundEvent) {
         clearTimeout(timer)
         client.removeListener('event', waitForBlockEvent)
-        
+
         printSuccessMessage('Successfully downgraded block ' + formatBlockName(downgradeBlock) + ' to OS3.')
         console.log("")
         callback(null, 'done')
