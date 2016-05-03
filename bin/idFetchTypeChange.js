@@ -46,7 +46,6 @@ function start(client) {
 	console.log('')
 	console.log('')
 	promptForAnyKey('To detect a Cubelets press any key.\n', function() {
-
 		fetchBlocks(function(err, blocks) {
 			if (err) {
 				exitWithError(err)
@@ -55,7 +54,7 @@ function start(client) {
 			if (blocks.length === 0) {
 				console.log("No Cubelets were detected.")
 				start(client)
-			} else if (blocks.length === 1) {
+			} else if (blocks.length === 1 && blocks[0].getBlockType() !== BlockTypes.BLUETOOTH) {
 				askToChangeCubeletType(blocks[0], function() {
 					start(client)
 				})
@@ -75,22 +74,57 @@ function fetchBlocks(callback) {
 		}
 		var blocks = []
 		var count = 0;
+		if(response.blocks.length == 0)
+		{
+			callback(null, [])
+			return
+		}
 		__.each(response.blocks, function(block) {
 			//getConfig to retrieve versions
 			var request = new Protocol.Block.messages.GetConfigurationRequest(block.blockId)
-	    client.sendBlockRequest(request, function(err, blockInfo) {
-				var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId))
-				b.mode = blockInfo.mode
-				b._applicationVersion = blockInfo.applicationVersion
-				b._bootloaderVersion = blockInfo.bootloaderVersion
-				b._hardwareVersion = blockInfo.hardwareVersion
-				b._blockType = (Block.blockTypeForId(blockInfo.blockTypeId) != BlockTypes.UNKNOWN ? Block.blockTypeForId(blockInfo.blockTypeId) : block._blockType);
 
-	      blocks.push(b)
-				if(blocks.length == response.blocks.length){
-					callback(null, blocks)
-				}
-	    })
+			if(parseInt(block.blockTypeId) == 4)
+			{
+				client.sendRequest(new Protocol.messages.GetConfigurationRequest(), function(err, blockInfo) {
+					blockInfo.blockTypeId = 4;
+					if(err){
+						callback(err)
+						return
+					}
+					var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId))
+					if(blockInfo)
+					{
+						b.mode = blockInfo.mode
+						b._applicationVersion = blockInfo.applicationVersion
+						b._bootloaderVersion = blockInfo.bootloaderVersion
+						b._hardwareVersion = blockInfo.hardwareVersion
+						b._blockType = (Block.blockTypeForId(blockInfo.blockTypeId) != BlockTypes.UNKNOWN ? Block.blockTypeForId(blockInfo.blockTypeId) : block._blockType);
+					}
+					blocks.push(b)
+					if(blocks.length == response.blocks.length){
+						callback(null, blocks)
+						return
+					}
+				})
+			}
+			else {
+				client.sendBlockRequest(request, function(err, blockInfo) {
+					var b = new Block(block.blockId, block.hopCount, Block.blockTypeForId(block.blockTypeId))
+					if(blockInfo)
+					{
+						b.mode = blockInfo.mode
+						b._applicationVersion = blockInfo.applicationVersion
+						b._bootloaderVersion = blockInfo.bootloaderVersion
+						b._hardwareVersion = blockInfo.hardwareVersion
+						b._blockType = (Block.blockTypeForId(blockInfo.blockTypeId) != BlockTypes.UNKNOWN ? Block.blockTypeForId(blockInfo.blockTypeId) : block._blockType);
+					}
+					blocks.push(b)
+					if(blocks.length == response.blocks.length){
+						callback(null, blocks)
+						return
+					}
+				})
+			}
 		})
 
 	})
