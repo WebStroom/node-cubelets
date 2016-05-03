@@ -14,7 +14,19 @@ var ClassicProgram = ClassicProtocol.Program
 
 var bluetoothBlockId = config.map.type.bluetooth
 
-var client = cubelets.connect(config.device, function (err) {
+var args = process.argv
+var device;
+console.log(args.length)
+if (args.length >= 3) {
+  device = {
+    path: args[2]
+  }
+}
+else {
+  device = config.device
+}
+
+var client = cubelets.connect(device, function (err) {
   test('connected', function (t) {
     t.plan(1)
     if (err) {
@@ -35,7 +47,7 @@ var client = cubelets.connect(config.device, function (err) {
 							t.pass()
 							//TODO: Flashing will only work if the block is already in bootloader already?
 						break;
-							
+
 						case 1://Imago
 							t.pass('detect imago mode')
 							client.setProtocol(ImagoProtocol)
@@ -46,13 +58,13 @@ var client = cubelets.connect(config.device, function (err) {
 			        {
 			        	t.pass("set host to bootloader mode from OS4")
 			        }, 1000)
-			        
+
 						break;
 						case 2://Bootstrap
 			        client.setProtocol(BootstrapProtocol)
 			        var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(1)
 			        client.sendRequest(req, function (err, res) {
-			          t.ifError(err)			          
+			          t.ifError(err)
 			          client.setProtocol(ImagoProtocol)
 			          var req = new ImagoProtocol.messages.SetModeRequest(0)
 			          client.sendRequest(req, function (err, res) {
