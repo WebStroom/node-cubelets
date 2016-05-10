@@ -52,6 +52,7 @@ var UpgradeBootloader = function (client) {
       if (err) {
         // Emit Finished with error
         self.emit('upgradeBootloader', {'status': 'error', 'error': err})
+        return
       }
       self.emit('upgradeBootloader', {'status': 'success'})
       return
