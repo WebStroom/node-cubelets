@@ -17,12 +17,23 @@ var async = require('async')
 var cubelets = require('../index')
 var Protocol = cubelets.Protocol
 var Block = require('../block')
+var BlockTypes = require('../blockTypes')
 var __ = require('underscore')
 var ImagoProtocol = require('../protocol/imago')
+var ClassicProtocol = require('../protocol/classic')
+var ClassicFlash = ClassicProtocol.Flash
+var ClassicProgram = ClassicProtocol.Program
+var BootstrapProtocol = require('../protocol/bootstrap')
 var UpgradeBootloader = require('../upgrade/upgradeBootloader')
 var fs = require('fs')
 var MCUTypes = require('../mcuTypes')
 var clc = require('cli-color')
+
+var FirmwareType = {
+  CLASSIC: 0,
+  IMAGO: 1,
+  BOOTSTRAP: 2
+}
 
 // Console output colors
 var error = clc.bgRed.white.bold
@@ -79,8 +90,11 @@ function connect(port){
 }
 
 function start(client, firstRun){
+
+  //TODO: Make sure BT is running the correct firmware
+
   var tasks = [
-    fetchTargetBlock,//Find the block we want to upgrade TODO wait for block to be added if not
+    fetchTargetBlock,//Find the block we want to upgrade
     fetchBlockConfiguration,//Fetch its configuration
     startUpgrade,//Kick off upgrade
     waitForBlockRemoved,
@@ -90,6 +104,8 @@ function start(client, firstRun){
   {
     tasks.unshift(waitForBlockAdded)
     tasks.unshift(resetBT)
+    tasks.unshift(flashBTIfNeeded)
+    tasks.unshift(checkBluetoothOperatingMode)
   }
 
   async.waterfall(tasks, function(err, result) {
@@ -100,6 +116,80 @@ function start(client, firstRun){
     start(client, false)
     return
   })
+}
+
+function checkBluetoothOperatingMode (callback) {
+  // Switch to the classic protocol
+  client.setProtocol(ClassicProtocol)
+  client.sendRequest(new ClassicProtocol.messages.KeepAliveRequest(), function (err, response) {
+    if (err) {
+      console.log('Bluetooth block is running OS4 application.')
+      callback(null, FirmwareType.IMAGO)
+    } else if (response.payload.length > 0) {
+      console.log('Bluetooth block is running OS4 bootstrap application.')
+      // The bootstrap protocol will differentiate itself by
+      // sending an extra byte in the response.
+      callback(null, FirmwareType.BOOTSTRAP)
+    } else {
+      console.log('Bluetooth block is running OS3 application/bootloader.')
+      callback(null, FirmwareType.CLASSIC)
+    }
+  })
+}
+
+function flashBTIfNeeded(fromMode, callback)
+{
+  if (fromMode === FirmwareType.BOOTSTRAP)
+  {//Flash host with imago from bootstrap
+    client.setProtocol(BootstrapProtocol)
+    var req = new BootstrapProtocol.messages.SetBootstrapModeRequest(1)
+    client.sendRequest(req, function (err, res) {
+      client.setProtocol(ImagoProtocol)
+      var req = new ImagoProtocol.messages.SetModeRequest(0)
+      client.sendRequest(req, function (err, res) {
+        client.setProtocol(ClassicProtocol)
+        var hex = fs.readFileSync('./upgrade/hex/bluetooth_application.hex')
+        var program = new ClassicProgram(hex)
+        var block = new Block(1, 0, BlockTypes.BLUETOOTH)
+        block._mcuType = MCUTypes.AVR
+        var flash = new ClassicFlash(client, {
+          skipSafeCheck: true,
+          skipReadyCommand: true
+        })
+        flash.programToBlock(program, block, function (err) {
+          client.setProtocol(ImagoProtocol)
+          callback(null);
+        })
+        flash.on('progress', function (e) {
+          console.log('progress', '(' + e.progress + '/' + e.total + ')')
+        })
+      })
+    })
+  }
+  else if(fromMode === FirmwareType.CLASSIC)
+  {
+    client.setProtocol(ClassicProtocol)
+    var hex = fs.readFileSync('./upgrade/hex/bluetooth_application.hex')
+    var program = new ClassicProgram(hex)
+    var block = new Block(1, 0, BlockTypes.BLUETOOTH)
+    block._mcuType = MCUTypes.AVR
+    var flash = new ClassicFlash(client, {
+      skipSafeCheck: true,
+      skipReadyCommand: true
+    })
+    flash.programToBlock(program, block, function (err) {
+      client.setProtocol(ImagoProtocol)
+      callback(null);
+    })
+    flash.on('progress', function (e) {
+      console.log('progress', '(' + e.progress + '/' + e.total + ')')
+    })
+  }
+  else
+  {//We are already running in imago, set the protocal and carry on.
+    client.setProtocol(ImagoProtocol)
+    callback(null);
+  }
 }
 
 function resetBT(callback) {
