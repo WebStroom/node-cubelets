@@ -36,8 +36,6 @@
   "optionalDependencies": {
     "bluetooth-serial-port": "git+https://github.com/modrobotics/node-bluetooth-serial-port.git",
     "buffer-array-stream": "~0.0.1",
-    "chrome-bluetooth-client": "~0.0.1",
-    "chrome-runtime-stream": "~0.0.1",
     "net-browserify": "^0.1.6",
     "serialport": "1.7.4"
   },
