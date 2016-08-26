@@ -184,7 +184,10 @@ function convertBlockToType(block, convertType, callback) {
 	var flash = new ImagoFlash(client, {
 		skipSafeCheck : true
 	})
+	console.log("Program to block")
 	flash.programToBlock(program, block, function(err) {
+		console.log(err)
+		console.log("Program to block return")
 		if (err) {
 			exitWithError(err)
 		} else {
