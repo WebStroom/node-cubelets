@@ -52,10 +52,7 @@ var SerialConnection = function (device, opts) {
   }
 
   this._write = function (data, enc, next) {
-    serialPort.write(data, function(){
-      next();
-    })
-    /*var chunkSize = 60
+    var chunkSize = 60
     writeChunk(0)
     function writeChunk(i) {
       var start = i * chunkSize
@@ -76,12 +73,13 @@ var SerialConnection = function (device, opts) {
     function write(chunk, callback) {
       if (serialPort) {
         debug('<<', chunk)
-        console.log(chunk)
-        serialPort.write(chunk, callback)
+        serialPort.write(chunk, function(){
+          serialPort.drain(callback);
+        })
       } else {
         callback(new Error('disconnected'))
       }
-    }*/
+    }
   }
 
   this._open = function (callback) {
