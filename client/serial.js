@@ -1,6 +1,6 @@
 var debug = require('debug')('cubelets:serial')
 var util = require('util')
-var SerialPort = require('serialport').SerialPort
+var SerialPort = require('serialport')
 var Scanner = require('../scanner')
 var Connection = require('../connection')
 var Client = require('../client')
@@ -39,7 +39,7 @@ util.inherits(SerialScanner, Scanner)
 
 var SerialConnection = function (device, opts) {
   Connection.call(this, device, opts)
-  
+
   var path = device['path'] || ((process.platform === 'win32') ?
     'COM1' : '/dev/cu.Cubelet-RGB-AMP-SPP')
 
@@ -73,7 +73,9 @@ var SerialConnection = function (device, opts) {
     function write(chunk, callback) {
       if (serialPort) {
         debug('<<', chunk)
-        serialPort.write(chunk, callback)
+        serialPort.write(chunk, function(){
+          serialPort.drain(callback);
+        })
       } else {
         callback(new Error('disconnected'))
       }
@@ -86,7 +88,7 @@ var SerialConnection = function (device, opts) {
         callback(null)
       }
     } else {
-      serialPort = new SerialPort(path, {}, false)
+      serialPort = new SerialPort(path, {autoOpen: false})
 
       serialPort.on('error', function (err) {
         stream.emit('error', err)
