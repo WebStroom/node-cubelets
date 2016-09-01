@@ -111,12 +111,12 @@
     }
   },
   "urls": {
-    "info": "http://cubelets-programming.appspot.com",
+    "info": "http://cubeletmfg.modrobotics.com",
     "compile": "http://compile.modrobotics.com",
-    "firmware": "http://cubelets-programming.appspot.com",
+    "firmware": "http://cubeletmfg.modrobotics.com",
     "imagoFirmware": "firmware.modrobotics.com",
-    "update": "http://cubelets-programming.appspot.com",
-    "kit": "http://cubelets-programming.appspot.com"
+    "update": "http://cubeletmfg.modrobotics.com",
+    "kit": "http://cubeletmfg.modrobotics.com"
   },
   "chrome": {
     "appId": "fehdhddkknkaeimadppmacaoclnllcjm"
