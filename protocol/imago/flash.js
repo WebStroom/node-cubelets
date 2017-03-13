@@ -7,6 +7,7 @@ var MCUTypes = require('../../mcuTypes')
 var Version = require('../../version')
 var emptyFunction = function () {}
 var __ = require('underscore')
+var crc = require('crc');
 
 var ValidTargetMCUTypes = [
   MCUTypes.PIC
@@ -47,7 +48,7 @@ function Flash(protocol, client) {
       blockTypeId: block.getBlockType().typeId,
       version: new Version(0, 0, 0),
       isCustom: false,
-      crc: 0xcc
+      crc: crc.crc8(program.data)
     }
 
     steps = 2
@@ -78,11 +79,17 @@ function Flash(protocol, client) {
     var timer = setTimeout(function () {
       handleResult(new Error('Timed out waiting for upload to complete.'))
     }, timeout)
-    
+
     client.on('event', waitForCompleteEvent)
     function waitForCompleteEvent(e) {
       if (e instanceof messages.UploadToMemoryCompleteEvent) {
-        handleResult(null)
+        if(e.result == 0x00)//BT_SUCCESS
+        {
+          handleResult(null)
+        }
+        else{
+          handleResult(new Error("Failed to validate hex CRC."))
+        }
       }
     }
 
