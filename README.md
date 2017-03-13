@@ -11,12 +11,13 @@ Cubelets are magnetic blocks that can be snapped together to make an endless var
 Install (Windows)
 =================
 
-    - NodeJs v0.10.40: https://nodejs.org/dist/v0.10.40/node-v0.10.40-x86.msi
+    - Recommended: nvm for managing node versions.
+    - NodeJs 6.10.0 (32-bit): (`nvm install 6.10.0 32` if using nvm )
     - Python 2.7
     - Git
-    - Visual Studio 2013 Express: https://www.microsoft.com/en-us/download/details.aspx?id=44914
+    - Visual Studio 2015
     - npm update -g npm
-    - npm install --msvs_version=2013
+    - npm install
 
 Connect
 =======
