@@ -1,7 +1,7 @@
 var test = require('tape')
 var fs = require('fs')
 var config = require('../config')
-var cubelets = require('../../index')
+var cubelets = require('../../index')()
 var Upgrade = require('../../upgrade')
 
 var bluetoothBlockId = config.map.type.bluetooth

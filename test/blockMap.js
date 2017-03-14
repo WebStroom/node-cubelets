@@ -1,5 +1,5 @@
 var redtape = require('redtape')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var device = require('./config').device
 
 var test = redtape(function before(cb) {

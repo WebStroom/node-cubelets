@@ -10,7 +10,7 @@ var ImagoProtocol = require('../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
 var ImagoFlash = ImagoProtocol.Flash
 var BootstrapProtocol = require('../protocol/bootstrap')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Block = cubelets.Block
 var BlockTypes = cubelets.BlockTypes
 var MCUTypes = cubelets.MCUTypes
@@ -33,7 +33,7 @@ var Upgrade = function (client) {
   events.EventEmitter.call(this)
 
 	var firmwareService = new ImagoFirmwareService()
-	
+
   var running = false
   var finished = false
   var hostBlock = null
@@ -149,9 +149,9 @@ var Upgrade = function (client) {
 			        	hostBlock = new Block(99, 0, BlockTypes.BLUETOOTH)
           			hostBlock._mcuType = MCUTypes.AVR
           			shouldSkipReady = true
-			        	callback(null)      	
+			        	callback(null)
 			        }, 1000)
-            },            
+            },
             flashBootstrapToHostBlock,
             startBlockUpgrades,
             jumpToDiscovery,
@@ -233,10 +233,10 @@ var Upgrade = function (client) {
     step = [0,1]
     debug('flashBootstrapToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    
+
     hostBlock._hardwareVersion = new Version(2, 1, 0)
     firmwareService.fetchBootstrapFirmware(hostBlock, function(err, res)
-    {    	
+    {
     	var program = new ClassicProgram(res.hexBlob)
 	    if (program.valid) {
 	      self.emit('flashBootstrapToHostBlock', hostBlock)
@@ -615,8 +615,8 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
-    targetBlock._hardwareVersion = new Version(	DefaultVersions[blockType.name].major, 
-    																						DefaultVersions[blockType.name].minor, 
+    targetBlock._hardwareVersion = new Version(	DefaultVersions[blockType.name].major,
+    																						DefaultVersions[blockType.name].minor,
     																						DefaultVersions[blockType.name].patch)
     firmwareService.fetchBootstrapFirmware(targetBlock, function(err, res)
     {
@@ -672,13 +672,13 @@ var Upgrade = function (client) {
     assert.equal(client.getProtocol(), ImagoProtocol, 'Must be in OS4 mode.')
     assert(targetBlock, 'Target block must be set.')
     var blockType = targetBlock.getBlockType()
-    
-    targetBlock._hardwareVersion = new Version(	DefaultVersions[blockType.name].major, 
-    																						DefaultVersions[blockType.name].minor, 
+
+    targetBlock._hardwareVersion = new Version(	DefaultVersions[blockType.name].major,
+    																						DefaultVersions[blockType.name].minor,
     																						DefaultVersions[blockType.name].patch)
-    
+
     targetBlock._bootloaderVersion = new Version(0,0,0);
-    
+
     firmwareService.checkForBootloaderUpdate(targetBlock, function(err, res)
     {
     	if(err)
@@ -706,7 +706,7 @@ var Upgrade = function (client) {
 	    } else {
 	      callback(new Error('Program invalid.'))
 	    }
-    });   
+    });
   }
 
   function checkTargetBlockComplete(callback) {
@@ -721,7 +721,7 @@ var Upgrade = function (client) {
     step = [0,1]
     debug('flashUpgradeToHostBlock')
     assert.equal(client.getProtocol(), ClassicProtocol, 'Must be in OS3 mode.')
-    
+
     hostBlock._bootloaderVersion = new Version(4, 1, 0);
     hostBlock._hardwareVersion = new Version(2, 1, 0);
     firmwareService.fetchLatestHex(hostBlock, function(err, res)

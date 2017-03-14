@@ -1,6 +1,6 @@
 var test = require('tape')
-var cubelets = require('../index')
- 
+var cubelets = require('../index')()
+
 test('can parse', function (t) {
   t.plan(8)
 

@@ -1,6 +1,6 @@
 var util = require('util')
 var events = require('events')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Block = cubelets.Block
 var BlockTypes = cubelets.BlockTypes
 var MCUTypes = cubelets.MCUTypes
@@ -49,7 +49,7 @@ function CompatibilityCheck(client) {
               }
               callback(null)
               fetchTimer = setInterval(
-                fetchMoreBlocks, 
+                fetchMoreBlocks,
                 fetchInterval
               )
             }

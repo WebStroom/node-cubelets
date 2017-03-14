@@ -1,7 +1,7 @@
 var fs = require('fs')
 var test = require('tape')
 var device = require('./config').device
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 
 var outputFile = fs.openSync(__dirname + '/flow.bin', 'w')
@@ -40,7 +40,7 @@ test.only('echo flood', function (t)  {
       client.sendData(data, function (err) {
         if (err) {
           client.disconnect()
-        } 
+        }
       })
     }
   })
@@ -82,7 +82,7 @@ test('config flood', function (t) {
       client.sendData(data, function (err) {
         if (err) {
           client.disconnect()
-        } 
+        }
       })
     }
   })

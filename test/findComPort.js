@@ -2,7 +2,7 @@
 ***ONLY WORKS ON WINDOWS**
 */
 
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var BluetoothSerialPort = require('bluetooth-serial-port').BluetoothSerialPort
 var sp = require('serialport')

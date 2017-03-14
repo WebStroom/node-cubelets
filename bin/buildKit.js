@@ -10,7 +10,7 @@ var device = {
 
 var BAD_ID_THRESHOLD = 205000
 
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var Kit = require('../kit/index.js')
 var SixKit = require('../kit/six')
@@ -39,7 +39,7 @@ var client = cubelets.connect(device, function (err) {
 	}
 	catch(err)
 	{
-		
+
 	}
     start(client)
   }
@@ -135,11 +135,11 @@ function checkForBadBlocks (blocks, callback) {
 }
 
 function blockHasBadId (blockId) {
-	
+
 	var ID0 = ((blockId & 0x0000FF));
 	var ID1 = ((blockId & 0x00FF00) >> 8);
 	var ID2 = ((blockId & 0xFF0000) >> 16);
-	
+
 	if(ID2 === ID0 && ID2 === 0x03)
 	{
 		return true;
@@ -148,7 +148,7 @@ function blockHasBadId (blockId) {
 	{
 		return false;
 	}
-	
+
   /*var badBlocks = [196611, 196867, 197123, 197379, 197635, 197891, 198147, 198403, 198659, 198915, 199171, 199427, 199683, 199939, 200195, 200451, 200707, 200963, 201219, 201475, 201731, 201987, 202243, 202499, 202755, 203011, 203267, 203523]
   if (blockId > BAD_ID_THRESHOLD || __.indexOf(badBlocks, blockId) >= 0) {
     return true
@@ -258,7 +258,7 @@ function promptForAnyKey (message, callback) {
 	if(stdin.isTTY)
 	{
 		stdin.setRawMode(true)
-	}  
+	}
   stdin.resume()
   stdin.setEncoding('utf8')
 
@@ -279,7 +279,7 @@ function promptYesOrNo (message, _default, callback) {
 	{
 		stdin.setRawMode(true)
 	}
-  
+
   stdin.resume()
   stdin.setEncoding('utf8')
 

@@ -11,7 +11,7 @@ var device = {
   path: args[2]
 }
 
-var cubelets = require('../../index')
+var cubelets = require('../../index')()
 var Protocol = cubelets.Protocol
 var Block = require('../../block')
 var __ = require('underscore')

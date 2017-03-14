@@ -1,6 +1,6 @@
 var test = require('tape')
 var config = require('../config')
-var cubelets = require('../../index')
+var cubelets = require('../../index')()
 var BootstrapProtocol = require('../../protocol/bootstrap')
 var ClassicProtocol = require('../../protocol/classic')
 var ImagoProtocol = require('../../protocol/imago')

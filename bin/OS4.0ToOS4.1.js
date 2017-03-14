@@ -15,7 +15,7 @@ var bar = new ProgressBar('uploading [:bar] :percent', {
 });
 
 var __ = require('underscore')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
@@ -86,8 +86,8 @@ client.on('disconnect', function() {
 })
 function start(client, firstRun) {
 
-	var tasks = [	disableCrcs,//4.0.0 blocks don't have CRCs turn them off' 
-								waitForOs4Block,//Wait for a block to be attached (if it isn't already) 
+	var tasks = [	disableCrcs,//4.0.0 blocks don't have CRCs turn them off'
+								waitForOs4Block,//Wait for a block to be attached (if it isn't already)
 								verifyTargetNeedsUpgrade,//Check that the firmware running is something less than 4.1.0
 								logIfBadId,//Keep track of IDs that may have suffered from the ID snaffu
 								flashUpgradeBootloader,//Flash the 'deep-memory bootloader'
@@ -95,18 +95,18 @@ function start(client, firstRun) {
 								wait,//Allow time for the BT to boot
 								enableCrcs,//The new bootloader should have CRCs now, so turn them on
 								waitForOs4Block,//Make sure the block shows up
-								flashModifiedPicBootstrap,//Flash the OS 4.1.0 bootloader and verification hex 
+								flashModifiedPicBootstrap,//Flash the OS 4.1.0 bootloader and verification hex
 								resetBT,//Reset to clear routing table
-								wait, 
+								wait,
 								enableCrcs,
-								waitForOs4Block, 
+								waitForOs4Block,
 								checkForBadID,//If the block got labeled as having a bad ID, and it still does, bail
 								flashOs4Application,//Flash the 4.1.0 application
-								resetBT, 
-								wait, 
-								enableCrcs, 
-								waitForOs4Block, 
-								waitForBlockRemoved,//Don't continue the process until the user takes off the block 
+								resetBT,
+								wait,
+								enableCrcs,
+								waitForOs4Block,
+								waitForBlockRemoved,//Don't continue the process until the user takes off the block
 								done]
 
 	if (firstRun) {
@@ -122,7 +122,7 @@ function start(client, firstRun) {
 			console.timeEnd("Upgraded in");
 		} catch(err) {
 		}
-		
+
 		flashTypeId = null;
 
 		start(client, false)
@@ -161,21 +161,21 @@ function flashHostIfNeeded(fromMode, callback) {
       {
       	callback(err)
       	return
-      }  
-       
+      }
+
       client.setProtocol(ImagoProtocol)
       var req = new ImagoProtocol.messages.SetModeRequest(0)
       client.sendRequest(req, function (err, res) {
       })
       setTimeout(function()
       {
-      	flashHostCrcFirmware(callback)        	
+      	flashHostCrcFirmware(callback)
       }, 1000)
     })
-    
+
 	} else if (fromMode === FirmwareType.CLASSIC) {// Classic
 		client.setProtocol(ClassicProtocol)
-		//determine host id 
+		//determine host id
 		//flash like normal
 		console.log('Begin flashing bluetooth OS4 code from OS3 mode.')
 		flashHostCrcFirmware(callback)
@@ -188,7 +188,7 @@ function flashHostIfNeeded(fromMode, callback) {
 				callback(err)
 				return
 			}
-			
+
 			if(response.mode === 3)
 			{//BT is running the correct firmware that has toggleable CRCs
 				callback(null)
@@ -202,10 +202,10 @@ function flashHostIfNeeded(fromMode, callback) {
         }, 200)
         setTimeout(function()
         {
-        	flashHostCrcFirmware(callback)        	
+        	flashHostCrcFirmware(callback)
         }, 1000)
 			}
-		})		
+		})
 	}
 }
 
@@ -295,12 +295,12 @@ function verifyTargetNeedsUpgrade(block, callback) {
 			return
 		}
 		else
-		{	
+		{
 			if(flashTypeId === null)
 			{
 				flashTypeId = response.blockTypeId
-			}		
-	
+			}
+
 			//We only want to upgrade 4.0.x blocks
 			if (response.bootloaderVersion.isLessThan(new Version(4, 1, 0))) {
 				callback(null, block)
@@ -413,7 +413,7 @@ function checkForBadID(block, callback) {
 			setTimeout(function()
 			{
 				callback(new Error("Please make sure to remove the block with the bad ID"))
-			}, 10000)			
+			}, 10000)
 			return
 		}
 		else
@@ -462,14 +462,14 @@ function flashOs4Application(block, callback) {
 	})
 }
 
-function waitForBlockRemoved(block, callback) {	
+function waitForBlockRemoved(block, callback) {
 	client.once('event', function(message) {
 		if ( message instanceof Protocol.messages.BlockRemovedEvent) {
 			callback(null)
 			return
 		}
 	})
-	
+
 	//process.stdout.write(clc.erase.screen);
 	printSuccessMessage("Successfully upgraded " + formatBlockName(block) + " to v4.1.0")
 	console.log("\n\nPlease remove " + formatBlockName(block) + " and attach the next block to be updated.\n\n\n")
@@ -528,7 +528,7 @@ function printProgress(type, progress)
 		{
 			console.log(""+ type+": " + progress + "%")
 		}
-		
+
 	}
 
 }

@@ -4,7 +4,7 @@ var fs = require('fs')
 var __ = require('underscore')
 
 var config = require('./config')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var Block = cubelets.Block
 var BlockTypes = cubelets.BlockTypes

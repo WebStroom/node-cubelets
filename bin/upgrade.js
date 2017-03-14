@@ -6,7 +6,7 @@ if (args.length < 3) {
 
 var async = require('async')
 var prompt = require('cli-prompt')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var Upgrade = require('../upgrade')
@@ -24,7 +24,7 @@ var error = clc.bgRed.white.bold
 var success = clc.bgGreen.white.bold
 
 if (args.length === 3) {
-  // Default color of the terminal window	
+  // Default color of the terminal window
   defaultColor = '\x1b[37;40m'
 } else {
   var defaultColor = args[3]

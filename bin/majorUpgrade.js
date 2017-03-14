@@ -14,7 +14,7 @@ if (args.length === 3) {
 
 var __ = require('underscore')
 var async = require('async')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')

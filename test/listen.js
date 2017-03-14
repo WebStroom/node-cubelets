@@ -1,6 +1,6 @@
 var test = require('tape')
 var device = require('./config').device
-var cubelets = require('../index')
+var cubelets = require('../index')()
 
 var fromBootloader = false
 

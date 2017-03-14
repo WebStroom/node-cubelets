@@ -1,7 +1,7 @@
 var fs = require('fs')
 var test = require('tape')
 var config = require('./config')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 
 var blockIds = {
   flashlight: config.map.type.flashlight,

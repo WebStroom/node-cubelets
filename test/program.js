@@ -1,6 +1,6 @@
 var fs = require('fs')
 var test = require('tape')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var ImagoProgram = require('../protocol/imago/program')
 var ClassicProgram = require('../protocol/imago/classic')
 

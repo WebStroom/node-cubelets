@@ -10,7 +10,7 @@ var async = require('async')
 // var __ = require('underscore')
 var clc = require('cli-color')
 
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
 var MCUTypes = require('../mcuTypes')

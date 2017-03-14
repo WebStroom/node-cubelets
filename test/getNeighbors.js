@@ -1,6 +1,6 @@
 var test = require('tape')
 var config = require('./config')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var __ = require('underscore')
 
 var client = cubelets.connect(config.device, function (err) {

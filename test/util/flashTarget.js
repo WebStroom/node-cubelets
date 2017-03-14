@@ -4,7 +4,7 @@ if (args.length < 3) {
   process.exit(1)
 }
 
-var cubelets = require('../../index')
+var cubelets = require('../../index')()
 var ImagoFirmwareService = require('../../services/imagoFirmware')
 var Protocol = cubelets.Protocol
 var ImagoProgram = Protocol.Program
@@ -48,7 +48,7 @@ function start(client)
     wait,
 		done
 	]
-	
+
 	async.waterfall(tasks, function(err, result) {
 		count++;
 		if(err)
@@ -67,7 +67,7 @@ function start(client)
 
 function fetchTargetBlock(callback)
 {//Figure out what block we are going to flash
-	
+
 	//Fetch all of the blocks in the construction
   client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
     if (err) {
@@ -79,7 +79,7 @@ function fetchTargetBlock(callback)
     	console.log("Couldn't find a target block. Please make sure a block is connected and try again.")
     	process.exit()
     }
-    
+
     var targetBlockInfo = null;
     //For simplicity, store the first block
     __.each(response.blocks, function(block)
@@ -89,16 +89,16 @@ function fetchTargetBlock(callback)
     		targetBlockInfo = block;
     	}
     })
-		
+
 		if(targetBlockInfo === null)
 		{
 			callback(new Error("Failed to find target block"));
 			return;
 		}
-    
+
     //Create an actual Block object
     var targetBlock = new Block(targetBlockInfo.blockId, targetBlockInfo.hopCount, Block.blockTypeForId(targetBlockInfo.blockTypeId), MCUTypes.PIC)
-    
+
     //Fetch the blocks configuration to know it's block type incase it's in bootloader mode
     var request = new ImagoProtocol.Block.messages.GetConfigurationRequest(targetBlock.getBlockId())
     client.sendBlockRequest(request, function (err, response) {
@@ -106,19 +106,19 @@ function fetchTargetBlock(callback)
         console.log(err)
         process.exit()
       }
-      
+
       //Store the block type and versions that came back from the Get Configuration request
       targetBlock._blockType = Block.blockTypeForId(response.blockTypeId)
 			targetBlock._applicationVersion = response.applicationVersion
 			targetBlock._bootloaderVersion = response.bootloaderVersion
 			targetBlock._hardwareVersion = response.hardwareVersion
-      
-      
+
+
       //TODO: Hack to store the correct MCU type.
       targetBlock._mcuType = MCUTypes.PIC
-      
-      callback(null, targetBlock);			
-    })    				
+
+      callback(null, targetBlock);
+    })
   })
 }
 
@@ -136,7 +136,7 @@ function fetchLatestFirmware(block, callback)
 	    console.log("An invalid hex file was received from the firmware service.")
 	    process.exit();
     }
-    callback(null, block, application)		
+    callback(null, block, application)
 	})
 }
 var once = 0;
@@ -167,7 +167,7 @@ function flashApplication(block, application, callback)
   	client.removeListener('event', listener);
 	  if (err) {
 	    callback("Flashing failed")
-	  } else {      	
+	  } else {
 	    callback(null)
 	  }
   })
@@ -185,5 +185,3 @@ function wait (howLong, callback) {
 function done(callback) {
 	callback(null, 'done')
 }
-
-

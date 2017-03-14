@@ -1,7 +1,7 @@
 var fs = require('fs')
 var test = require('tape')
 var config = require('./config')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 
 var blockIds = {
   flashlight: config.map.type.flashlight,
@@ -36,7 +36,7 @@ test('connect', function (t) {
             clearTimeout(timer)
             client.removeListener('event', onEvent)
             t.pass('register')
-          }            
+          }
         }
         client.on('event', onEvent)
       })
@@ -56,7 +56,7 @@ test('connect', function (t) {
               clearTimeout(timer)
               client.removeListener('event', onEvent)
               t.fail('unregister')
-            }            
+            }
           }
           client.on('event', onEvent)
         }, 2000)

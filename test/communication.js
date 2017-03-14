@@ -1,6 +1,6 @@
 var test = require('tape')
 var config = require('./config')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var __ = require('underscore')
 

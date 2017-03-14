@@ -4,7 +4,7 @@ var fs = require('fs')
 var __ = require('underscore')
 
 var config = require('./config')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var ImagoProtocol = require('../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
@@ -49,9 +49,9 @@ var client = cubelets.connect(config.device, function (err) {
         var hex = fs.readFileSync('./upgrade/hex/application/' + blockType.name + '.hex')
         var program = new ImagoProgram(hex)
         t.ok(program.valid, 'program valid')
-        
+
         var flash = new ImagoFlash(client)
-        
+
         flash.on('progress', function(e) {
 							console.log('progress', '(' + e.progress + '/' + e.total + ')')
 				})
@@ -59,10 +59,10 @@ var client = cubelets.connect(config.device, function (err) {
 				flash.programToBlock(program, block, function(err) {
 							t.notOk(err, err);
 							t.pass("Flashed program")
-							
+
 					})
       })
-      
+
       test('disconnect', function (t) {
         t.plan(1)
         client.disconnect()

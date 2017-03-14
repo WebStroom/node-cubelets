@@ -1,5 +1,5 @@
 var test = require('tape')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 
 test('message codes', function (t) {
   t.plan(8)

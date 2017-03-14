@@ -1,7 +1,7 @@
 var test = require('tape')
 var fs = require('fs')
 var config = require('../config')
-var cubelets = require('../../index')
+var cubelets = require('../../index')()
 var Protocol = cubelets.Protocol
 var Block = require('../../block')
 var BlockTypes = require('../../blockTypes')
@@ -35,9 +35,9 @@ cubelets.getDevices(function(devices) {
 		if (device.services) {
 			device.channelID = device.services[0].channelID;
 		}
-		
+
 			device.channelID = 1;
-		
+
 		client = cubelets.connect(device, function(err) {
 			if (err) {
 				console.log("Failed to connect.")
@@ -70,7 +70,7 @@ function findTargetAndFlash() {
 				console.log(err)
 				process.exit()
 			}
-			
+
 			console.log(response)
 
 			//Store the block type and versions that came back from the Get Configuration request
@@ -120,7 +120,7 @@ function flashTargetBlock(block) {
 				}
 			})
 			}, 0)
-		
+
 	})
 }
 

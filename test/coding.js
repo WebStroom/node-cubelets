@@ -1,8 +1,8 @@
 var test = require('tape')
-var cubelets = require('../index')
+var cubelets = require('../index')()
 var Protocol = cubelets.Protocol
 var Version = cubelets.Version
- 
+
 test('messages', function (t) {
   t.plan(8)
 
