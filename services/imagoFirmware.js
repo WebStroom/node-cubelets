@@ -159,6 +159,7 @@ function ImagoFirmwareService() {
 																					'hardwareVersion=' + hardwareVersion,
 																					'bootloaderVersion=' + '0.0.0'].join('&')
 		};
+
 		makeRequest(cacheKey, options, callback, true)
 	}
 	function getCachedValue(cacheKey)

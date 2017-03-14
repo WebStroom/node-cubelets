@@ -35,10 +35,10 @@
     "xtend": "^4.0.0"
   },
   "optionalDependencies": {
-    "bluetooth-serial-port": "1.2.2",
+    "bluetooth-serial-port": "ELundby45/node-bluetooth-serial-port",
     "buffer-array-stream": "~0.0.1",
     "net-browserify": "^0.1.6",
-    "serialport": "1.7.4"
+    "serialport": "4.0.1"
   },
   "browser": {
     "./client/index.js": "./client/browser.js",
