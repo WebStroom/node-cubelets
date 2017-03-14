@@ -1,11 +1,24 @@
-var cubelets = require('./client/index')
+var validClientTypes = [  'bluetoothSerial',
+                          'browser',
+                          'chrome',
+                          'chromeSerial',
+                          'cordova',
+                          'demo',
+                          'net',
+                          'serial'];
 
-cubelets.Block = require('./block')
-cubelets.BlockTypes = require('./blockTypes')
-cubelets.MCUTypes = require('./mcuTypes')
-cubelets.Version = require('./version')
-cubelets.InfoService = require('./services/info')
-cubelets.FirmwareService = require('./services/firmware')
-cubelets.ImagoFirmwareService = require('./services/imagoFirmware')
+module.exports = function(clientType){
+  if(!clientType || validClientTypes.indexOf(clientType) < 0){
+    clientType = 'serial';
+  }
+  var cubelets = require('./client/index')(clientType);
 
-module.exports = cubelets
+  cubelets.Block = require('./block')
+  cubelets.BlockTypes = require('./blockTypes')
+  cubelets.MCUTypes = require('./mcuTypes')
+  cubelets.Version = require('./version')
+  cubelets.InfoService = require('./services/info')
+  cubelets.FirmwareService = require('./services/firmware')
+  cubelets.ImagoFirmwareService = require('./services/imagoFirmware')
+  return cubelets;
+}

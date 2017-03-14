@@ -5,14 +5,20 @@ if (args.length !== 3) {
 }
 
 var device = {
-	path : args[2]
+	path : args[2],//If using Serial
+	address : args[2],//If using BluetoothSerial
+	channelID : 1
+}
+var clientType = 'serial';
+if(args[2].indexOf(':') > -1){
+	clientType = 'bluetoothSerial';
 }
 
 var fs = require('fs')
 var ImagoProtocol = require('../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
 var ImagoFlash = ImagoProtocol.Flash
-var cubelets = require('../index')
+var cubelets = require('../index')(clientType)
 var Protocol = cubelets.Protocol
 var Block = require('../block')
 var BlockTypes = require('../blockTypes')
