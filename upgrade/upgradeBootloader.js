@@ -4,11 +4,10 @@ var async = require('async')
 var ImagoProtocol = require('../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
 var ImagoFlash = ImagoProtocol.Flash
-var cubelets = require('../index')()
-var Protocol = cubelets.Protocol
-var Block = cubelets.Block
-var BlockTypes = cubelets.BlockTypes
-var MCUTypes = cubelets.MCUTypes
+var Protocol = require('cubelets/protocol')
+var Block = require('cubelets/block')
+var BlockTypes = require('cubelets/blockTypes')
+var MCUTypes = require('cubelets/mcuTypes')
 var __ = require('underscore')
 var fs = require('fs')
 
