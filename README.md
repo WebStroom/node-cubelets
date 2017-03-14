@@ -11,13 +11,24 @@ Cubelets are magnetic blocks that can be snapped together to make an endless var
 Install (Windows)
 =================
 
-    - Recommended: nvm for managing node versions.
+    - Recommended: [nvm](https://github.com/coreybutler/nvm-windows) for managing node versions.
     - NodeJs 6.10.0 (32-bit): (`nvm install 6.10.0 32` if using nvm )
     - Python 2.7
     - Git
-    - Visual Studio 2015
-    - npm update -g npm
-    - npm install
+    - Visual Studio 2015 Community Edition
+    - `git clone https://github.com/modrobotics/node-cubelets.git`
+    - `cd node_cubelets & npm install`
+
+Install (macOS)
+=================
+
+    - Recommended: [nvm](https://github.com/creationix/nvm) for managing node versions.
+    - NodeJs 6.10.0
+    - Xcode
+    - Git
+    - `git clone https://github.com/modrobotics/node-cubelets.git`
+    - `cd node_cubelets & npm install`
+
 
 Connect
 =======
