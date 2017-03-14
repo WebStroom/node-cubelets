@@ -97,7 +97,7 @@ function Flash(protocol, client) {
       if (err) {
         handleResult(err)
       } else {
-        var chunkSize = 60
+        var chunkSize = slotData.length
         writeChunk(0)
         function writeChunk(i) {
           var start = i * chunkSize

@@ -64,6 +64,11 @@ function Factory(Scanner, Connection) {
       client.emit('disconnect', err)
       debug('disconnect')
     })
+    
+    con.on('error', function(err)
+    {
+    	client.emit('disconnect', err)
+    })
 
     var protocol, parser, strategy
 

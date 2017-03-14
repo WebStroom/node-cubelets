@@ -30,6 +30,11 @@ function ImagoStrategy(protocol, client) {
   this.getBlockMap = function () {
     return map
   }
+  
+  this.resetBlockMap = function()
+  {
+  	map = new BlockMap()
+  }
 
   var configuration = null
 
