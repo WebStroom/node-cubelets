@@ -15,7 +15,7 @@ Install (Windows)
 - NodeJs 6.10.0 (32-bit): (`nvm install 6.10.0 32` if using nvm )
 - Python 2.7
 - Git
-- Visual Studio 2015 Community Edition
+- Visual Studio 2015 Community Edition (With Visual C++ and command line tools)
 - For building node-cubelets
     - `git clone https://github.com/modrobotics/node-cubelets.git`
     - `cd node_cubelets & npm install`
@@ -29,8 +29,11 @@ Install (macOS)
 - NodeJs 6.10.0
 - Xcode
 - Git
-- `git clone https://github.com/modrobotics/node-cubelets.git`
-- `cd node_cubelets & npm install`
+- For building node-cubelets
+    - `git clone https://github.com/modrobotics/node-cubelets.git`
+    - `cd node_cubelets & npm install`
+- For using node-cubelets in your own project
+    - `npm install https://github.com/modrobotics/node-cubelets.git`
 
 
 Connect
