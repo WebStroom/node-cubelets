@@ -6,28 +6,31 @@ Communicate with Cubelets using node.js
 What are Cubelets?
 ==================
 
-Cubelets are magnetic blocks that can be snapped together to make an endless variety of robots. You can communicate with and program them in node.js with a Bluetooth Cubelet.
+[Cubelets](https://www.modrobotics.com/cubelets) are magnetic blocks that can be snapped together to make an endless variety of robots. You can communicate with and program them in node.js with a Bluetooth Cubelet.
 
 Install (Windows)
 =================
 
-    - Recommended: [nvm](https://github.com/coreybutler/nvm-windows) for managing node versions.
-    - NodeJs 6.10.0 (32-bit): (`nvm install 6.10.0 32` if using nvm )
-    - Python 2.7
-    - Git
-    - Visual Studio 2015 Community Edition
+- Recommended: [nvm](https://github.com/coreybutler/nvm-windows) for managing node versions.
+- NodeJs 6.10.0 (32-bit): (`nvm install 6.10.0 32` if using nvm )
+- Python 2.7
+- Git
+- Visual Studio 2015 Community Edition
+- For building node-cubelets
     - `git clone https://github.com/modrobotics/node-cubelets.git`
     - `cd node_cubelets & npm install`
+- For using node-cubelets in your own project
+    - `npm install https://github.com/modrobotics/node-cubelets.git`
 
 Install (macOS)
 =================
 
-    - Recommended: [nvm](https://github.com/creationix/nvm) for managing node versions.
-    - NodeJs 6.10.0
-    - Xcode
-    - Git
-    - `git clone https://github.com/modrobotics/node-cubelets.git`
-    - `cd node_cubelets & npm install`
+- Recommended: [nvm](https://github.com/creationix/nvm) for managing node versions.
+- NodeJs 6.10.0
+- Xcode
+- Git
+- `git clone https://github.com/modrobotics/node-cubelets.git`
+- `cd node_cubelets & npm install`
 
 
 Connect
