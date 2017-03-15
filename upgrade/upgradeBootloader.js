@@ -4,10 +4,9 @@ var async = require('async')
 var ImagoProtocol = require('../protocol/imago')
 var ImagoProgram = ImagoProtocol.Program
 var ImagoFlash = ImagoProtocol.Flash
-var Protocol = require('cubelets/protocol')
-var Block = require('cubelets/block')
-var BlockTypes = require('cubelets/blockTypes')
-var MCUTypes = require('cubelets/mcuTypes')
+var Block = require('../block')
+var BlockTypes = require('../blockTypes')
+var MCUTypes = require('../mcuTypes')
 var __ = require('underscore')
 var fs = require('fs')
 
@@ -69,7 +68,7 @@ var UpgradeBootloader = function (client) {
 
     var totalSize = program.data.length
     var listener = function (e) {
-      if (e instanceof Protocol.messages.FlashProgressEvent) {
+      if (e instanceof ImagoProtocol.messages.FlashProgressEvent) {
         // Emit Flashing Progress events
         self.emit('flashDeepMemoryBootloader', {'status': 'flashProgress', 'progress': (e.progress / totalSize)})
       }
@@ -129,7 +128,7 @@ var UpgradeBootloader = function (client) {
       // Target block was not found, wait for a block added event before trying again
       if (found === false) {
         client.once('event', function (message) {
-          if (message instanceof Protocol.messages.BlockAddedEvent) {
+          if (message instanceof ImagoProtocol.messages.BlockAddedEvent) {
             waitForOs4Block(callback)
             return
           }
@@ -138,7 +137,7 @@ var UpgradeBootloader = function (client) {
     })
   }
   function getAllBlocks (callback) {
-    client.sendRequest(new Protocol.messages.GetAllBlocksRequest(), function (err, response) {
+    client.sendRequest(new ImagoProtocol.messages.GetAllBlocksRequest(), function (err, response) {
       if (err) {
         callback(err)
         return
@@ -170,7 +169,7 @@ var UpgradeBootloader = function (client) {
 
     var totalSize = program.data.length
     var listener = function (e) {
-      if (e instanceof Protocol.messages.FlashProgressEvent) {
+      if (e instanceof ImagoProtocol.messages.FlashProgressEvent) {
         // Emit flashing progress event
         self.emit('flashBootloader', {'status': 'flashProgress', 'progress': (e.progress / totalSize)})
       }
@@ -206,7 +205,7 @@ var UpgradeBootloader = function (client) {
 
     var totalSize = program.data.length
     var listener = function (e) {
-      if (e instanceof Protocol.messages.FlashProgressEvent) {
+      if (e instanceof ImagoProtocol.messages.FlashProgressEvent) {
         // Emit flashing progress event
         self.emit('flashApplication', {'status': 'flashProgress', 'progress': (e.progress / totalSize)})
       }
