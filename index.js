@@ -1,8 +1,10 @@
 var validClientTypes = [  'bluetoothSerial',
                           'browser',
+                          'btleUART',
                           'chrome',
                           'chromeSerial',
                           'cordova',
+                          'cordovaBTSerial',
                           'demo',
                           'net',
                           'serial'];
