@@ -94,6 +94,11 @@
       "typeId": 25,
       "name": "temperature",
       "category": "sense"
+    },
+    "FACE_TEST": {
+      "typeId": 99,
+      "name": "face_test",
+      "category": "test"
     }
   },
   "mcuTypes": {
