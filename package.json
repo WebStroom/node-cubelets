@@ -25,6 +25,7 @@
     "cli-prompt": "^0.4.2",
     "crc": "^3.4.4",
     "debug": "^2.2.0",
+    "noble": "^1.8.1",
     "node-cache": "^3.2.0",
     "progress": "^1.1.8",
     "readable-stream": "2.1.5",

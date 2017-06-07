@@ -20,7 +20,7 @@ function Scanner () {
     var i = __(devices).findIndex(function (d) {
       return self._compareDevice(d, device)
     })
-    if (i !== -1) {
+    if (i === -1) {
       devices.push(device)
       return true
     }

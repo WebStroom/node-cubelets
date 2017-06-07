@@ -5,6 +5,7 @@ var validClientTypes = [  'bluetoothSerial',
                           'chromeSerial',
                           'cordova',
                           'cordovaBTSerial',
+                          'nobleSerial',
                           'demo',
                           'net',
                           'serial'];
