@@ -10,6 +10,9 @@ function deviceAddedCallback(device){
         console.log(err);
         return;
       }
+      client.on('disconnect', function() {
+        console.log("Disconnected!");
+      });
       console.log("Connected. Fetching neighborBlocks...");
       client.fetchNeighborBlocks(function (err, neighborBlocks) {
         if(err){

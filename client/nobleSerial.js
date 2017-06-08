@@ -114,6 +114,7 @@ var BTLEConnection = function (device, opts) {
   //  device.channelID : (Array.isArray(services) && services.length > 0) ?
   //    services[0].channelID : 1
   var stream = this;
+  var isOpen = false
 
   var writeCharacteristic = null;
   var readCharacteristic = null;
@@ -136,6 +137,7 @@ var BTLEConnection = function (device, opts) {
 
     //Event handler for disconnect detect.
     device.once('disconnect', function(){
+      isOpen = false;
       debug("Disconnected");
       //Call the disconnected event
       stream.close(function(){});
@@ -143,6 +145,7 @@ var BTLEConnection = function (device, opts) {
 
     device.once('connect', function(){
       debug("Connected");
+      isOpen = true;
       device.discoverAllServicesAndCharacteristics(function(err, services, characteristics){
         characteristics.forEach(function(characteristic){
           if(uuidCompare(characteristic.uuid, TX_UUID)){
@@ -175,7 +178,15 @@ var BTLEConnection = function (device, opts) {
     });
   }
   this._close = function (callback) {
-    device.disconnect(callback);
+    if(isOpen){
+      isOpen = false;
+      device.disconnect(function(){
+        callback(null);
+      });
+    }
+    else{
+      callback(null);
+    }
   }
 }
 
