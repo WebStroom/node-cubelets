@@ -12,7 +12,7 @@ Install (Windows)
 =================
 
 - Recommended: [nvm](https://github.com/coreybutler/nvm-windows) for managing node versions.
-- NodeJs 6.10.0 (32-bit): (`nvm install 6.10.0 32` if using nvm )
+- NodeJs v6.10.0 (32-bit): (`nvm install 6.10.0 32` if using nvm )
 - Python 2.7
 - Git
 - Visual Studio 2015 Community Edition (With Visual C++ and command line tools)
@@ -26,7 +26,7 @@ Install (macOS)
 =================
 
 - Recommended: [nvm](https://github.com/creationix/nvm) for managing node versions.
-- NodeJs 6.10.0
+- NodeJs v6.10.0
 - Xcode
 - Git
 - For building node-cubelets
@@ -40,14 +40,25 @@ Client Types
 =============
 There are a few different client types that use different ways to connect to Cubelets.
 
+- serial (Windows/OSX)[default]: Establish a connection using a virtual serial port relies on [node-serialport](https://github.com/EmergingTechnologyAdvisors/node-serialport).
 - bluetoothSerial (Windows/OSX): Uses SPP to establish a connection relies on [node-bluetooth-serial-port](https://github.com/eelcocramer/node-bluetooth-serial-port).
-- serial (Windows/OSX): Establish a connection using a virtual serial port relies on [node-serialport](https://github.com/EmergingTechnologyAdvisors/node-serialport).
 - cordova (cordova iOS/Android): Can be used in apps built with cordova relies on the [com.modrobotics.bluetooth](https://bitbucket.org/modrobotics/cubelets-app/src/777cf3ee9ffadcaf2d305b5af0aca7d17364753a/plugins/com.modrobotics.bluetooth/?at=master) plugin.
 - demo (any): Doesn't actually connect to a construction, simply responds to messages. Useful for testing and UI updates.
 - chromeSerial (experimental ChromeBooks): Uses the [chrome.bluetooth API](https://developer.chrome.com/apps/bluetooth) to establish an SPP connection.
 - btleUART (experimental cordova iOS/Android): BTLE client for cordova relies on [cordova-plugin-bluetoothle](https://github.com/randdusing/cordova-plugin-bluetoothle).
 - cordovaBTSerial (experimental cordova iOS/Android): BT classic client for cordova relies on the cordova plugin [BluetoothClassicSerial](https://github.com/soltius/BluetoothClassicSerial).
 - nobleSerial (experimental OSX): BTLE client for OSX. Uses [noble](https://github.com/sandeepmistry/noble).
+
+## Choosing a Client Type
+The type of client that is used can be specified when requiring the cubelets module.
+```js
+//The default client type is serial.
+var cubelets = require('cubelets');
+
+//Cubelets will use the bluetoothSerial client type.
+var cubelets = require('cubelets')('bluetoothSerial');
+
+```
 
 Discover
 =========
@@ -60,6 +71,8 @@ cubelets.getDevices(function(devices){
 
 or discover nearby Bluetooth Cubelets:
 ```js
+var cubelets = require('cubelets')('bluetoothSerial');
+
 function deviceFound(device){
   //This is a newly discovered device
   console.log(device);
@@ -165,4 +178,4 @@ client.fetchGraph(function (err, graph) {
 
 Demos/Examples
 ===============
-See `bin/` and `test/` for further examples.
+See [`bin/`](https://github.com/modrobotics/node-cubelets/tree/master/bin) and [`test/`](https://github.com/modrobotics/node-cubelets/tree/master/test) for further examples.
