@@ -69,6 +69,8 @@ var ChromeSerialConnection = function (device, opts) {
           if (chrome.runtime.lastError) {
             callback(chrome.runtime.lastError.message)
           } else {
+            //Send an event that can be caught by the background script of a chrome app.
+            chrome.runtime.sendMessage({status: "connected", socketId: socketId});
             // Profile implementation here.
             isOpen = true
             chrome.bluetoothSocket.onReceiveError.addListener(function(errorInfo) {
